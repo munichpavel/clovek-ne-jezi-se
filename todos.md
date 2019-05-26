@@ -4,7 +4,7 @@ tests for moves
 write tests for game (includes board)
 test game state???
 ~~test normal board section length()~~
-test non-standard board section lengths
+~~test non-standard board section lengths~~
 ~~test board representation small~~
 test generic board representation
 ~~test player class symbol~~

@@ -15,7 +15,6 @@ class Player:
         )
 
 
-
 class Players:
     def __init__(self, players):
         self.symbols = self._set_players(players)
