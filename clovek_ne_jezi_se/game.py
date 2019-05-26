@@ -6,6 +6,7 @@ class Player:
     def __init__(self, agent, symbol):
         self.agent = agent
         self.symbol = symbol
+        self.home = 4 * (EMPTY_VALUE)
 
     def __repr__(self):
         return (

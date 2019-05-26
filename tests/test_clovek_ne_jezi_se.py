@@ -14,6 +14,9 @@ class TestPlayer:
     def test_repr(self):
         assert repr(self.player) == 'Player agent None, game piece 1'
 
+    def test_home(self):
+        assert len(self.player.home) == 4
+
 
 @pytest.fixture
 def players_input():
