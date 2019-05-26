@@ -63,4 +63,9 @@ class Board:
                 "    | {10} | {9} | {8} |\n" \
                 "    -------------"
             ).format(*self.spaces)
+
+        else:
+            raise NotImplementedError(
+                'Board representation only for 16 space main board'
+            )
         
