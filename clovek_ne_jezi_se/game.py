@@ -1,16 +1,11 @@
 '''Clovek ne jezi se game board and plays'''
-from enum import Enum
-
-
 
 class Board:
     def __init__(self, section_length, empty_value='-'):
         self.section_length = section_length
         self.spaces = self.setup_spaces(empty_value)
-        
-     #   self.home = self.setup_homes()
-        
-    
+      
+
     def setup_spaces(self, empty_value):
 
         if self.section_length < 4:

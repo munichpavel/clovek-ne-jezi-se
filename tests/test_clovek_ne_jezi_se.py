@@ -53,14 +53,5 @@ class TestBoard:
     ):
 
         assert repr(small_board) == expected_empty_board_small
-
-
-    # def test_home_representation(self, small_board):
-
-    #     assert (
-    #         small_board.home.player_1 == 4 * (BoardValues.EMPTY)
-    #     )
-
-
         
 
