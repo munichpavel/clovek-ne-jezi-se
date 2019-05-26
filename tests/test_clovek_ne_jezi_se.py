@@ -2,7 +2,7 @@
 
 import pytest
 
-from clovek_ne_jezi_se.game import Board, Game
+from clovek_ne_jezi_se.game import Board
 
 class TestGame:
 
