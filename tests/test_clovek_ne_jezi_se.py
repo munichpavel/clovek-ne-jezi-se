@@ -10,6 +10,15 @@ class TestPlayer:
 
     assert repr(player) == 'Player agent None, game piece 1'
 
+@pytest.fixture
+def players_input():
+    return [
+        Player(None, symbol='1'),
+        Player(None, symbol='2'),
+        Player(None, symbol='3'),
+        Player(None, symbol='4'),
+    ]
+
 class TestPlayers:
     
     with pytest.raises(ValueError):
@@ -19,6 +28,12 @@ class TestPlayers:
             Player(None, symbol='2'),
             Player(None, symbol='3'),
         ])
+
+    def test_symbols(self, players_input):
+        players = Players(players_input)
+
+        assert players.symbols == ['1', '2', '3', '4']
+    
 
 
 @pytest.fixture
