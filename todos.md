@@ -9,6 +9,6 @@ test non-standard board section lengths
 test generic board representation
 ~~test player class symbol~~
 ~~refactor board values away~~
-test board homes
-make setups privatish
+~~test board homes setup~~
+~~make setups privatish~~
 test board win player 1

@@ -50,12 +50,13 @@ def empty_value():
     return '-'
 
 @pytest.fixture
-def small_board(empty_value):
+def small_empty_board(empty_value):
     return Board(4)
 
 
+
 @pytest.fixture
-def expected_empty_board_small(small_board):
+def expected_empty_board_small(small_empty_board):
     '''Stub test, for refactoring of board representation'''
     return ( "\n" \
     "    -------------\n" \
@@ -73,7 +74,7 @@ def expected_empty_board_small(small_board):
 
 class TestBoard:
 
-    def test_board_setup(self):
+    def test_spaces_setup(self):
         board = Board(10)
         assert len(board.spaces) == 4 * 10
 
@@ -84,13 +85,18 @@ class TestBoard:
         # Board cannot have odd section lengths
         with pytest.raises(ValueError):
             board = Board(5)
+
+    def test_homes_setup(self):
+        board = Board(4)
+
+        for symbol in ('1', '2', '3', '4'):
+            assert board.homes[symbol] == 4 * (EMPTY_VALUE)
     
 
     def test_board_representation(
-        self, small_board, 
+        self, small_empty_board, 
         expected_empty_board_small
     ):
 
-        assert repr(small_board) == expected_empty_board_small
-        
+        assert repr(small_empty_board) == expected_empty_board_small
 

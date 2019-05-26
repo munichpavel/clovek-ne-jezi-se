@@ -32,12 +32,13 @@ class Players:
 
 
 class Board:
-    def __init__(self, section_length):
+    def __init__(self, section_length, symbols=('1', '2', '3', '4')):
         self.section_length = section_length
-        self.spaces = self.setup_spaces(EMPTY_VALUE)
+        self.spaces = self._setup_spaces(EMPTY_VALUE)
+        self.homes = self._setup_homes(symbols)
       
 
-    def setup_spaces(self, EMPTY_VALUE):
+    def _setup_spaces(self, EMPTY_VALUE):
 
         if self.section_length < 4:
             raise ValueError('Sections must have length 4 or greater')
@@ -46,6 +47,15 @@ class Board:
             raise ValueError('Sections must have even length')
         
         return 4 * self.section_length * (EMPTY_VALUE)
+
+
+    def _setup_homes(self, symbols):
+
+        res = {}
+        for symbol in symbols:
+            res[symbol] = 4 * (EMPTY_VALUE)
+
+        return res
 
 
     def __repr__(self):
@@ -68,4 +78,4 @@ class Board:
             raise NotImplementedError(
                 'Board representation only for 16 space main board'
             )
-        
+    
