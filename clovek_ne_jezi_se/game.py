@@ -19,13 +19,27 @@ class Board:
     
     def setup_spaces(self):
         if self.section_length < 4:
-            raise ValueError('Sections must have lenght 4 or greater')
+            raise ValueError('Sections must have length 4 or greater')
 
         if self.section_length % 2 != 0:
             raise ValueError('Sections must have even length')
         
-        return 4 * self.section_length * [BoardValues.EMPTY]
+        return 4 * self.section_length * [BoardValues.EMPTY.value]
 
 
     def __repr__(self):
-        pass
+        if self.section_length == 4:
+            return ( "\n" \
+                "    -------------\n" \
+                "    | {0} | {1} | {2} |\n" \
+                "----------------------\n" \
+                "| {14} | {15} |    | {3} | {4} |\n"    \
+                "--------      -------|\n" \
+                "| {13} |            | {5} |\n"    \
+                "--------      -------|\n" \
+                "| {12} | {11} |    | {7} | {6} |\n"    \
+                "----------------------\n" \
+                "    | {10} | {9} | {8} |\n" \
+                "    -------------"
+            ).format(*self.spaces)
+        
