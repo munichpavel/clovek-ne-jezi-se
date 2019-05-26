@@ -2,6 +2,7 @@
 write tests for players (agents)
 tests for moves
 write tests for game (includes board)
+test game initialization
 test game state???
 ~~test normal board section length()~~
 ~~test non-standard board section lengths~~

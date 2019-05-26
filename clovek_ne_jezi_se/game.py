@@ -17,7 +17,9 @@ class Player:
 
 class Players:
     def __init__(self, players):
-        self.symbols = self._set_players(players)
+        self.n_players = len(players)
+        self._set_players(players)
+        
 
     def _set_players(self, players):
         res = []
@@ -27,7 +29,7 @@ class Players:
         if len(set(res)) < len(players):
             raise ValueError('Player symbols must be unique')
         
-        return res
+        self.symbols = res
 
 
 class Board:
@@ -86,3 +88,8 @@ class Board:
                 'Board representation only for 16 space main board'
             )
     
+
+class Game:
+    def __init__(self, players):
+        self.players = players
+        self.board = Board(players.n_players, players.symbols)

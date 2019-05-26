@@ -4,7 +4,8 @@ import pytest
 
 from clovek_ne_jezi_se.game import (
     EMPTY_VALUE,
-    Board, Player, Players
+    Board, Player, Players,
+    Game
 )
 
 
@@ -108,3 +109,12 @@ class TestBoard:
     ):
 
         assert repr(small_empty_board) == expected_empty_board_small
+
+
+class TestGame:
+
+    def test_game_setup(self, players, symbols):
+        game = Game(players)
+
+        assert len(game.board.spaces) == 4 * 4
+        assert len(game.board.homes[symbols[0]]) == 4
