@@ -26,6 +26,10 @@ def symbols():
 def players_input(symbols):
     return [Player(None, symbol=symbol) for symbol in symbols]
 
+@pytest.fixture
+def players(players_input):
+    return Players(players_input)
+
 class TestPlayers:
     
     with pytest.raises(ValueError):
@@ -37,8 +41,7 @@ class TestPlayers:
         ])
 
     
-    def test_symbols(self, players_input, symbols):
-        players = Players(players_input)
+    def test_symbols(self, players, symbols):
 
         assert players.symbols == symbols
     
@@ -77,6 +80,7 @@ def expected_empty_board_small(small_empty_board):
     return res
 
 
+
 class TestBoard:
 
     def test_spaces_setup(self):
@@ -104,4 +108,3 @@ class TestBoard:
     ):
 
         assert repr(small_empty_board) == expected_empty_board_small
-
