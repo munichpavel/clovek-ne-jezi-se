@@ -1,5 +1,34 @@
 '''Clovek ne jezi se game board and plays'''
 
+
+class Player:
+    def __init__(self, agent, symbol):
+        self.agent = agent
+        self.symbol = symbol
+
+    def __repr__(self):
+        return (
+            'Player agent {}, game piece {}'
+            .format(self.agent, self.symbol)
+        )
+
+
+
+class Players:
+    def __init__(self, players):
+        self.symbols = self._set_players(players)
+
+    def _set_players(self, players):
+        res = []
+        for player in players:
+            res.append(player.symbol)
+
+        if len(set(res)) < len(players):
+            raise ValueError('Player symbols must be unique')
+        
+        return res
+
+
 class Board:
     def __init__(self, section_length, empty_value='-'):
         self.section_length = section_length

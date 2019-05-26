@@ -2,7 +2,24 @@
 
 import pytest
 
-from clovek_ne_jezi_se.game import Board
+from clovek_ne_jezi_se.game import Board, Player, Players
+
+
+class TestPlayer:
+    player = Player(None, '1')
+
+    assert repr(player) == 'Player agent None, game piece 1'
+
+class TestPlayers:
+    
+    with pytest.raises(ValueError):
+        players = Players([
+            Player(None, symbol='1'),
+            Player(None, symbol='1'),
+            Player(None, symbol='2'),
+            Player(None, symbol='3'),
+        ])
+
 
 @pytest.fixture
 def empty_value():
@@ -30,9 +47,7 @@ def expected_empty_board_small(small_board, empty_value):
      "    -------------"
     ).format(*(16 * (empty_value)))
 
-
 class TestBoard:
-
 
     def test_board_setup(self):
         board = Board(10)
