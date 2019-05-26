@@ -2,10 +2,20 @@
 
 import pytest
 
-from clovek_ne_jezi_se.game import Board, BoardValues
+from clovek_ne_jezi_se.game import Board
 
 @pytest.fixture
-def empty_board_small():
+def empty_value():
+    return '-'
+
+@pytest.fixture
+def small_board(empty_value):
+    return Board(4, empty_value=empty_value)
+
+
+@pytest.fixture
+def expected_empty_board_small(small_board, empty_value):
+    '''Stub test, for refactoring of board representation'''
     return ( "\n" \
     "    -------------\n" \
        "    | {0} | {1} | {2} |\n" \
@@ -18,9 +28,11 @@ def empty_board_small():
     "----------------------\n" \
     "    | {10} | {9} | {8} |\n" \
      "    -------------"
-    ).format(*(16 * [BoardValues.EMPTY.value]))
+    ).format(*(16 * (empty_value)))
+
 
 class TestBoard:
+
 
     def test_board_setup(self):
         board = Board(10)
@@ -34,10 +46,21 @@ class TestBoard:
         with pytest.raises(ValueError):
             board = Board(5)
     
-    def test_board_representation(self, empty_board_small):
-        # Test board representation
-        board = Board(4)
-        assert repr(board) == empty_board_small
+
+    def test_board_representation(
+        self, small_board, 
+        expected_empty_board_small
+    ):
+
+        assert repr(small_board) == expected_empty_board_small
+
+
+    # def test_home_representation(self, small_board):
+
+    #     assert (
+    #         small_board.home.player_1 == 4 * (BoardValues.EMPTY)
+    #     )
+
 
         
 

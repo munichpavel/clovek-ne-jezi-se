@@ -2,29 +2,24 @@
 from enum import Enum
 
 
-class BoardValues(Enum):
-    EMPTY = '-'
-    PLAYER_1 = '1'
-    PLAYER_2 = '2'
-    PLAYER_3 = '3'
-    PLAYER_4 = '4'
-
-
 
 class Board:
-    def __init__(self, section_length):
+    def __init__(self, section_length, empty_value='-'):
         self.section_length = section_length
-        self.spaces = self.setup_spaces()
+        self.spaces = self.setup_spaces(empty_value)
+        
+     #   self.home = self.setup_homes()
         
     
-    def setup_spaces(self):
+    def setup_spaces(self, empty_value):
+
         if self.section_length < 4:
             raise ValueError('Sections must have length 4 or greater')
 
         if self.section_length % 2 != 0:
             raise ValueError('Sections must have even length')
         
-        return 4 * self.section_length * [BoardValues.EMPTY.value]
+        return 4 * self.section_length * (empty_value)
 
 
     def __repr__(self):
