@@ -60,3 +60,12 @@ target/
 
 # pyenv python configuration file
 .python-version
+
+# environment variables
+.env
+
+# vs code
+.vscode
+
+# jupyter notebooks
+notebooks/.ipynb_checkpoints
