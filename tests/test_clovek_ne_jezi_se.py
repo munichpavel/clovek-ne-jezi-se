@@ -2,13 +2,18 @@
 
 import pytest
 
-from clovek_ne_jezi_se.game import Board, Player, Players
+from clovek_ne_jezi_se.game import (
+    EMPTY_VALUE,
+    Board, Player, Players
+)
 
 
 class TestPlayer:
     player = Player(None, '1')
+    
+    def test_repr(self):
+        assert repr(self.player) == 'Player agent None, game piece 1'
 
-    assert repr(player) == 'Player agent None, game piece 1'
 
 @pytest.fixture
 def players_input():
@@ -29,6 +34,7 @@ class TestPlayers:
             Player(None, symbol='3'),
         ])
 
+    
     def test_symbols(self, players_input):
         players = Players(players_input)
 
@@ -42,11 +48,11 @@ def empty_value():
 
 @pytest.fixture
 def small_board(empty_value):
-    return Board(4, empty_value=empty_value)
+    return Board(4)
 
 
 @pytest.fixture
-def expected_empty_board_small(small_board, empty_value):
+def expected_empty_board_small(small_board):
     '''Stub test, for refactoring of board representation'''
     return ( "\n" \
     "    -------------\n" \
@@ -60,7 +66,7 @@ def expected_empty_board_small(small_board, empty_value):
     "----------------------\n" \
     "    | {10} | {9} | {8} |\n" \
      "    -------------"
-    ).format(*(16 * (empty_value)))
+    ).format(*(16 * (EMPTY_VALUE)))
 
 class TestBoard:
 

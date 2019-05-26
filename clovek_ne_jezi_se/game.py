@@ -1,4 +1,5 @@
 '''Clovek ne jezi se game board and plays'''
+EMPTY_VALUE = '-'
 
 
 class Player:
@@ -30,12 +31,12 @@ class Players:
 
 
 class Board:
-    def __init__(self, section_length, empty_value='-'):
+    def __init__(self, section_length):
         self.section_length = section_length
-        self.spaces = self.setup_spaces(empty_value)
+        self.spaces = self.setup_spaces(EMPTY_VALUE)
       
 
-    def setup_spaces(self, empty_value):
+    def setup_spaces(self, EMPTY_VALUE):
 
         if self.section_length < 4:
             raise ValueError('Sections must have length 4 or greater')
@@ -43,7 +44,7 @@ class Board:
         if self.section_length % 2 != 0:
             raise ValueError('Sections must have even length')
         
-        return 4 * self.section_length * (empty_value)
+        return 4 * self.section_length * (EMPTY_VALUE)
 
 
     def __repr__(self):
