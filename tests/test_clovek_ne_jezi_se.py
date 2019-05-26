@@ -19,13 +19,12 @@ class TestPlayer:
 
 
 @pytest.fixture
-def players_input():
-    return [
-        Player(None, symbol='1'),
-        Player(None, symbol='2'),
-        Player(None, symbol='3'),
-        Player(None, symbol='4'),
-    ]
+def symbols():
+    return ['1', '2', '3', '4']
+
+@pytest.fixture
+def players_input(symbols):
+    return [Player(None, symbol=symbol) for symbol in symbols]
 
 class TestPlayers:
     
@@ -38,27 +37,25 @@ class TestPlayers:
         ])
 
     
-    def test_symbols(self, players_input):
+    def test_symbols(self, players_input, symbols):
         players = Players(players_input)
 
-        assert players.symbols == ['1', '2', '3', '4']
+        assert players.symbols == symbols
     
 
 
 @pytest.fixture
-def empty_value():
-    return '-'
-
-@pytest.fixture
-def small_empty_board(empty_value):
+def small_empty_board():
     return Board(4)
-
 
 
 @pytest.fixture
 def expected_empty_board_small(small_empty_board):
+
+    symbols = ['1', '2', '3', '4']
     '''Stub test, for refactoring of board representation'''
-    return ( "\n" \
+
+    res = ("\n" \
     "    -------------\n" \
        "    | {0} | {1} | {2} |\n" \
     "----------------------\n" \
@@ -71,6 +68,14 @@ def expected_empty_board_small(small_empty_board):
     "    | {10} | {9} | {8} |\n" \
      "    -------------"
     ).format(*(16 * (EMPTY_VALUE)))
+
+    for symbol in symbols:
+        res +=  (
+        "\nplayer {} home: {} | {} | {} | {} "
+        .format(symbol, * (4 * (EMPTY_VALUE)))
+    )
+    return res
+
 
 class TestBoard:
 

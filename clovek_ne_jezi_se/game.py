@@ -35,7 +35,8 @@ class Board:
     def __init__(self, section_length, symbols=('1', '2', '3', '4')):
         self.section_length = section_length
         self.spaces = self._setup_spaces(EMPTY_VALUE)
-        self.homes = self._setup_homes(symbols)
+        self.symbols = symbols
+        self.homes = self._setup_homes()
       
 
     def _setup_spaces(self, EMPTY_VALUE):
@@ -49,10 +50,10 @@ class Board:
         return 4 * self.section_length * (EMPTY_VALUE)
 
 
-    def _setup_homes(self, symbols):
+    def _setup_homes(self):
 
         res = {}
-        for symbol in symbols:
+        for symbol in self.symbols:
             res[symbol] = 4 * (EMPTY_VALUE)
 
         return res
@@ -60,7 +61,7 @@ class Board:
 
     def __repr__(self):
         if self.section_length == 4:
-            return ( "\n" \
+            res = ("\n" \
                 "    -------------\n" \
                 "    | {0} | {1} | {2} |\n" \
                 "----------------------\n" \
@@ -73,6 +74,13 @@ class Board:
                 "    | {10} | {9} | {8} |\n" \
                 "    -------------"
             ).format(*self.spaces)
+
+            for symbol in self.symbols:
+                res += (
+                "\nplayer {} home: {} | {} | {} | {} "
+                .format(symbol, *(4 * (EMPTY_VALUE)))
+            )
+            return res
 
         else:
             raise NotImplementedError(
