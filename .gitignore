@@ -69,3 +69,6 @@ target/
 
 # jupyter notebooks
 notebooks/.ipynb_checkpoints
+
+# bash scripts
+*.sh
