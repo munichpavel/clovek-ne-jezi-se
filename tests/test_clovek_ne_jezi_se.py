@@ -49,12 +49,12 @@ class TestPlayers:
 
 
 @pytest.fixture
-def small_empty_board():
+def small_initial_board():
     return Board(4)
 
 
 @pytest.fixture
-def expected_empty_board_small(small_empty_board):
+def expected_small_initial_board(small_initial_board):
 
     symbols = ['1', '2', '3', '4']
     '''Stub test, for refactoring of board representation'''
@@ -81,7 +81,6 @@ def expected_empty_board_small(small_empty_board):
     return res
 
 
-
 class TestBoard:
 
     def test_spaces_setup(self):
@@ -96,19 +95,22 @@ class TestBoard:
         with pytest.raises(ValueError):
             board = Board(5)
 
-    def test_homes_setup(self):
-        board = Board(4)
+    def test_homes_setup(self, small_initial_board):
 
         for symbol in ('1', '2', '3', '4'):
-            assert board.homes[symbol] == 4 * (EMPTY_VALUE)
+            assert small_initial_board.homes[symbol] == 4 * (EMPTY_VALUE)
     
 
     def test_board_representation(
-        self, small_empty_board, 
-        expected_empty_board_small
+        self, small_initial_board, 
+        expected_small_initial_board
     ):
 
-        assert repr(small_empty_board) == expected_empty_board_small
+        assert repr(small_initial_board) == expected_small_initial_board
+
+    def test_player_representation(self, small_initial_board):
+        symbols = ('1', '2', '3', '4')
+        assert 1
 
 
 class TestGame:
