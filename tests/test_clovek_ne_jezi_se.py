@@ -19,6 +19,10 @@ class TestPlayer:
         assert len(self.player.home) == 4
 
 
+    with pytest.raises(ValueError):
+        player = Player(None, 1)
+
+
 @pytest.fixture
 def symbols():
     return ['1', '2', '3', '4']
@@ -40,12 +44,10 @@ class TestPlayers:
             Player(None, symbol='2'),
             Player(None, symbol='3'),
         ])
-
     
+
     def test_symbols(self, players, symbols):
-
-        assert players.symbols == symbols
-    
+       assert players.symbols == symbols
 
 
 @pytest.fixture
@@ -108,10 +110,9 @@ class TestBoard:
 
         assert repr(small_initial_board) == expected_small_initial_board
 
-    def test_player_representation(self, small_initial_board):
-        symbols = ('1', '2', '3', '4')
-        assert 1
+    def test_player_representation(self, small_initial_board, symbols):
 
+        assert small_initial_board._get_private_symbol('1') == 0
 
 class TestGame:
 

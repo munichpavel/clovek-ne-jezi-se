@@ -5,8 +5,15 @@ EMPTY_VALUE = '-'
 class Player:
     def __init__(self, agent, symbol):
         self.agent = agent
-        self.symbol = symbol
+        self.symbol = self._set_symbol(symbol)
         self.home = 4 * (EMPTY_VALUE)
+
+    def _set_symbol(self, symbol):
+        if not isinstance(symbol, str):
+            raise ValueError("Player symbol must be a string")
+        
+        return symbol
+
 
     def __repr__(self):
         return (
@@ -59,6 +66,10 @@ class Board:
 
         return res
 
+
+    def _get_private_symbol(self, public_symbol):
+
+        return self.symbols.index(public_symbol)
 
     def __repr__(self):
         if self.section_length == 4:

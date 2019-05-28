@@ -12,4 +12,20 @@ test generic board representation
 ~~refactor board values away~~
 ~~test board homes setup~~
 ~~make setups privatish~~
-test board win player 1
+~~throw value error for non string symbols~~
+test internal player symbol representation
+    + convert public to private
+    + and back
+game wins
+    + ~~no winner in initial board~~
+    + real winners
+board rules (keep some as problem for students)
+
+# def test_wins(self, players, symbols):
+    #     # No winner for initialized board
+    #     game = Game(players)
+    #     assert game.winner == -1
+
+    #     for symbol in players.symbols:
+    #         game.board.homes[symbol] == 4 * (symbol)
+    #         assert game.winner == symbol
