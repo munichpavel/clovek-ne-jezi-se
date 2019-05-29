@@ -71,6 +71,12 @@ class Board:
 
         return self.symbols.index(public_symbol)
 
+    def _get_public_symbol(self, private_symbol):
+        return self.symbols[private_symbol]
+
+    
+    
+
     def __repr__(self):
         if self.section_length == 4:
             res = ("\n" \

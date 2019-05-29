@@ -13,9 +13,9 @@ test generic board representation
 ~~test board homes setup~~
 ~~make setups privatish~~
 ~~throw value error for non string symbols~~
-test internal player symbol representation
-    + convert public to private
-    + and back
+~~test internal player symbol representation~~
+    + ~~convert public to private~~
+    + ~~and back~~
 game wins
     + ~~no winner in initial board~~
     + real winners

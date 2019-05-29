@@ -15,6 +15,7 @@ class TestPlayer:
     def test_repr(self):
         assert repr(self.player) == 'Player agent None, game piece 1'
 
+
     def test_home(self):
         assert len(self.player.home) == 4
 
@@ -112,7 +113,10 @@ class TestBoard:
 
     def test_player_representation(self, small_initial_board, symbols):
 
-        assert small_initial_board._get_private_symbol('1') == 0
+        for i in range(len(symbols)):
+            assert small_initial_board._get_private_symbol(symbols[i]) == i
+            assert small_initial_board._get_public_symbol(i) == symbols[i]
+
 
 class TestGame:
 
