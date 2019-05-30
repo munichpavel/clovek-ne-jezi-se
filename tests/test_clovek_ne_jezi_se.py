@@ -43,6 +43,13 @@ class TestPlayer:
 class TestFurthestAlongPlayer:
     symbol = '1'
     player = FurthestAlongAgent(symbol)
+
+    def test_furthest_along_position(self):
+        assert self.player._find_furthest_along_position(['1', '-', '1', '1']) == 3
+        with pytest.raises(ValueError):
+            self.player._find_furthest_along_position(['-'])
+
+
     board = Board(4)
 
     # Set game to non-initial state with two pieces on board

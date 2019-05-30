@@ -1,6 +1,6 @@
 ~~Write tests for board~~
 write tests for players (agents)
-tests for moves
+
 write tests for game (includes board)
 ~~test game initialization~~
 ~~test normal board section length()~~
@@ -30,3 +30,4 @@ Get rid of inner representation???
 ~~make agents inherit from player~~
 Make player abstract class
 test move furthest along player simple move
+tests for moves

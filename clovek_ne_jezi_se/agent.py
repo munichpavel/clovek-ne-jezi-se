@@ -49,12 +49,18 @@ class FurthestAlongAgent(Player):
     '''Agent who always moves the game piece furthest along'''
     
     def take_action(self, board):
-
-        return {'main': 3}
+        roll_value = self.roll()
+        if self.symbol in board.homes[self.symbol]:
+            ix = self._find_furthest_along_position(board.homes[self.symbol])
+            return {'home': ix + roll_value}
+            
+        elif self.symbol in board.spaces:
+            ix = self._find_furthest_along_position(board.spaces)
+            return {'main': ix + roll_value}
 
     def _find_furthest_along_position(self, board_component):
-        return len(board_component) - board_component[::-1](self.symbol) - 1
-
+        return len(board_component) - board_component[::-1].index(self.symbol) - 1
+        
 
 class Players:
     def __init__(self, players):
