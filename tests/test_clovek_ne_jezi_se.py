@@ -2,14 +2,10 @@
 
 import pytest
 
-from clovek_ne_jezi_se.game import (
-    EMPTY_VALUE,
-    Board, Player, Players,
-    Game
-)
+from clovek_ne_jezi_se.game import Board, Game
 
 from clovek_ne_jezi_se.agent import (
-    HumanAgent
+    EMPTY_VALUE, Player, Players,
 )
 
 
@@ -26,6 +22,19 @@ class TestPlayer:
 
     with pytest.raises(ValueError):
         player = Player(None, 1)
+
+
+    def test_dice_roll_monkeypatch(self, monkeypatch):
+
+        def monkey_roll(roll_value):
+            return roll_value
+
+        monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
+        assert self.player._roll_is_valid(self.player.roll())
+
+        monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(0))
+        assert ~self.player._roll_is_valid(self.player.roll())
+
 
 
 @pytest.fixture
@@ -145,22 +154,3 @@ class TestGame:
              # Fill each player's home base to winning
             game.board.homes[symbol] = 4 * (symbol)
             assert game.is_winner(symbol)
-
-
-@pytest.fixture
-def human_agent():
-    return HumanAgent()
-
-class TestAgent:
-
-    def test_dice_roll_monkeypatch(self, human_agent, monkeypatch):
-
-        def monkey_roll(roll_value):
-            return roll_value
-
-        monkeypatch.setattr(human_agent, 'roll', lambda: monkey_roll(1))
-        assert human_agent._roll_is_valid(human_agent.roll())
-
-        monkeypatch.setattr(human_agent, 'roll', lambda: monkey_roll(0))
-        assert ~human_agent._roll_is_valid(human_agent.roll())
-

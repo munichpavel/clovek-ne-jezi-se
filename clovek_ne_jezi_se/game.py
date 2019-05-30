@@ -1,49 +1,10 @@
 '''Clovek ne jezi se game board and plays'''
-EMPTY_VALUE = '-'
-
-
-class Player:
-    def __init__(self, agent, symbol):
-        self.agent = agent
-        self.symbol = self._set_symbol(symbol)
-        self.home = 4 * (EMPTY_VALUE)
-
-    def _set_symbol(self, symbol):
-        if not isinstance(symbol, str):
-            raise ValueError("Player symbol must be a string")
-        
-        return symbol
-
-
-    def __repr__(self):
-        return (
-            'Player agent {}, game piece {}'
-            .format(self.agent, self.symbol)
-        )
-
-
-class Players:
-    def __init__(self, players):
-        self.n_players = len(players)
-        self._set_players(players)
-        
-
-    def _set_players(self, players):
-        res = []
-        for player in players:
-            res.append(player.symbol)
-
-        if len(set(res)) < len(players):
-            raise ValueError('Player symbols must be unique')
-        
-        self.symbols = res
-
 
 class Board:
     '''
     Game goard, consisting of waiting area, main board, 
     and home base representation.
-    
+
     The board state is represented by the main board and 
     home base, while the waiting area is used only to determine
     allowable moves, e.g. if player A's waiting area has count 0,

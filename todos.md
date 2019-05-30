@@ -24,7 +24,6 @@ test game state
 board rules (keep some as problem for students)
 Get rid of inner representation???
 
-base agent class
-human agent class
+~~Add roll dice methods to player~~
 ~~test roll dice~~
 ~~test stupid mock dice roll~~
