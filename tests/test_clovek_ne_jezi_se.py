@@ -2,10 +2,10 @@
 
 import pytest
 
+from clovek_ne_jezi_se.consts import EMPTY_VALUE
 from clovek_ne_jezi_se.game import Board, Game
-
 from clovek_ne_jezi_se.agent import (
-    EMPTY_VALUE, Player, Players,
+   Player, Players,
 )
 
 

@@ -1,5 +1,7 @@
 '''Clovek ne jezi se game board and plays'''
 
+from .consts import EMPTY_VALUE
+
 class Board:
     '''
     Game goard, consisting of waiting area, main board, 

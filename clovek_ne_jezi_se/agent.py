@@ -1,5 +1,6 @@
 from random import randint
-EMPTY_VALUE = '-'
+
+from .consts import EMPTY_VALUE
 
 class Player:
     
