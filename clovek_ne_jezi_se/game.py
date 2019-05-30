@@ -111,3 +111,9 @@ class Game:
     def __init__(self, players):
         self.players = players
         self.board = Board(players.n_players, players.symbols)
+        self._winner = -1
+
+
+    def is_winner(self, symbol):
+        return self.board.homes[symbol] == 4 * (symbol)
+        
