@@ -131,7 +131,10 @@ class TestGame:
         game = Game(players)
         assert game._winner == -1
 
+        
         for symbol in players.symbols:
-            # Fill each player's home base to winning
+            # No winners with initial board
+            assert ~game.is_winner(symbol)
+             # Fill each player's home base to winning
             game.board.homes[symbol] = 4 * (symbol)
             assert game.is_winner(symbol)
