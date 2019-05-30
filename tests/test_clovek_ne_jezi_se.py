@@ -9,7 +9,7 @@ from clovek_ne_jezi_se.game import (
 )
 
 from clovek_ne_jezi_se.agent import (
-    BaseAgent
+    HumanAgent
 )
 
 
@@ -148,19 +148,19 @@ class TestGame:
 
 
 @pytest.fixture
-def base_agent():
-    return BaseAgent()
+def human_agent():
+    return HumanAgent()
 
 class TestAgent:
 
-    def test_dice_roll_monkeypatch(self, base_agent, monkeypatch):
+    def test_dice_roll_monkeypatch(self, human_agent, monkeypatch):
 
         def monkey_roll(roll_value):
             return roll_value
 
-        monkeypatch.setattr(base_agent, 'roll', lambda: monkey_roll(1))
-        assert base_agent._roll_is_valid(base_agent.roll())
+        monkeypatch.setattr(human_agent, 'roll', lambda: monkey_roll(1))
+        assert human_agent._roll_is_valid(human_agent.roll())
 
-        monkeypatch.setattr(base_agent, 'roll', lambda: monkey_roll(0))
-        assert ~base_agent._roll_is_valid(base_agent.roll())
+        monkeypatch.setattr(human_agent, 'roll', lambda: monkey_roll(0))
+        assert ~human_agent._roll_is_valid(human_agent.roll())
 

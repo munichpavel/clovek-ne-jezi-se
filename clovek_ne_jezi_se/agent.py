@@ -1,6 +1,8 @@
 from random import randint
 
-class BaseAgent:
+class HumanAgent:
+
+
 
     def roll(self):
         res = self._get_roll_value
