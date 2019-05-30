@@ -8,6 +8,10 @@ from clovek_ne_jezi_se.game import (
     Game
 )
 
+from clovek_ne_jezi_se.agent import (
+    BaseAgent
+)
+
 
 class TestPlayer:
     player = Player(None, '1')
@@ -141,3 +145,22 @@ class TestGame:
              # Fill each player's home base to winning
             game.board.homes[symbol] = 4 * (symbol)
             assert game.is_winner(symbol)
+
+
+@pytest.fixture
+def base_agent():
+    return BaseAgent()
+
+class TestAgent:
+
+    def test_dice_roll_monkeypatch(self, base_agent, monkeypatch):
+
+        def monkey_roll(roll_value):
+            return roll_value
+
+        monkeypatch.setattr(base_agent, 'roll', lambda: monkey_roll(1))
+        assert base_agent._roll_is_valid(base_agent.roll())
+
+        monkeypatch.setattr(base_agent, 'roll', lambda: monkey_roll(0))
+        assert ~base_agent._roll_is_valid(base_agent.roll())
+

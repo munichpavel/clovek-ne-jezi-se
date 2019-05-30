@@ -11,6 +11,7 @@ test generic board representation
 ~~refactor board values away~~
 ~~test board homes setup~~
 ~~test board waiting areas~~
+Add waiting count to board representation???
 ~~make setups privatish~~
 ~~throw value error for non string symbols~~
 ~~test internal player symbol representation~~
@@ -21,3 +22,8 @@ game wins
     + ~~real winners~~
 test game state
 board rules (keep some as problem for students)
+Get rid of inner representation???
+
+base agent class
+~~test roll dice~~
+~~test stupid mock dice roll~~
