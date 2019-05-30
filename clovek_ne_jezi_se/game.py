@@ -40,11 +40,16 @@ class Players:
 
 
 class Board:
+    '''
+    Game goard, consisting of waiting area, main board, 
+    and home base representation
+    '''
     def __init__(self, section_length, symbols=('1', '2', '3', '4')):
         self.section_length = section_length
         self.spaces = self._setup_spaces(EMPTY_VALUE)
         self.symbols = symbols
         self.homes = self._setup_homes()
+        self.waiting_count = self._setup_waiting()
       
 
     def _setup_spaces(self, EMPTY_VALUE):
@@ -59,10 +64,18 @@ class Board:
 
 
     def _setup_homes(self):
-
+        '''Each player's home base consisting of 4 spots'''
         res = {}
         for symbol in self.symbols:
             res[symbol] = 4 * (EMPTY_VALUE)
+
+        return res
+
+    
+    def _setup_waiting(self):
+        res = {}
+        for symbol in self.symbols:
+            res[symbol] = 4
 
         return res
 
@@ -71,13 +84,13 @@ class Board:
 
         return self.symbols.index(public_symbol)
 
+
     def _get_public_symbol(self, private_symbol):
         return self.symbols[private_symbol]
 
-    
-    
 
     def __repr__(self):
+        '''Show board and players'''
         if self.section_length == 4:
             res = ("\n" \
                 "    -------------\n" \

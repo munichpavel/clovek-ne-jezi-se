@@ -124,7 +124,10 @@ class TestGame:
         game = Game(players)
 
         assert len(game.board.spaces) == 4 * 4
-        assert len(game.board.homes[symbols[0]]) == 4
+        for symbol in symbols:
+            assert len(game.board.homes[symbol]) == 4
+            assert game.board.waiting_count[symbol] == 4
+
 
     def test_wins(self, players, symbols):
         # No winner for initialized board
