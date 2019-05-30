@@ -21,10 +21,12 @@ game wins
     + ~~no winner in initial board~~
     + ~~real winners~~
 test game state
-board rules (keep some as problem for students)
+board rules / valid actions (keep some as problem for students)
 Get rid of inner representation???
 
 ~~Add roll dice methods to player~~
 ~~test roll dice~~
 ~~test stupid mock dice roll~~
-test random player simple move
+~~make agents inherit from player~~
+Make player abstract class
+test move furthest along player simple move

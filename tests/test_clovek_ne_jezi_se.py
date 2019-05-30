@@ -10,11 +10,16 @@ from clovek_ne_jezi_se.agent import (
 )
 
 
+def monkey_roll(roll_value):
+    return roll_value
+
 class TestPlayer:
-    player = Player(None, '1')
-    
+    player = Player('1')
+
+
+
     def test_repr(self):
-        assert repr(self.player) == 'Player agent None, game piece 1'
+        assert repr(self.player) == 'Player game piece 1'
 
 
     def test_home(self):
@@ -22,13 +27,10 @@ class TestPlayer:
 
 
     with pytest.raises(ValueError):
-        player = Player(None, 1)
+        player = Player(1)
 
 
     def test_dice_roll_monkeypatch(self, monkeypatch):
-
-        def monkey_roll(roll_value):
-            return roll_value
 
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
         assert self.player._roll_is_valid(self.player.roll())
@@ -40,16 +42,18 @@ class TestPlayer:
 
 class TestFurthestAlongPlayer:
     symbol = '1'
-    player = Player(FurthestAlongAgent(), symbol)
+    player = FurthestAlongAgent(symbol)
     board = Board(4)
 
     # Set game to non-initial state with two pieces on board
     board.spaces[0] = symbol
     board.spaces[2] = symbol
-    
 
-
-
+    def test_take_action(self, monkeypatch):
+        
+        monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
+        
+        assert self.player.take_action(self.board) == {'main': 3}
 
 
 @pytest.fixture
@@ -58,7 +62,7 @@ def symbols():
 
 @pytest.fixture
 def players_input(symbols):
-    return [Player(None, symbol=symbol) for symbol in symbols]
+    return [Player(symbol=symbol) for symbol in symbols]
 
 @pytest.fixture
 def players(players_input):
@@ -68,10 +72,10 @@ class TestPlayers:
     
     with pytest.raises(ValueError):
         players = Players([
-            Player(None, symbol='1'),
-            Player(None, symbol='1'),
-            Player(None, symbol='2'),
-            Player(None, symbol='3'),
+            Player(symbol='1'),
+            Player(symbol='1'),
+            Player(symbol='2'),
+            Player(symbol='3'),
         ])
     
 
