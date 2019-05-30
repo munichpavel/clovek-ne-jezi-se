@@ -28,14 +28,14 @@ class Board:
         if self.section_length % 2 != 0:
             raise ValueError('Sections must have even length')
         
-        return 4 * self.section_length * (EMPTY_VALUE)
+        return 4 * self.section_length * [EMPTY_VALUE]
 
 
     def _setup_homes(self):
         '''Each player's home base consisting of 4 spots'''
         res = {}
         for symbol in self.symbols:
-            res[symbol] = 4 * (EMPTY_VALUE)
+            res[symbol] = 4 * [EMPTY_VALUE]
 
         return res
 
@@ -77,7 +77,7 @@ class Board:
             for symbol in self.symbols:
                 res += (
                 "\nplayer {} home: {} | {} | {} | {} "
-                .format(symbol, *(4 * (EMPTY_VALUE)))
+                .format(symbol, *(4 * [EMPTY_VALUE]))
             )
             return res
 
@@ -96,5 +96,5 @@ class Game:
 
 
     def is_winner(self, symbol):
-        return self.board.homes[symbol] == 4 * (symbol)
+        return self.board.homes[symbol] == 4 * [symbol]
         

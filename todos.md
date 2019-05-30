@@ -27,3 +27,4 @@ Get rid of inner representation???
 ~~Add roll dice methods to player~~
 ~~test roll dice~~
 ~~test stupid mock dice roll~~
+test random player simple move

@@ -6,6 +6,7 @@ from clovek_ne_jezi_se.consts import EMPTY_VALUE
 from clovek_ne_jezi_se.game import Board, Game
 from clovek_ne_jezi_se.agent import (
    Player, Players,
+   FurthestAlongAgent
 )
 
 
@@ -34,6 +35,20 @@ class TestPlayer:
 
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(0))
         assert ~self.player._roll_is_valid(self.player.roll())
+
+
+
+class TestFurthestAlongPlayer:
+    symbol = '1'
+    player = Player(FurthestAlongAgent(), symbol)
+    board = Board(4)
+
+    # Set game to non-initial state with two pieces on board
+    board.spaces[0] = symbol
+    board.spaces[2] = symbol
+    
+
+
 
 
 
@@ -114,7 +129,7 @@ class TestBoard:
     def test_homes_setup(self, small_initial_board):
 
         for symbol in ('1', '2', '3', '4'):
-            assert small_initial_board.homes[symbol] == 4 * (EMPTY_VALUE)
+            assert small_initial_board.homes[symbol] == 4 * [EMPTY_VALUE]
     
 
     def test_board_representation(
@@ -152,5 +167,5 @@ class TestGame:
             # No winners with initial board
             assert ~game.is_winner(symbol)
              # Fill each player's home base to winning
-            game.board.homes[symbol] = 4 * (symbol)
+            game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
