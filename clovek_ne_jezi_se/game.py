@@ -42,7 +42,12 @@ class Players:
 class Board:
     '''
     Game goard, consisting of waiting area, main board, 
-    and home base representation
+    and home base representation.
+    
+    The board state is represented by the main board and 
+    home base, while the waiting area is used only to determine
+    allowable moves, e.g. if player A's waiting area has count 0,
+    then she may not move a new symbol onto the main board.
     '''
     def __init__(self, section_length, symbols=('1', '2', '3', '4')):
         self.section_length = section_length
