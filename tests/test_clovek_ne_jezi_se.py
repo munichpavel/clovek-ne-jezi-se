@@ -128,7 +128,7 @@ def expected_small_initial_board(small_initial_board):
         "--------      -------|\n" \
         "| {3} |            | {11} |\n"    \
         "--------      -------|\n" \
-        "| {2} | {1} |    | {12} | {13} |\n"    \
+        "| {2} | {1} |    | {13} | {12} |\n"    \
         "----------------------\n" \
         "    | {0} | {15} | {14} |\n" \
         "    -------------"
@@ -214,4 +214,6 @@ class TestGame:
         players.players['2']._start_position == 10
         players.players['3']._start_position == 20
         players.players['4']._start_position == 30
+
+  
 

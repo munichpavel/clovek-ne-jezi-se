@@ -68,7 +68,7 @@ class Board:
         "--------      -------|\n" \
         "| {3} |            | {11} |\n"    \
         "--------      -------|\n" \
-        "| {2} | {1} |    | {12} | {13} |\n"    \
+        "| {2} | {1} |    | {13} | {12} |\n"    \
         "----------------------\n" \
         "    | {0} | {15} | {14} |\n" \
                 "    -------------"
@@ -90,11 +90,17 @@ class Board:
 
 class Game:
     def __init__(self, players, section_length=4):
-        self.players = players
+        self._set_player_start(players, section_length)
         self.board = Board(section_length, players.symbols)
         self._winner = -1
 
 
+    def _set_player_start(self, players, section_length):
+        self.players = players
+        for idx, player in enumerate(self.players.players.values()):
+            player.set_start_position(idx, section_length)
+
+    
     def is_winner(self, symbol):
         return self.board.homes[symbol] == 4 * [symbol]
         
