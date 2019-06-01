@@ -206,3 +206,10 @@ class TestGame:
             players.players['2']._start_position == 4
             players.players['3']._start_position == 8
             players.players['4']._start_position == 12
+
+            Game(players, 10)
+            players.players['1']._start_position == 0
+            players.players['2']._start_position == 10
+            players.players['3']._start_position == 20
+            players.players['4']._start_position == 30
+
