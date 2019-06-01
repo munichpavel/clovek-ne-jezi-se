@@ -8,6 +8,7 @@ class Player:
      #   self.agent = agent
         self.symbol = self._set_symbol(symbol)
         self.home = 4 * (EMPTY_VALUE)
+        self.order = None
 
 
     def _set_symbol(self, symbol):
@@ -15,6 +16,10 @@ class Player:
             raise ValueError("Player symbol must be a string")
         
         return symbol
+
+
+    def set_order(self, order):
+        self.order = order
 
 
     def __repr__(self):
@@ -43,6 +48,12 @@ class Player:
         return 1 <= roll_value <= 6
 
     
+    @staticmethod
+    def _action_is_valid(board_component, ix):
+        if ix < 0 or ix > len(board_component) - 1:
+            return False
+        else:
+            return board_component[ix] == EMPTY_VALUE
 
 
 class FurthestAlongAgent(Player):
@@ -50,13 +61,25 @@ class FurthestAlongAgent(Player):
     
     def take_action(self, board):
         roll_value = self.roll()
-        if self.symbol in board.homes[self.symbol]:
+        
+        if self.symbol in board.homes[self.symbol] and \
+            self._action_is_valid(
+                board.homes[self.symbol],
+                self._find_furthest_along_position(board.homes[self.symbol]) + roll_value
+            ):
             ix = self._find_furthest_along_position(board.homes[self.symbol])
-            return {'home': ix + roll_value}
+            return {'home': (ix, ix + roll_value)}
             
-        elif self.symbol in board.spaces:
+        elif self.symbol in board.spaces and \
+            self._action_is_valid(
+                board.spaces,
+                self._find_furthest_along_position(board.spaces) + roll_value
+            ):
             ix = self._find_furthest_along_position(board.spaces)
-            return {'main': ix + roll_value}
+            return {'main': (ix, ix + roll_value)}
+
+        else:
+            return {}
 
     def _find_furthest_along_position(self, board_component):
         return len(board_component) - board_component[::-1].index(self.symbol) - 1
@@ -64,16 +87,18 @@ class FurthestAlongAgent(Player):
 
 class Players:
     def __init__(self, players):
-        self.n_players = len(players)
-        self._set_players(players)
+        self.players = players
+        self.n_players = len(self.players)
+        self._set_player_collective()
         
 
-    def _set_players(self, players):
+    def _set_player_collective(self):
         res = []
-        for player in players:
+        for idx, player in enumerate(self.players):
+            player.set_order(idx)
             res.append(player.symbol)
 
-        if len(set(res)) < len(players):
+        if len(set(res)) < len(self.players):
             raise ValueError('Player symbols must be unique')
         
         self.symbols = res

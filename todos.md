@@ -31,3 +31,4 @@ Get rid of inner representation???
 Make player abstract class
 test move furthest along player simple move
 tests for moves
+test player order (replace inner rep???)

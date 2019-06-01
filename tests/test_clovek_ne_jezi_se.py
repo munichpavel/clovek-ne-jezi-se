@@ -38,6 +38,10 @@ class TestPlayer:
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(0))
         assert ~self.player._roll_is_valid(self.player.roll())
 
+    def test_action_is_valid(self):
+
+        assert self.player._action_is_valid([EMPTY_VALUE], 0)
+        assert ~self.player._action_is_valid([EMPTY_VALUE], 1)
 
 
 class TestFurthestAlongPlayer:
@@ -50,17 +54,27 @@ class TestFurthestAlongPlayer:
             self.player._find_furthest_along_position(['-'])
 
 
-    board = Board(4)
-
-    # Set game to non-initial state with two pieces on board
-    board.spaces[0] = symbol
-    board.spaces[2] = symbol
+    
 
     def test_take_action(self, monkeypatch):
-        
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
+
+        board = Board(4)
+        assert self.player.take_action(board) == {}
+
+        # Put one position in first home spot
+        board.homes[self.symbol][0] = self.symbol
+        assert self.player.take_action(board) == {'home': (0, 1)}
+
+        board = Board(4)
+        # Set game to non-initial state with two pieces on board
+        board.spaces[0] = self.symbol
+        board.spaces[2] = self.symbol
         
-        assert self.player.take_action(self.board) == {'main': 3}
+        assert self.player.take_action(board) == {'main': (2, 3)}
+
+        
+        assert self.player.take_action(board) == {'main': (2, 3)}
 
 
 @pytest.fixture
@@ -88,6 +102,10 @@ class TestPlayers:
 
     def test_symbols(self, players, symbols):
        assert players.symbols == symbols
+
+    def test_orders(self, players):
+        for i in range(players.n_players):
+            assert players.players[i].order == i
 
 
 @pytest.fixture
