@@ -108,6 +108,7 @@ class TestPlayers:
             assert players.players[i].order == i
 
 
+
 @pytest.fixture
 def small_initial_board():
     return Board(4)
@@ -121,15 +122,15 @@ def expected_small_initial_board(small_initial_board):
 
     res = ("\n" \
         "    -------------\n" \
-        "    | {0} | {1} | {2} |\n" \
+        "    | {6} | {7} | {8} |\n" \
         "----------------------\n" \
-        "| {14} | {15} |    | {3} | {4} |\n"    \
+        "| {4} | {5} |    | {9} | {10} |\n"    \
         "--------      -------|\n" \
-        "| {13} |            | {5} |\n"    \
+        "| {3} |            | {11} |\n"    \
         "--------      -------|\n" \
-        "| {12} | {11} |    | {7} | {6} |\n"    \
+        "| {2} | {1} |    | {12} | {13} |\n"    \
         "----------------------\n" \
-        "    | {10} | {9} | {8} |\n" \
+        "    | {0} | {15} | {14} |\n" \
         "    -------------"
     ).format(*(16 * (EMPTY_VALUE)))
 
@@ -198,3 +199,7 @@ class TestGame:
              # Fill each player's home base to winning
             game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
+
+
+    def test_player_start_position(self, players):
+        game = Game(players, )
