@@ -200,3 +200,9 @@ class TestGame:
             game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
 
+    def test_player_start_position(self, players):
+            Game(players, 4)
+            players.players['1']._start_position == 0
+            players.players['2']._start_position == 4
+            players.players['3']._start_position == 8
+            players.players['4']._start_position == 12

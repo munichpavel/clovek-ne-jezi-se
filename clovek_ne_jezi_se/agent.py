@@ -5,10 +5,12 @@ from .consts import EMPTY_VALUE
 class Player:
     
     def __init__(self, symbol):
-     #   self.agent = agent
         self.symbol = self._set_symbol(symbol)
         self.home = 4 * (EMPTY_VALUE)
+        # Set within Players
         self.order = None
+        # Set within Game
+        self._start_position = None
 
 
     def _set_symbol(self, symbol):
@@ -20,6 +22,10 @@ class Player:
 
     def set_order(self, order):
         self.order = order
+
+    
+    def set_start_position(self, order, section_length):
+        return order * section_length
 
 
     def __repr__(self):
