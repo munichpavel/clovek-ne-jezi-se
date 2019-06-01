@@ -87,20 +87,22 @@ class FurthestAlongAgent(Player):
 
 class Players:
     def __init__(self, players):
-        self.players = players
-        self.n_players = len(self.players)
-        self._set_player_collective()
+        self.n_players = len(players)
+        self._set_players(players)
         
 
-    def _set_player_collective(self):
-        res = []
-        for idx, player in enumerate(self.players):
+    def _set_players(self, players):
+        '''Set player orders, symbols and interface'''
+        symbols = []
+        self.players = {}
+        for idx, player in enumerate(players):     
             player.set_order(idx)
-            res.append(player.symbol)
+            symbols.append(player.symbol)
+            self.players[player.symbol] = player
 
-        if len(set(res)) < len(self.players):
+        if len(set(symbols)) < len(players):
             raise ValueError('Player symbols must be unique')
         
-        self.symbols = res
+        self.symbols = symbols
 
     

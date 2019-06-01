@@ -31,4 +31,13 @@ Get rid of inner representation???
 Make player abstract class
 test move furthest along player simple move
 tests for moves
+~~refactor player interface within players~~
+test start and last before home positions for players, different board section lengths
 test player order (replace inner rep???)
+
+  def test_player_start_position(self, players):
+        game = Game(players, 4)
+        players.players['1']._start_position == 0
+        players.players['2']._start_position == 4
+        players.players['3']._start_position == 8
+        players.players['4']._start_position == 12

@@ -104,8 +104,8 @@ class TestPlayers:
        assert players.symbols == symbols
 
     def test_orders(self, players):
-        for i in range(players.n_players):
-            assert players.players[i].order == i
+        for idx, symbol in enumerate(players.symbols):
+            assert players.players[symbol].order == idx
 
 
 
@@ -200,6 +200,3 @@ class TestGame:
             game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
 
-
-    def test_player_start_position(self, players):
-        game = Game(players, )
