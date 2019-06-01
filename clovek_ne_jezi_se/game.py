@@ -89,9 +89,9 @@ class Board:
 
 
 class Game:
-    def __init__(self, players):
+    def __init__(self, players, section_length=4):
         self.players = players
-        self.board = Board(players.n_players, players.symbols)
+        self.board = Board(section_length, players.symbols)
         self._winner = -1
 
 
