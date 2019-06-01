@@ -33,5 +33,5 @@ test move furthest along player simple move
 tests for moves
 ~~refactor player interface within players~~
 ~~test player start position~~
-test last before home positions for players, different board section lengths
-test player order (replace inner rep???)
+~~test last before home positions for players, different board section lengths~~
+~~test player order (replace inner rep???)~~

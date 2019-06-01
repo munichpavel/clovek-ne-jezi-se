@@ -11,6 +11,7 @@ class Player:
         self.order = None
         # Set within Game
         self._start_position = None
+        self._prehome_position = None
 
 
     def _set_symbol(self, symbol):
@@ -25,7 +26,11 @@ class Player:
 
     
     def set_start_position(self, order, section_length):
-        return order * section_length
+        self._start_poistion = order * section_length
+
+
+    def set_prehome_position(self, order, section_length):
+        self._prehome_position = (4 - order) * section_length - 1
 
 
     def __repr__(self):

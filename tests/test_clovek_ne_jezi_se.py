@@ -200,6 +200,7 @@ class TestGame:
             game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
 
+
     def test_player_start_position(self, players):
         # Mini board
         Game(players, 4)
@@ -215,5 +216,19 @@ class TestGame:
         players.players['3']._start_position == 20
         players.players['4']._start_position == 30
 
-  
+
+    def test_player_pre_home_position(self, players):
+        # Mini board
+        Game(players, 4)
+        players.players['1']._prehome_position == 15
+        players.players['2']._prehome_position == 3
+        players.players['3']._prehome_position == 7
+        players.players['4']._prehome_position == 11
+
+        # Normal board
+        Game(players, 4)
+        players.players['1']._prehome_position == 39
+        players.players['2']._prehome_position == 9
+        players.players['3']._prehome_position == 19
+        players.players['4']._prehome_position == 29
 
