@@ -40,10 +40,10 @@ class Player:
         )
 
     
-    @staticmethod
-    def roll():
+    def roll(self):
         res = Player._get_roll_value()
         if Player._roll_is_valid(res):
+            print("Player {} rolls a {}".format(self.symbol, res))
             return res
         else:
             raise ValueError('Roll value must be between 1 and 6')

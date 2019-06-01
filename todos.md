@@ -35,3 +35,4 @@ tests for moves
 ~~test player start position~~
 ~~test last before home positions for players, different board section lengths~~
 ~~test player order (replace inner rep???)~~
+~~display dice roll~~
