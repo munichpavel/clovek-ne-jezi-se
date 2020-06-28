@@ -1,13 +1,14 @@
 from random import randint
 
-from .consts import EMPTY_VALUE, NUMBER_OF_PLAYERS
+from .consts import EMPTY_VALUE
 
 
 class Player:
 
-    def __init__(self, symbol):
+    def __init__(self, symbol, number_of_players):
         self.symbol = self._set_symbol(symbol)
-        self.home = NUMBER_OF_PLAYERS * (EMPTY_VALUE)
+        self.number_of_players = number_of_players
+        self.home = number_of_players * (EMPTY_VALUE)
         # Set within Players
         self.order = None
         # Set within Game
@@ -32,7 +33,7 @@ class Player:
     def set_prehome_position(self, order, section_length):
         res = (
             (order * section_length - 1)
-            % (section_length * NUMBER_OF_PLAYERS)
+            % (section_length * self.number_of_players)
         )
         self._prehome_position = res
 

@@ -1,7 +1,9 @@
 """Clovek ne jezi se game board and plays"""
 import attr
 
-from .consts import EMPTY_VALUE, PIECES_PER_PLAYER
+from .consts import (
+    EMPTY_VALUE, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER
+)
 
 
 class Board:
@@ -14,44 +16,47 @@ class Board:
     allowable moves, e.g. if player A's waiting area has count 0,
     then she may not move a new symbol onto the main board.
     """
-    def __init__(self, section_length, symbols=('1', '2', '3', '4')):
+    def __init__(self, section_length, player_symbols=('1', '2', '3', '4')):
         self.section_length = section_length
+        self.player_symbols = player_symbols
         self.spaces = self._setup_spaces(EMPTY_VALUE)
-        self.symbols = symbols
         self.homes = self._setup_homes()
         self.waiting_count = self._setup_waiting()
 
     def _setup_spaces(self, EMPTY_VALUE):
 
-        if self.section_length < 4:
-            raise ValueError('Sections must have length 4 or greater')
+        if self.section_length < MINIMUM_SECTION_LENGTH:
+            raise ValueError(
+                f'Sections must have length {MINIMUM_SECTION_LENGTH}'
+                ' or greater'
+            )
 
         if self.section_length % 2 != 0:
             raise ValueError('Sections must have even length')
 
-        return 4 * self.section_length * [EMPTY_VALUE]
+        return len(self.player_symbols) * self.section_length * [EMPTY_VALUE]
 
     def _setup_homes(self):
         """Each player's home base consisting of 4 spots"""
         res = {}
-        for symbol in self.symbols:
-            res[symbol] = 4 * [EMPTY_VALUE]
+        for symbol in self.player_symbols:
+            res[symbol] = PIECES_PER_PLAYER * [EMPTY_VALUE]
 
         return res
 
     def _setup_waiting(self):
         res = {}
-        for symbol in self.symbols:
-            res[symbol] = 4
+        for symbol in self.player_symbols:
+            res[symbol] = PIECES_PER_PLAYER
 
         return res
 
     def _get_private_symbol(self, public_symbol):
 
-        return self.symbols.index(public_symbol)
+        return self.player_symbols.index(public_symbol)
 
     def _get_public_symbol(self, private_symbol):
-        return self.symbols[private_symbol]
+        return self.player_symbols[private_symbol]
 
     def __repr__(self):
         """Show board and players"""
@@ -71,7 +76,7 @@ class Board:
                 "    -------------"
             ).format(*self.spaces)
 
-            for symbol in self.symbols:
+            for symbol in self.player_symbols:
                 res += (
                     "\nplayer {} home: {} | {} | {} | {} "
                     .format(symbol, *(4 * [EMPTY_VALUE]))
