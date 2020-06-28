@@ -53,6 +53,7 @@ class TestFurthestAlongPlayer:
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
 
         board = Board(4)
+        board.initialize()
         assert self.player.take_action(board) == {}
 
         # Put one position in first home spot
@@ -60,6 +61,7 @@ class TestFurthestAlongPlayer:
         assert self.player.take_action(board) == {'home': (0, 1)}
 
         board = Board(4)
+        board.initialize()
         # Set game to non-initial state with two pieces on board
         board.spaces[0] = self.symbol
         board.spaces[2] = self.symbol
@@ -112,7 +114,9 @@ class TestPlayers:
 
 @pytest.fixture
 def small_initial_board():
-    return Board(4)
+    board = Board(4)
+    board.initialize()
+    return board
 
 
 @pytest.fixture
@@ -148,15 +152,19 @@ class TestBoard:
 
     def test_spaces_setup(self):
         board = Board(10)
+        board.initialize()
+
         assert len(board.spaces) == 4 * 10
 
         # Board cannot have too short sections
         with pytest.raises(ValueError):
             board = Board(3)
+            board.initialize()
 
         # Board cannot have odd section lengths
         with pytest.raises(ValueError):
             board = Board(5)
+            board.initialize()
 
     def test_homes_setup(self, small_initial_board):
 

@@ -19,11 +19,13 @@ class Board:
     def __init__(self, section_length, player_symbols=('1', '2', '3', '4')):
         self.section_length = section_length
         self.player_symbols = player_symbols
-        self.spaces = self._setup_spaces(EMPTY_VALUE)
-        self.homes = self._setup_homes()
-        self.waiting_count = self._setup_waiting()
 
-    def _setup_spaces(self, EMPTY_VALUE):
+    def initialize(self):
+        self.setup_spaces()
+        self.setup_homes()
+        self.setup_waiting_count()
+
+    def setup_spaces(self):
 
         if self.section_length < MINIMUM_SECTION_LENGTH:
             raise ValueError(
@@ -34,22 +36,24 @@ class Board:
         if self.section_length % 2 != 0:
             raise ValueError('Sections must have even length')
 
-        return len(self.player_symbols) * self.section_length * [EMPTY_VALUE]
+        self.spaces = (
+            len(self.player_symbols) * self.section_length * [EMPTY_VALUE]
+        )
 
-    def _setup_homes(self):
+    def setup_homes(self):
         """Each player's home base consisting of 4 spots"""
         res = {}
         for symbol in self.player_symbols:
             res[symbol] = PIECES_PER_PLAYER * [EMPTY_VALUE]
 
-        return res
+        self.homes = res
 
-    def _setup_waiting(self):
+    def setup_waiting_count(self):
         res = {}
         for symbol in self.player_symbols:
             res[symbol] = PIECES_PER_PLAYER
 
-        return res
+        self.waiting_count = res
 
     def _get_private_symbol(self, public_symbol):
 
@@ -116,3 +120,4 @@ class Game:
 
     def initialize_board(self):
         self.board = Board(self.section_length, self.players.symbols)
+        self.board.initialize()
