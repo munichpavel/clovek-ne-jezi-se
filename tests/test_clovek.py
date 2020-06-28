@@ -169,6 +169,8 @@ class TestGame:
 
     def test_game_setup(self, players, symbols):
         game = Game(players)
+        game.initialize()
+        game.initialize_board()
 
         assert len(game.board.spaces) == 4 * 4
         for symbol in symbols:
@@ -178,42 +180,61 @@ class TestGame:
     def test_wins(self, players, symbols):
         # No winner for initialized board
         game = Game(players)
-        assert game._winner == -1
-
+        game.initialize()
+        game.initialize_board()
 
         for symbol in players.symbols:
             # No winners with initial board
             assert ~game.is_winner(symbol)
-             # Fill each player's home base to winning
+            # Fill each player's home base to winning
             game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
 
     def test_player_start_position(self, players):
         # Mini board
-        Game(players, 4)
-        players.players['1']._start_position == 0
-        players.players['2']._start_position == 4
-        players.players['3']._start_position == 8
-        players.players['4']._start_position == 12
+        game = Game(players, section_length=4)
+        game.initialize()
+
+        assert game.players.players['1'].get_start_position() == 0
+        assert players.players['2'].get_start_position() == 4
+        assert players.players['3'].get_start_position() == 8
+        assert players.players['4'].get_start_position() == 12
 
         # Normal board
-        Game(players, 10)
-        players.players['1']._start_position == 0
-        players.players['2']._start_position == 10
-        players.players['3']._start_position == 20
-        players.players['4']._start_position == 30
+        game = Game(players, section_length=10)
+        game.initialize()
 
-    def test_player_pre_home_position(self, players):
+        assert game.players.players['1'].get_start_position() == 0
+        assert game.players.players['2'].get_start_position() == 10
+        assert game.players.players['3'].get_start_position() == 20
+        assert game.players.players['4'].get_start_position() == 30
+
+    @pytest.mark.parametrize(
+        'symbol,position',
+        [
+            ('1', 15),
+            ('2', 3),
+            ('3', 7),
+            ('4', 11)
+        ])
+    def test_player_mini_pre_home_position(self, players, symbol, position):
         # Mini board
-        Game(players, 4)
-        players.players['1']._prehome_position == 15
-        players.players['2']._prehome_position == 3
-        players.players['3']._prehome_position == 7
-        players.players['4']._prehome_position == 11
+        game = Game(players, section_length=4)
+        game.initialize()
 
-        # Normal board
-        Game(players, 4)
-        players.players['1']._prehome_position == 39
-        players.players['2']._prehome_position == 9
-        players.players['3']._prehome_position == 19
-        players.players['4']._prehome_position == 29
+        assert game.players.players[symbol].get_prehome_position() == position
+
+    @pytest.mark.parametrize(
+        'symbol,position',
+        [
+            ('1', 39),
+            ('2', 9),
+            ('3', 19),
+            ('4', 29)
+        ])
+    def test_player_normal_pre_home_position(self, players, symbol, position):
+        # Mini board
+        game = Game(players, section_length=10)
+        game.initialize()
+
+        assert game.players.players[symbol].get_prehome_position() == position

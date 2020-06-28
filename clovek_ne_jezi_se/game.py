@@ -1,6 +1,7 @@
 """Clovek ne jezi se game board and plays"""
+import attr
 
-from .consts import EMPTY_VALUE
+from .consts import EMPTY_VALUE, PIECES_PER_PLAYER
 
 
 class Board:
@@ -83,21 +84,30 @@ class Board:
             )
 
 
+@attr.s
 class Game:
-    def __init__(self, players, section_length=4):
-        self.players = players
-        self._set_player_start(section_length)
-        self._set_player_prehome(section_length)
-        self.board = Board(section_length, players.symbols)
-        self._winner = -1
 
-    def _set_player_start(self, section_length):
-        for idx, player in enumerate(self.players.players.values()):
-            player.set_start_position(idx, section_length)
+    players = attr.ib()
+    section_length = attr.ib(default=4)
 
-    def _set_player_prehome(self, section_length):
+    def initialize(self):
+        self.initialize_players()
+        self.initialize_board()
+
+    def initialize_players(self):
+        self._set_player_start()
+        self._set_player_prehome()
+
+    def _set_player_start(self):
         for idx, player in enumerate(self.players.players.values()):
-            player.set_prehome_position(idx, section_length)
+            player.set_start_position(idx, self.section_length)
+
+    def _set_player_prehome(self):
+        for idx, player in enumerate(self.players.players.values()):
+            player.set_prehome_position(idx, self.section_length)
 
     def is_winner(self, symbol):
-        return self.board.homes[symbol] == 4 * [symbol]
+        return self.board.homes[symbol] == PIECES_PER_PLAYER * [symbol]
+
+    def initialize_board(self):
+        self.board = Board(self.section_length, self.players.symbols)
