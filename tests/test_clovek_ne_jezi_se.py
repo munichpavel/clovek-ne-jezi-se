@@ -13,22 +13,18 @@ from clovek_ne_jezi_se.agent import (
 def monkey_roll(roll_value):
     return roll_value
 
+
 class TestPlayer:
     player = Player('1')
-
-
 
     def test_repr(self):
         assert repr(self.player) == 'Player game piece 1'
 
-
     def test_home(self):
         assert len(self.player.home) == 4
 
-
     with pytest.raises(ValueError):
         player = Player(1)
-
 
     def test_dice_roll_monkeypatch(self, monkeypatch):
 
@@ -53,9 +49,6 @@ class TestFurthestAlongPlayer:
         with pytest.raises(ValueError):
             self.player._find_furthest_along_position(['-'])
 
-
-    
-
     def test_take_action(self, monkeypatch):
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
 
@@ -70,10 +63,7 @@ class TestFurthestAlongPlayer:
         # Set game to non-initial state with two pieces on board
         board.spaces[0] = self.symbol
         board.spaces[2] = self.symbol
-        
-        assert self.player.take_action(board) == {'main': (2, 3)}
 
-        
         assert self.player.take_action(board) == {'main': (2, 3)}
 
 
@@ -89,8 +79,9 @@ def players_input(symbols):
 def players(players_input):
     return Players(players_input)
 
+
 class TestPlayers:
-    
+
     with pytest.raises(ValueError):
         players = Players([
             Player(symbol='1'),
@@ -98,15 +89,13 @@ class TestPlayers:
             Player(symbol='2'),
             Player(symbol='3'),
         ])
-    
 
     def test_symbols(self, players, symbols):
-       assert players.symbols == symbols
+        assert players.symbols == symbols
 
     def test_orders(self, players):
         for idx, symbol in enumerate(players.symbols):
             assert players.players[symbol].order == idx
-
 
 
 @pytest.fixture
@@ -118,27 +107,28 @@ def small_initial_board():
 def expected_small_initial_board(small_initial_board):
 
     symbols = ['1', '2', '3', '4']
-    '''Stub test, for refactoring of board representation'''
+    """Stub test, for refactoring of board representation"""
 
-    res = ("\n" \
-        "    -------------\n" \
-        "    | {6} | {7} | {8} |\n" \
-        "----------------------\n" \
-        "| {4} | {5} |    | {9} | {10} |\n"    \
-        "--------      -------|\n" \
-        "| {3} |            | {11} |\n"    \
-        "--------      -------|\n" \
-        "| {2} | {1} |    | {13} | {12} |\n"    \
-        "----------------------\n" \
-        "    | {0} | {15} | {14} |\n" \
+    res = (
+        "\n"
+        "    -------------\n"
+        "    | {6} | {7} | {8} |\n"
+        "----------------------\n"
+        "| {4} | {5} |    | {9} | {10} |\n"
+        "--------      -------|\n"
+        "| {3} |            | {11} |\n"
+        "--------      -------|\n"
+        "| {2} | {1} |    | {13} | {12} |\n"
+        "----------------------\n"
+        "    | {0} | {15} | {14} |\n"
         "    -------------"
     ).format(*(16 * (EMPTY_VALUE)))
 
     for symbol in symbols:
-        res +=  (
-        "\nplayer {} home: {} | {} | {} | {} "
-        .format(symbol, * (4 * (EMPTY_VALUE)))
-    )
+        res += (
+            "\nplayer {} home: {} | {} | {} | {} "
+            .format(symbol, * (4 * (EMPTY_VALUE)))
+        )
     return res
 
 
@@ -151,7 +141,7 @@ class TestBoard:
         # Board cannot have too short sections
         with pytest.raises(ValueError):
             board = Board(3)
-        
+
         # Board cannot have odd section lengths
         with pytest.raises(ValueError):
             board = Board(5)
@@ -160,10 +150,9 @@ class TestBoard:
 
         for symbol in ('1', '2', '3', '4'):
             assert small_initial_board.homes[symbol] == 4 * [EMPTY_VALUE]
-    
 
     def test_board_representation(
-        self, small_initial_board, 
+        self, small_initial_board,
         expected_small_initial_board
     ):
 
@@ -186,20 +175,18 @@ class TestGame:
             assert len(game.board.homes[symbol]) == 4
             assert game.board.waiting_count[symbol] == 4
 
-
     def test_wins(self, players, symbols):
         # No winner for initialized board
         game = Game(players)
         assert game._winner == -1
 
-        
+
         for symbol in players.symbols:
             # No winners with initial board
             assert ~game.is_winner(symbol)
              # Fill each player's home base to winning
             game.board.homes[symbol] = 4 * [symbol]
             assert game.is_winner(symbol)
-
 
     def test_player_start_position(self, players):
         # Mini board
@@ -216,7 +203,6 @@ class TestGame:
         players.players['3']._start_position == 20
         players.players['4']._start_position == 30
 
-
     def test_player_pre_home_position(self, players):
         # Mini board
         Game(players, 4)
@@ -231,4 +217,3 @@ class TestGame:
         players.players['2']._prehome_position == 9
         players.players['3']._prehome_position == 19
         players.players['4']._prehome_position == 29
-
