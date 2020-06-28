@@ -6,11 +6,6 @@ from .consts import EMPTY_VALUE
 
 @attr.s
 class Player:
-
-    # def __init__(self, symbol, number_of_players):
-    #     self.symbol = self._set_symbol(symbol)
-    #     self.number_of_players = number_of_players
-    #     self.home = number_of_players * (EMPTY_VALUE)
     symbol = attr.ib(validator=attr.validators.instance_of(str))
     number_of_players = attr.ib(validator=attr.validators.instance_of(int))
 
