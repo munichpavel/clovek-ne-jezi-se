@@ -9,11 +9,6 @@ class Player:
         self.symbol = self._set_symbol(symbol)
         self.number_of_players = number_of_players
         self.home = number_of_players * (EMPTY_VALUE)
-        # Set within Players
-        self.order = None
-        # Set within Game
-        self._start_position = None
-        self._prehome_position = None
 
     def _set_symbol(self, symbol):
         if not isinstance(symbol, str):
