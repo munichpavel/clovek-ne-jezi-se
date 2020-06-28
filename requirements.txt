@@ -1,5 +1,6 @@
 # not-just-dev
 numpy
+attrs
 
 # dev
 pytest
