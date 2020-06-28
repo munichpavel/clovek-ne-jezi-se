@@ -1,6 +1,0 @@
-jupyter
-numpy
-pylint
-pytest
-pytest-runner
--e .
