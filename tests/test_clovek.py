@@ -45,7 +45,10 @@ class TestFurthestAlongPlayer:
     player = FurthestAlongAgent(symbol, number_of_players=4)
 
     def test_furthest_along_position(self):
-        assert self.player._find_furthest_along_position(['1', '-', '1', '1']) == 3
+        assert (
+            self.player._find_furthest_along_position(['1', '-', '1', '1'])
+            == 3
+        )
         with pytest.raises(ValueError):
             self.player._find_furthest_along_position(['-'])
 
@@ -73,9 +76,11 @@ class TestFurthestAlongPlayer:
 def symbols():
     return ['1', '2', '3', '4']
 
+
 @pytest.fixture
 def players_input(symbols):
     return [Player(symbol=symbol, number_of_players=4) for symbol in symbols]
+
 
 @pytest.fixture
 def players(players_input):
