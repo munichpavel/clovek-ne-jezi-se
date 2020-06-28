@@ -83,11 +83,23 @@ def players(players_input):
 class TestPlayers:
 
     with pytest.raises(ValueError):
-        players = Players([
+        Players([
             Player(symbol='1', number_of_players=4),
             Player(symbol='1', number_of_players=4),
             Player(symbol='2', number_of_players=4),
             Player(symbol='3', number_of_players=4),
+        ])
+
+    with pytest.raises(ValueError):
+        Players([
+            Player(symbol='0', number_of_players=2),
+            Player(symbol='1', number_of_players=3),
+        ])
+
+    with pytest.raises(ValueError):
+        Players([
+            Player(symbol='0', number_of_players=1),
+            Player(symbol='1', number_of_players=1),
         ])
 
     def test_symbols(self, players, symbols):

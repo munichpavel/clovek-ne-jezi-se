@@ -110,6 +110,9 @@ class Players:
 
     def _set_players(self, players):
         """Set player orders, symbols and interface"""
+
+        self._validate_n_players(players)
+
         symbols = []
         self.players = {}
         for idx, player in enumerate(players):
@@ -121,3 +124,15 @@ class Players:
             raise ValueError('Player symbols must be unique')
 
         self.symbols = symbols
+
+    def _validate_n_players(self, players):
+        all_n_players = [player.number_of_players for player in players]
+
+        if not len(set(all_n_players)) == 1:
+            raise ValueError('Inconsistent number of players per player')
+
+        n_players = players[0].number_of_players
+        if not len(players) == n_players:
+            raise ValueError(
+                f'{len(players)} players entered, but should be {n_players}'
+            )
