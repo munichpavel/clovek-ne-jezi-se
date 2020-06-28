@@ -1,14 +1,20 @@
 from random import randint
+import attr
 
 from .consts import EMPTY_VALUE
 
-
+@attr.s
 class Player:
 
-    def __init__(self, symbol, number_of_players):
-        self.symbol = self._set_symbol(symbol)
-        self.number_of_players = number_of_players
-        self.home = number_of_players * (EMPTY_VALUE)
+    # def __init__(self, symbol, number_of_players):
+    #     self.symbol = self._set_symbol(symbol)
+    #     self.number_of_players = number_of_players
+    #     self.home = number_of_players * (EMPTY_VALUE)
+    symbol = attr.ib(validator=attr.validators.instance_of(str))
+    number_of_players = attr.ib(validator=attr.validators.instance_of(int))
+
+    def initialize_home(self):
+        self.home = self.number_of_players * (EMPTY_VALUE)
 
     def _set_symbol(self, symbol):
         if not isinstance(symbol, str):
@@ -35,12 +41,6 @@ class Player:
     def get_prehome_position(self):
         return self._prehome_position
 
-    def __repr__(self):
-        return (
-            'Player game piece {}'
-            .format(self.symbol)
-        )
-
     def roll(self):
         res = Player._get_roll_value()
         if Player._roll_is_valid(res):
@@ -54,11 +54,11 @@ class Player:
         return randint(1, 6)
 
     @staticmethod
-    def _roll_is_valid(roll_value):
+    def roll_is_valid(roll_value):
         return 1 <= roll_value <= 6
 
     @staticmethod
-    def _action_is_valid(board_component, ix):
+    def action_is_valid(board_component, ix):
         if ix < 0 or ix > len(board_component) - 1:
             return False
         else:
@@ -72,7 +72,7 @@ class FurthestAlongAgent(Player):
         roll_value = self.roll()
 
         if self.symbol in board.homes[self.symbol] and \
-            self._action_is_valid(
+            self.action_is_valid(
                 board.homes[self.symbol],
                 self._find_furthest_along_position(board.homes[self.symbol])
                 + roll_value
@@ -81,7 +81,7 @@ class FurthestAlongAgent(Player):
             return {'home': (ix, ix + roll_value)}
 
         elif self.symbol in board.spaces and \
-            self._action_is_valid(
+            self.action_is_valid(
                 board.spaces,
                 self._find_furthest_along_position(board.spaces) + roll_value
                 ):

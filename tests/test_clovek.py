@@ -16,33 +16,32 @@ def monkey_roll(roll_value):
 
 class TestPlayer:
     player = Player('1', number_of_players=4)
-
-    def test_repr(self):
-        assert repr(self.player) == 'Player game piece 1'
+    player.initialize_home()
 
     def test_home(self):
         assert len(self.player.home) == 4
 
-    with pytest.raises(ValueError):
-        player = Player(1, number_of_players=4)
+    with pytest.raises(TypeError):
+        Player(1, number_of_players=4)
 
     def test_dice_roll_monkeypatch(self, monkeypatch):
 
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
-        assert self.player._roll_is_valid(self.player.roll())
+        assert self.player.roll_is_valid(self.player.roll())
 
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(0))
-        assert ~self.player._roll_is_valid(self.player.roll())
+        assert ~self.player.roll_is_valid(self.player.roll())
 
     def test_action_is_valid(self):
 
-        assert self.player._action_is_valid([EMPTY_VALUE], 0)
-        assert ~self.player._action_is_valid([EMPTY_VALUE], 1)
+        assert self.player.action_is_valid([EMPTY_VALUE], 0)
+        assert ~self.player.action_is_valid([EMPTY_VALUE], 1)
 
 
 class TestFurthestAlongPlayer:
     symbol = '1'
     player = FurthestAlongAgent(symbol, number_of_players=4)
+    player.initialize_home()
 
     def test_furthest_along_position(self):
         assert (
@@ -79,6 +78,12 @@ def symbols():
 
 @pytest.fixture
 def players_input(symbols):
+    res = []
+    for symbol in symbols:
+        player = Player(symbol=symbol, number_of_players=4)
+        player.initialize_home()
+        res.append(player)
+    return res
     return [Player(symbol=symbol, number_of_players=4) for symbol in symbols]
 
 
