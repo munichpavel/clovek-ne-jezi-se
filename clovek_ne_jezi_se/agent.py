@@ -3,6 +3,7 @@ import attr
 
 from .consts import EMPTY_VALUE
 
+
 @attr.s
 class Player:
 
