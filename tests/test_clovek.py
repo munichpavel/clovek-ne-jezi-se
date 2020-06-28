@@ -4,10 +4,7 @@ import pytest
 
 from clovek_ne_jezi_se.consts import EMPTY_VALUE
 from clovek_ne_jezi_se.game import Board, Game
-from clovek_ne_jezi_se.agent import (
-   Player, Players,
-   FurthestAlongAgent
-)
+from clovek_ne_jezi_se.agent import Player, FurthestAlongAgent
 
 
 def monkey_roll(roll_value):
@@ -72,57 +69,6 @@ class TestFurthestAlongPlayer:
 
 
 @pytest.fixture
-def symbols():
-    return ['1', '2', '3', '4']
-
-
-@pytest.fixture
-def players_input(symbols):
-    res = []
-    for symbol in symbols:
-        player = Player(symbol=symbol, number_of_players=4)
-        player.initialize_home()
-        res.append(player)
-    return res
-    return [Player(symbol=symbol, number_of_players=4) for symbol in symbols]
-
-
-@pytest.fixture
-def players(players_input):
-    return Players(players_input)
-
-
-class TestPlayers:
-
-    with pytest.raises(ValueError):
-        Players([
-            Player(symbol='1', number_of_players=4),
-            Player(symbol='1', number_of_players=4),
-            Player(symbol='2', number_of_players=4),
-            Player(symbol='3', number_of_players=4),
-        ])
-
-    with pytest.raises(ValueError):
-        Players([
-            Player(symbol='0', number_of_players=2),
-            Player(symbol='1', number_of_players=3),
-        ])
-
-    with pytest.raises(ValueError):
-        Players([
-            Player(symbol='0', number_of_players=1),
-            Player(symbol='1', number_of_players=1),
-        ])
-
-    def test_symbols(self, players, symbols):
-        assert players.symbols == symbols
-
-    def test_orders(self, players):
-        for idx, symbol in enumerate(players.symbols):
-            assert players.players[symbol].order == idx
-
-
-@pytest.fixture
 def small_initial_board():
     board = Board(4)
     board.initialize()
@@ -156,6 +102,11 @@ def expected_small_initial_board(small_initial_board):
             .format(symbol, * (4 * (EMPTY_VALUE)))
         )
     return res
+
+
+@pytest.fixture
+def symbols():
+    return ['1', '2', '3', '4']
 
 
 class TestBoard:
@@ -195,23 +146,58 @@ class TestBoard:
             assert small_initial_board._get_public_symbol(i) == symbols[i]
 
 
+@pytest.fixture
+def players(symbols):
+    res = []
+    for symbol in symbols:
+        player = Player(symbol=symbol, number_of_players=4)
+        player.initialize_home()
+        res.append(player)
+    return res
+    return [Player(symbol=symbol, number_of_players=4) for symbol in symbols]
+
+
 class TestGame:
 
     def test_game_setup(self, players, symbols):
         game = Game(players)
         game.initialize()
 
-        assert len(game.board.spaces) == game.players.n_players * 4
+        assert len(game.board.spaces) == game.n_players * 4
         for symbol in symbols:
             assert len(game.board.homes[symbol]) == 4
             assert game.board.waiting_count[symbol] == 4
+
+    def test_initializtion_errors(self):
+        with pytest.raises(ValueError):
+            game = Game([
+                Player(symbol='1', number_of_players=4),
+                Player(symbol='1', number_of_players=4),
+                Player(symbol='2', number_of_players=4),
+                Player(symbol='3', number_of_players=4),
+            ])
+            game.initialize_players()
+
+        with pytest.raises(ValueError):
+            game = Game([
+                Player(symbol='0', number_of_players=2),
+                Player(symbol='1', number_of_players=3),
+            ])
+            game.initialize_players()
+
+        with pytest.raises(ValueError):
+            game = Game([
+                Player(symbol='0', number_of_players=1),
+                Player(symbol='1', number_of_players=1),
+            ])
+            game.initialize_players()
 
     def test_wins(self, players, symbols):
         # No winner for initialized board
         game = Game(players)
         game.initialize()
 
-        for symbol in players.symbols:
+        for symbol in game.player_symbols:
             # No winners with initial board
             assert ~game.is_winner(symbol)
             # Fill each player's home base to winning
@@ -235,7 +221,7 @@ class TestGame:
         game.initialize()
 
         assert (
-            game.players.players[symbol].get_start_position()
+            game.get_player(symbol).get_start_position()
             == expected_position
         )
 
@@ -256,7 +242,7 @@ class TestGame:
         game.initialize()
 
         assert (
-            game.players.players[symbol].get_start_position()
+            game.get_player(symbol).get_start_position()
             == expected_position
         )
 
@@ -273,7 +259,7 @@ class TestGame:
         game = Game(players, section_length=4)
         game.initialize()
 
-        assert game.players.players[symbol].get_prehome_position() == position
+        assert game.get_player(symbol).get_prehome_position() == position
 
     @pytest.mark.parametrize(
         'symbol,position',
@@ -288,4 +274,4 @@ class TestGame:
         game = Game(players, section_length=10)
         game.initialize()
 
-        assert game.players.players[symbol].get_prehome_position() == position
+        assert game.get_player(symbol).get_prehome_position() == position

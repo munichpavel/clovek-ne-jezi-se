@@ -39,7 +39,7 @@ class Player:
 
     def roll(self):
         res = Player._get_roll_value()
-        if Player._roll_is_valid(res):
+        if Player.roll_is_valid(res):
             print("Player {} rolls a {}".format(self.symbol, res))
             return res
         else:
@@ -92,38 +92,3 @@ class FurthestAlongAgent(Player):
             len(board_component)
             - board_component[::-1].index(self.symbol) - 1
         )
-
-
-class Players:
-    def __init__(self, players):
-        self.n_players = len(players)
-        self._set_players(players)
-
-    def _set_players(self, players):
-        """Set player orders, symbols and interface"""
-
-        self._validate_n_players(players)
-
-        symbols = []
-        self.players = {}
-        for idx, player in enumerate(players):
-            player.set_order(idx)
-            symbols.append(player.symbol)
-            self.players[player.symbol] = player
-
-        if len(set(symbols)) < len(players):
-            raise ValueError('Player symbols must be unique')
-
-        self.symbols = symbols
-
-    def _validate_n_players(self, players):
-        all_n_players = [player.number_of_players for player in players]
-
-        if not len(set(all_n_players)) == 1:
-            raise ValueError('Inconsistent number of players per player')
-
-        n_players = players[0].number_of_players
-        if not len(players) == n_players:
-            raise ValueError(
-                f'{len(players)} players entered, but should be {n_players}'
-            )

@@ -1,6 +1,8 @@
 """Clovek ne jezi se game board and plays"""
 import attr
 
+import numpy as np
+
 from .consts import (
     EMPTY_VALUE, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER
 )
@@ -104,20 +106,52 @@ class Game:
         self.initialize_board()
 
     def initialize_players(self):
+        self.n_players = len(self.players)
+        self._validate_n_players()
+        self._set_player_symbols()
         self._set_player_start()
         self._set_player_prehome()
 
+    def _validate_n_players(self):
+
+        all_n_players = [player.number_of_players for player in self.players]
+
+        if not len(set(all_n_players)) == 1:
+            raise ValueError('Inconsistent number of players per player')
+
+        if not self.n_players == self.players[0].number_of_players:
+            raise ValueError(
+                f'{len(self.players)} players entered, '
+                f'but should be {self.n_players}'
+            )
+
+    def _set_player_symbols(self):
+        """Set player orders, symbols and interface"""
+        symbols = []
+        for idx, player in enumerate(self.players):
+            player.set_order(idx)
+            symbols.append(player.symbol)
+
+        if len(set(symbols)) < self.n_players:
+            raise ValueError('Player symbols must be unique')
+
+        self.player_symbols = symbols
+
     def _set_player_start(self):
-        for idx, player in enumerate(self.players.players.values()):
+        for idx, player in enumerate(self.players):
             player.set_start_position(idx, self.section_length)
 
     def _set_player_prehome(self):
-        for idx, player in enumerate(self.players.players.values()):
+        for idx, player in enumerate(self.players):
             player.set_prehome_position(idx, self.section_length)
 
     def is_winner(self, symbol):
         return self.board.homes[symbol] == PIECES_PER_PLAYER * [symbol]
 
     def initialize_board(self):
-        self.board = Board(self.section_length, self.players.symbols)
+        self.board = Board(self.section_length, self.player_symbols)
         self.board.initialize()
+
+    def get_player(self, symbol):
+        idx = np.argmax(np.array(self.player_symbols) == symbol)
+        return self.players[idx]
