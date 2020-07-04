@@ -120,11 +120,16 @@ def players(symbols):
     return res
 
 
+@pytest.fixture
+def game(players):
+    game = Game(players)
+    game.initialize()
+    return game
+
+
 class TestGame:
 
-    def test_game_setup(self, players, symbols):
-        game = Game(players)
-        game.initialize()
+    def test_game_setup(self, game, symbols):
 
         assert len(game.board.spaces) == game.n_players * 4
         for symbol in symbols:
@@ -155,11 +160,8 @@ class TestGame:
             ])
             game.initialize_players()
 
-    def test_wins(self, players, symbols):
+    def test_wins(self, game):
         # No winner for initialized board
-        game = Game(players)
-        game.initialize()
-
         for symbol in game.player_symbols:
             # No winners with initial board
             assert ~game.is_winner(symbol)
@@ -239,11 +241,8 @@ class TestGame:
 
         assert game.get_player(symbol).get_prehome_position() == position
 
-    def test_get_initial_arrays(self, players):
+    def test_get_initial_arrays(self, game):
         # Test get array methods for initialized game
-        game = Game(players)
-        game.initialize()
-
         # Waiting count array
         np.testing.assert_array_equal(
             game.get_waiting_count_array(),
@@ -260,4 +259,21 @@ class TestGame:
         np.testing.assert_array_equal(
             game.get_homes_array(),
             -1 * np.ones((4, game.n_players))
+        )
+
+    @pytest.mark.parametrize(
+        'symbol_idx,space_idx',
+        [(0, 0), (1, 0), (3, 1)]
+    )
+    def test_assignments(self, game, symbol_idx, space_idx):
+        symbol = game.player_symbols[symbol_idx]
+        game.assign_to_space(symbol, space_idx)
+
+        # Define expected array by modifying spaces array
+        expected = game.get_spaces_array()
+        expected[space_idx] = symbol_idx
+
+        np.testing.assert_array_equal(
+            game.get_spaces_array(),
+            expected
         )
