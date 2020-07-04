@@ -2,9 +2,11 @@
 
 import pytest
 
+import numpy as np
+
 from clovek_ne_jezi_se.consts import EMPTY_VALUE
 from clovek_ne_jezi_se.game import Board, Game
-from clovek_ne_jezi_se.agent import Player, FurthestAlongAgent
+from clovek_ne_jezi_se.agent import Player#, FurthestAlongAgent
 
 
 def monkey_roll(roll_value):
@@ -28,44 +30,6 @@ class TestPlayer:
 
         monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(0))
         assert ~self.player.roll_is_valid(self.player.roll())
-
-    def test_action_is_valid(self):
-
-        assert self.player.action_is_valid([EMPTY_VALUE], 0)
-        assert ~self.player.action_is_valid([EMPTY_VALUE], 1)
-
-
-class TestFurthestAlongPlayer:
-    symbol = '1'
-    player = FurthestAlongAgent(symbol, number_of_players=4)
-    player.initialize_home()
-
-    def test_furthest_along_position(self):
-        assert (
-            self.player._find_furthest_along_position(['1', '-', '1', '1'])
-            == 3
-        )
-        with pytest.raises(ValueError):
-            self.player._find_furthest_along_position(['-'])
-
-    def test_take_action(self, monkeypatch):
-        monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
-
-        board = Board(4)
-        board.initialize()
-        assert self.player.take_action(board) == {}
-
-        # Put one position in first home spot
-        board.homes[self.symbol][0] = self.symbol
-        assert self.player.take_action(board) == {'home': (0, 1)}
-
-        board = Board(4)
-        board.initialize()
-        # Set game to non-initial state with two pieces on board
-        board.spaces[0] = self.symbol
-        board.spaces[2] = self.symbol
-
-        assert self.player.take_action(board) == {'main': (2, 3)}
 
 
 @pytest.fixture
@@ -154,7 +118,6 @@ def players(symbols):
         player.initialize_home()
         res.append(player)
     return res
-    return [Player(symbol=symbol, number_of_players=4) for symbol in symbols]
 
 
 class TestGame:
@@ -275,3 +238,26 @@ class TestGame:
         game.initialize()
 
         assert game.get_player(symbol).get_prehome_position() == position
+
+    def test_get_initial_arrays(self, players):
+        # Test get array methods for initialized game
+        game = Game(players)
+        game.initialize()
+
+        # Waiting count array
+        np.testing.assert_array_equal(
+            game.get_waiting_counts_array(),
+            np.array(4 * [4])
+        )
+
+        # Spaces
+        np.testing.assert_array_equal(
+            game.get_spaces_array(),
+            -1 * np.ones(len(game.board.spaces))
+        )
+
+        # Homes
+        np.testing.assert_array_equal(
+            game.get_homes_array(),
+            -1 * np.ones((4, game.n_players))
+        )

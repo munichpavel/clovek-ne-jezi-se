@@ -53,13 +53,6 @@ class Player:
     def roll_is_valid(roll_value):
         return 1 <= roll_value <= 6
 
-    @staticmethod
-    def action_is_valid(board_component, ix):
-        if ix < 0 or ix > len(board_component) - 1:
-            return False
-        else:
-            return board_component[ix] == EMPTY_VALUE
-
 
 class FurthestAlongAgent(Player):
     """Agent who always moves the game piece furthest along"""

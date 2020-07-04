@@ -10,8 +10,9 @@ from .consts import (
 
 class Board:
     """
-    Game goard, consisting of waiting area, main board,
-    and home base representation.
+    Game board representation, consisting of waiting area, main board,
+    and home base representation. The internal representation of the game
+    board is implemented in Game.
 
     The board state is represented by the main board and
     home base, while the waiting area is used only to determine
@@ -155,3 +156,33 @@ class Game:
     def get_player(self, symbol):
         idx = np.argmax(np.array(self.player_symbols) == symbol)
         return self.players[idx]
+
+    def get_waiting_counts_array(self):
+        res = [
+            self.board.waiting_count.get(symbol)
+            for symbol in self.player_symbols
+        ]
+        return np.array(res)
+
+    def get_spaces_array(self):
+        res = [self._to_private_symbol(symbol) for symbol in self.board.spaces]
+        return np.array(res)
+
+    def get_homes_array(self):
+        res = []
+        for symbol in self.player_symbols:
+            res.append([
+                self._to_private_symbol(symbol)
+                for symbol in self.board.homes.get(symbol)
+            ])
+
+        return res
+
+    def _to_private_symbol(self, symbol):
+        if symbol == EMPTY_VALUE:
+            return -1
+        else:
+            return self.player_symbols.index(symbol)
+
+    def _to_public_symbol(self, private_symbol):
+        return self.player_symbols[private_symbol]
