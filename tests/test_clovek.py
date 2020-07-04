@@ -246,7 +246,7 @@ class TestGame:
 
         # Waiting count array
         np.testing.assert_array_equal(
-            game.get_waiting_counts_array(),
+            game.get_waiting_count_array(),
             np.array(4 * [4])
         )
 
