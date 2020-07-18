@@ -197,8 +197,5 @@ class Game:
         else:
             return self.player_symbols.index(symbol)
 
-    def _to_public_symbol(self, private_symbol):
-        return self.player_symbols[private_symbol]
-
     def assign_to_space(self, symbol, idx):
         self._spaces_array[idx] = self._to_private_symbol(symbol)
