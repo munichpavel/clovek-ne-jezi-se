@@ -118,7 +118,7 @@ class Game:
         all_n_players = [player.number_of_players for player in self.players]
 
         if not len(set(all_n_players)) == 1:
-            raise ValueError('Inconsistent number of players per player')
+            raise ValueError('Differing number of players entered')
 
         if not self.n_players == self.players[0].number_of_players:
             raise ValueError(
@@ -199,3 +199,6 @@ class Game:
 
     def _to_public_symbol(self, private_symbol):
         return self.player_symbols[private_symbol]
+
+    def assign_to_space(self, symbol, idx):
+        self._spaces_array[idx] = self._to_private_symbol(symbol)
