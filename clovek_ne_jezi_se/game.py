@@ -171,12 +171,20 @@ class Game:
     def get_waiting_count_array(self):
         return self._waiting_count
 
+    def set_waiting_count_array(self, symbol, count):
+        private_symbol = self._to_private_symbol(symbol)
+        self._waiting_count[private_symbol] = count
+
     def initialize_spaces_array(self):
         res = [self._to_private_symbol(symbol) for symbol in self.board.spaces]
         self._spaces_array = np.array(res)
 
     def get_spaces_array(self):
         return self._spaces_array
+
+    def set_space_array(self, symbol, position):
+        private_symbol = self._to_private_symbol(symbol)
+        self._spaces_array[position] = private_symbol
 
     def initialize_homes_array(self):
         res = []
@@ -203,11 +211,18 @@ class Game:
     def leave_home_is_valid(self, symbol, roll):
         private_symbol = self._to_private_symbol(symbol)
         res = []
+
+        # Check if a 6 rolled
         res.append(roll == 6)
 
+        # Check if still symbol pieces in waiting area
         if self._waiting_count[private_symbol] > 0:
             res.append(True)
         else:
             res.append(False)
+
+        # Check if symbol's start position is occupied
+        start_position = self.get_player(symbol).get_start_position()
+        res.append(self._spaces_array[start_position] == -1)
 
         return np.all(np.array(res))

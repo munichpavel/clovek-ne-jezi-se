@@ -286,6 +286,14 @@ class TestGameAction:
         # Leave home on roll of 6 always valid on initialized board
         for symbol in symbols:
             assert game.leave_home_is_valid(symbol=symbol, roll=6)
-
+            # Any other roll is invalid to leave home
             for roll in range(1, 6):
                 assert not game.leave_home_is_valid(symbol=symbol, roll=roll)
+
+        # Must be at least one symbol in waiting area to leave home
+        game.set_waiting_count_array('1', count=0)
+        assert not game.leave_home_is_valid('1', roll=6)
+
+        # May leave home only if start position unoccupied
+        game.set_space_array('1', game.get_player('2').get_start_position())
+        assert not game.leave_home_is_valid('2', roll=6)
