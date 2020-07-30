@@ -6,7 +6,7 @@ import numpy as np
 
 from clovek_ne_jezi_se.consts import EMPTY_VALUE
 from clovek_ne_jezi_se.game import Board, Game
-from clovek_ne_jezi_se.agent import Player#, FurthestAlongAgent
+from clovek_ne_jezi_se.agent import Player
 
 
 def monkey_roll(roll_value):
@@ -277,3 +277,15 @@ class TestGame:
             game.get_spaces_array(),
             expected
         )
+
+
+class TestGameAction:
+
+    def test_leave_home_is_valid(self, game, symbols):
+
+        # Leave home on roll of 6 always valid on initialized board
+        for symbol in symbols:
+            assert game.leave_home_is_valid(symbol=symbol, roll=6)
+
+            for roll in range(1, 6):
+                assert not game.leave_home_is_valid(symbol=symbol, roll=roll)

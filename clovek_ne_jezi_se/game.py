@@ -199,3 +199,15 @@ class Game:
 
     def assign_to_space(self, symbol, idx):
         self._spaces_array[idx] = self._to_private_symbol(symbol)
+
+    def leave_home_is_valid(self, symbol, roll):
+        private_symbol = self._to_private_symbol(symbol)
+        res = []
+        res.append(roll == 6)
+
+        if self._waiting_count[private_symbol] > 0:
+            res.append(True)
+        else:
+            res.append(False)
+
+        return np.all(np.array(res))
