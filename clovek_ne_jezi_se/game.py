@@ -153,15 +153,15 @@ class Game:
         self.board = Board(self.section_length, self.player_symbols)
         self.board.initialize()
         # Initialize array representations
-        self.set_waiting_count_array()
-        self.set_spaces_array()
-        self.set_homes_array()
+        self.initialize_waiting_count_array()
+        self.initialize_spaces_array()
+        self.initialize_homes_array()
 
     def get_player(self, symbol):
         idx = np.argmax(np.array(self.player_symbols) == symbol)
         return self.players[idx]
 
-    def set_waiting_count_array(self):
+    def initialize_waiting_count_array(self):
         res = [
             self.board.waiting_count.get(symbol)
             for symbol in self.player_symbols
@@ -171,14 +171,14 @@ class Game:
     def get_waiting_count_array(self):
         return self._waiting_count
 
-    def set_spaces_array(self):
+    def initialize_spaces_array(self):
         res = [self._to_private_symbol(symbol) for symbol in self.board.spaces]
         self._spaces_array = np.array(res)
 
     def get_spaces_array(self):
         return self._spaces_array
 
-    def set_homes_array(self):
+    def initialize_homes_array(self):
         res = []
         for symbol in self.player_symbols:
             res.append([
