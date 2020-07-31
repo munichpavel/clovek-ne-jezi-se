@@ -1,5 +1,5 @@
 """Tests for `clovek_ne_jezi_se` package."""
-
+from copy import deepcopy
 import pytest
 
 import numpy as np
@@ -115,54 +115,58 @@ def players():
     return res
 
 
-@pytest.fixture
-def game(players):
-    game = Game(players)
-    game.initialize()
-    return game
-
-
 class TestGame:
+    players = []
+    for symbol in ['1', '2', '3', '4']:
+        player = Player(symbol=symbol, number_of_players=4)
+        player.initialize_home()
+        players.append(player)
 
-    def test_game_setup(self, game):
+    mini_game = Game(players, section_length=4)
+    mini_game.initialize()
 
-        assert len(game.board.spaces) == game.n_players * 4
+    full_game = Game(deepcopy(players), section_length=10)
+    full_game.initialize()
+
+    def test_game_setup(self):
+
+        assert len(self.mini_game.board.spaces) == self.mini_game.n_players * 4
         for symbol in ['1', '2', '3', '4']:
-            assert len(game.board.homes[symbol]) == 4
-            assert game.board.waiting_count[symbol] == 4
+            assert len(self.mini_game.board.homes[symbol]) == 4
+            assert self.mini_game.board.waiting_count[symbol] == 4
 
     def test_initializtion_errors(self):
         with pytest.raises(ValueError):
-            game = Game([
+            wonky_symbols_game = Game([
                 Player(symbol='1', number_of_players=4),
                 Player(symbol='1', number_of_players=4),
                 Player(symbol='2', number_of_players=4),
                 Player(symbol='3', number_of_players=4),
             ])
-            game.initialize_players()
+            wonky_symbols_game.initialize_players()
 
         with pytest.raises(ValueError):
-            game = Game([
+            inconsistent_n_player_game = Game([
                 Player(symbol='0', number_of_players=2),
                 Player(symbol='1', number_of_players=3),
             ])
-            game.initialize_players()
+            inconsistent_n_player_game.initialize_players()
 
         with pytest.raises(ValueError):
-            game = Game([
+            wrong_n_players_game = Game([
                 Player(symbol='0', number_of_players=1),
                 Player(symbol='1', number_of_players=1),
             ])
-            game.initialize_players()
+            wrong_n_players_game.initialize_players()
 
-    def test_wins(self, game):
+    def test_wins(self):
         # No winner for initialized board
-        for symbol in game.player_symbols:
+        for symbol in self.mini_game.player_symbols:
             # No winners with initial board
-            assert ~game.is_winner(symbol)
+            assert ~self.mini_game.is_winner(symbol)
             # Fill each player's home base to winning
-            game.board.homes[symbol] = 4 * [symbol]
-            assert game.is_winner(symbol)
+            self.mini_game.board.homes[symbol] = 4 * [symbol]
+            assert self.mini_game.is_winner(symbol)
 
     @pytest.mark.parametrize(
         'symbol,expected_position',
@@ -174,14 +178,11 @@ class TestGame:
         ]
     )
     def test_player_mini_start_position(
-        self, players, symbol, expected_position
+        self, symbol, expected_position
     ):
         # Mini board
-        game = Game(players, section_length=4)
-        game.initialize()
-
         assert (
-            game.get_player(symbol).get_start_position()
+            self.mini_game.get_player(symbol).get_start_position()
             == expected_position
         )
 
@@ -195,14 +196,11 @@ class TestGame:
         ]
     )
     def test_player_normal_start_position(
-        self, players, symbol, expected_position
+        self, symbol, expected_position
     ):
         # Normal board
-        game = Game(players, section_length=10)
-        game.initialize()
-
         assert (
-            game.get_player(symbol).get_start_position()
+            self.full_game.get_player(symbol).get_start_position()
             == expected_position
         )
 
@@ -214,12 +212,12 @@ class TestGame:
             ('3', 7),
             ('4', 11)
         ])
-    def test_player_mini_pre_home_position(self, players, symbol, position):
-        # Mini board
-        game = Game(players, section_length=4)
-        game.initialize()
-
-        assert game.get_player(symbol).get_prehome_position() == position
+    def test_player_mini_pre_home_position(self, symbol, position):
+        assert (
+            self.mini_game
+            .get_player(symbol)
+            .get_prehome_position() == position
+        )
 
     @pytest.mark.parametrize(
         'symbol,position',
@@ -229,67 +227,81 @@ class TestGame:
             ('3', 19),
             ('4', 29)
         ])
-    def test_player_normal_pre_home_position(self, players, symbol, position):
-        # Mini board
-        game = Game(players, section_length=10)
-        game.initialize()
+    def test_player_normal_pre_home_position(self, symbol, position):
+        assert (
+            self.full_game.get_player(symbol).get_prehome_position()
+            == position
+        )
 
-        assert game.get_player(symbol).get_prehome_position() == position
-
-    def test_get_initial_arrays(self, game):
+    def test_get_initial_arrays(self):
         # Test get array methods for initialized game
         # Waiting count array
         np.testing.assert_array_equal(
-            game.get_waiting_count_array(),
+            self.mini_game.get_waiting_count_array(),
             np.array(4 * [4])
         )
 
         # Spaces
         np.testing.assert_array_equal(
-            game.get_spaces_array(),
-            -1 * np.ones(len(game.board.spaces))
+            self.mini_game.get_spaces_array(),
+            -1 * np.ones(len(self.mini_game.board.spaces))
         )
 
         # Homes
         np.testing.assert_array_equal(
-            game.get_homes_array(),
-            -1 * np.ones((4, game.n_players))
+            self.mini_game.get_homes_array(),
+            -1 * np.ones((4, self.mini_game.n_players))
         )
 
     @pytest.mark.parametrize(
         'symbol_idx,space_idx',
         [(0, 0), (1, 0), (3, 1)]
     )
-    def test_assignments(self, game, symbol_idx, space_idx):
-        symbol = game.player_symbols[symbol_idx]
-        game.assign_to_space(symbol, space_idx)
+    def test_assignments(self, symbol_idx, space_idx):
+        symbol = self.mini_game.player_symbols[symbol_idx]
+        self.mini_game.assign_to_space(symbol, space_idx)
 
         # Define expected array by modifying spaces array
-        expected = game.get_spaces_array()
+        expected = self.mini_game.get_spaces_array()
         expected[space_idx] = symbol_idx
 
         np.testing.assert_array_equal(
-            game.get_spaces_array(),
+            self.mini_game.get_spaces_array(),
             expected
         )
 
 
 class TestGameAction:
 
-    def test_leave_home_is_valid(self, game):
+    symbols = ['1', '2', '3', '4']
+    players = []
+    for symbol in symbols:
+        player = Player(symbol=symbol, number_of_players=4)
+        player.initialize_home()
+        players.append(player)
+
+    game = Game(players, section_length=4)
+    game.initialize()
+
+    def test_leave_home_is_valid(self):
 
         # Leave home on roll of 6 always valid on initialized board
-        for symbol in ['1', '2', '3', '4']:
-            assert game.leave_home_is_valid(symbol=symbol, roll=6)
+        for symbol in self.symbols:
+            assert self.game.leave_home_is_valid(symbol=symbol, roll=6)
             # Any other roll is invalid to leave home
             for roll in range(1, 6):
-                assert not game.leave_home_is_valid(symbol=symbol, roll=roll)
+                assert not (
+                    self.game.leave_home_is_valid(symbol=symbol, roll=roll)
+                )
 
         # Must be at least one symbol in waiting area to leave home
-        game.set_waiting_count_array('1', count=0)
-        assert not game.leave_home_is_valid('1', roll=6)
+        self.game.set_waiting_count_array('1', count=0)
+        assert not self.game.leave_home_is_valid('1', roll=6)
 
         # May leave home only if start position unoccupied
-        game.set_space_array('1', game.get_player('2').get_start_position())
-        assert not game.leave_home_is_valid('2', roll=6)
-
+        player_2_start = self.game.get_player('2').get_start_position()
+        (
+            self.game
+            .set_space_array('1', player_2_start)
+        )
+        assert not self.game.leave_home_is_valid('2', roll=6)
