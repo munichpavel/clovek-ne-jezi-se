@@ -68,11 +68,6 @@ def expected_small_initial_board(small_initial_board):
     return res
 
 
-@pytest.fixture
-def symbols():
-    return ['1', '2', '3', '4']
-
-
 class TestBoard:
 
     def test_spaces_setup(self):
@@ -103,17 +98,17 @@ class TestBoard:
 
         assert repr(small_initial_board) == expected_small_initial_board
 
-    def test_player_representation(self, small_initial_board, symbols):
+    def test_player_representation(self, small_initial_board):
 
-        for i in range(len(symbols)):
-            assert small_initial_board._get_private_symbol(symbols[i]) == i
-            assert small_initial_board._get_public_symbol(i) == symbols[i]
+        for i, symbol in enumerate(['1', '2', '3', '4']):
+            assert small_initial_board._get_private_symbol(symbol) == i
+            assert small_initial_board._get_public_symbol(i) == symbol
 
 
 @pytest.fixture
-def players(symbols):
+def players():
     res = []
-    for symbol in symbols:
+    for symbol in ['1', '2', '3', '4']:
         player = Player(symbol=symbol, number_of_players=4)
         player.initialize_home()
         res.append(player)
@@ -129,10 +124,10 @@ def game(players):
 
 class TestGame:
 
-    def test_game_setup(self, game, symbols):
+    def test_game_setup(self, game):
 
         assert len(game.board.spaces) == game.n_players * 4
-        for symbol in symbols:
+        for symbol in ['1', '2', '3', '4']:
             assert len(game.board.homes[symbol]) == 4
             assert game.board.waiting_count[symbol] == 4
 
@@ -281,10 +276,10 @@ class TestGame:
 
 class TestGameAction:
 
-    def test_leave_home_is_valid(self, game, symbols):
+    def test_leave_home_is_valid(self, game):
 
         # Leave home on roll of 6 always valid on initialized board
-        for symbol in symbols:
+        for symbol in ['1', '2', '3', '4']:
             assert game.leave_home_is_valid(symbol=symbol, roll=6)
             # Any other roll is invalid to leave home
             for roll in range(1, 6):
@@ -297,3 +292,4 @@ class TestGameAction:
         # May leave home only if start position unoccupied
         game.set_space_array('1', game.get_player('2').get_start_position())
         assert not game.leave_home_is_valid('2', roll=6)
+
