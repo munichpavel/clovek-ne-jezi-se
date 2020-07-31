@@ -286,24 +286,15 @@ class TestGameAction:
     # Set no symbol '2' figures left in waiting area
     game.set_waiting_count_array('2', count=0)
 
+    # Put a symbol '1' at '3's start
+    game.set_space_array('1', game.get_player('3').get_start_position())
+
     def test_leave_home_is_valid(self):
 
-        # Leave home on roll of 6 always valid on initialized board
-        for symbol in ['1', '3', '4']:
+        for symbol in ['1', '4']:
             assert self.game.leave_home_is_valid(symbol=symbol, roll=6)
             # Any other roll is invalid to leave home
             for roll in range(1, 6):
                 assert not (
                     self.game.leave_home_is_valid(symbol=symbol, roll=roll)
                 )
-
-        # Must be at least one symbol in waiting area to leave home
-        assert not self.game.leave_home_is_valid('2', roll=6)
-
-        # May leave home only if start position unoccupied
-        player_3_start = self.game.get_player('3').get_start_position()
-        (
-            self.game
-            .set_space_array('1', player_3_start)
-        )
-        assert not self.game.leave_home_is_valid('3', roll=6)
