@@ -283,10 +283,10 @@ class TestGameAction:
     game = Game(players, section_length=4)
     game.initialize()
 
-    # Set no symbol '2' figures left in waiting area
+    # Empty waiting area of one symbol for an invalid move
     game.set_waiting_count_array('2', count=0)
 
-    # Put a symbol '1' at '3's start
+    # Occupy one start position for an invalid move
     game.set_space_array('1', game.get_player('3').get_start_position())
 
     def test_leave_home_is_valid(self):
@@ -298,3 +298,19 @@ class TestGameAction:
                 assert not (
                     self.game.leave_home_is_valid(symbol=symbol, roll=roll)
                 )
+
+    @pytest.mark.parametrize(
+        'symbol,position,roll,expected',
+        [
+            ('1', 0, 3, True),
+            ('2', 0, 3, False),
+            ('1', 14, 1, True),
+            ('1', 15, 1, False)
+        ]
+    )
+    def test_is_space_advance(self, symbol, position, roll, expected):
+        assert (
+            self.game.is_space_advance(
+                symbol=symbol, position=position, roll=roll
+            ) == expected
+        )

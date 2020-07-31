@@ -1,4 +1,6 @@
 """Clovek ne jezi se game board and plays"""
+from math import floor
+
 import attr
 
 import numpy as np
@@ -226,3 +228,17 @@ class Game:
         res.append(self._spaces_array[start_position] == -1)
 
         return np.all(np.array(res))
+
+    def is_space_advance(self, symbol, position, roll):
+        """
+        Determine if advance move is still among spaces, i.e.
+        not in the symbol's home area
+        """
+        start = self.get_player(symbol).get_start_position()
+        zeroed_position = position - start
+        advance_after_prehome = floor(
+            (zeroed_position + roll) / float(len(self._spaces_array))
+        )
+        res = not bool(advance_after_prehome)
+
+        return res
