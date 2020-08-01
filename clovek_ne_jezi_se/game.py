@@ -87,8 +87,12 @@ class Board:
 
             for symbol in self.player_symbols:
                 res += (
-                    "\nplayer {} home: {} | {} | {} | {} "
-                    .format(symbol, *(4 * [EMPTY_VALUE]))
+                    "\nplayer {} pieces in waiting area: {} "
+                    .format(symbol, self.waiting_count[symbol])
+                )
+                res += (
+                    "\nplayer {} home: {} | {} | {} | {}\n"
+                    .format(symbol, *(self.homes[symbol]))
                 )
             return res
 
