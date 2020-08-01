@@ -303,7 +303,8 @@ class TestGameAction:
         'symbol,position,roll,expected',
         [
             ('1', 0, 3, True),
-            ('2', 0, 3, False),
+            ('2', 0, 3, True),
+            ('2', 0, 4, False),
             ('1', 14, 1, True),
             ('1', 15, 1, False)
         ]

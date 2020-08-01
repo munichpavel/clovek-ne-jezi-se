@@ -235,10 +235,14 @@ class Game:
         not in the symbol's home area
         """
         start = self.get_player(symbol).get_start_position()
-        zeroed_position = position - start
-        advance_after_prehome = floor(
+        zeroed_position = (position - start) % len(self._spaces_array)
+
+        advance_ratio_of_spaces = (
             (zeroed_position + roll) / float(len(self._spaces_array))
         )
-        res = not bool(advance_after_prehome)
+
+        after_prehome_ratio_rounded = floor(advance_ratio_of_spaces)
+
+        res = not bool(after_prehome_ratio_rounded)
 
         return res
