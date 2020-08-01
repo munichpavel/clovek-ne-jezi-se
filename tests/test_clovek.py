@@ -4,7 +4,7 @@ import pytest
 
 import numpy as np
 
-from clovek_ne_jezi_se.consts import EMPTY_VALUE
+from clovek_ne_jezi_se.consts import EMPTY_VALUE, PIECES_PER_PLAYER
 from clovek_ne_jezi_se.game import Board, Game
 from clovek_ne_jezi_se.agent import Player
 
@@ -74,7 +74,7 @@ class TestBoard:
         board = Board(10)
         board.initialize()
 
-        assert len(board.spaces) == 4 * 10
+        assert len(board.spaces) == PIECES_PER_PLAYER * 10
 
         # Board cannot have too short sections
         with pytest.raises(ValueError):
@@ -89,7 +89,10 @@ class TestBoard:
     def test_homes_setup(self, small_initial_board):
 
         for symbol in ('1', '2', '3', '4'):
-            assert small_initial_board.homes[symbol] == 4 * [EMPTY_VALUE]
+            assert (
+                small_initial_board.homes[symbol]
+                == PIECES_PER_PLAYER * [EMPTY_VALUE]
+            )
 
     def test_board_representation(
         self, small_initial_board,
@@ -132,8 +135,10 @@ class TestGame:
 
         assert len(self.mini_game.board.spaces) == self.mini_game.n_players * 4
         for symbol in ['1', '2', '3', '4']:
-            assert len(self.mini_game.board.homes[symbol]) == 4
-            assert self.mini_game.board.waiting_count[symbol] == 4
+            assert len(self.mini_game.board.homes[symbol]) == PIECES_PER_PLAYER
+            assert (
+                self.mini_game.board.waiting_count[symbol] == PIECES_PER_PLAYER
+            )
 
     def test_initializtion_errors(self):
         with pytest.raises(ValueError):
@@ -165,7 +170,7 @@ class TestGame:
             # No winners with initial board
             assert ~self.mini_game.is_winner(symbol)
             # Fill each player's home base to winning
-            self.mini_game.board.homes[symbol] = 4 * [symbol]
+            self.mini_game.board.homes[symbol] = PIECES_PER_PLAYER * [symbol]
             assert self.mini_game.is_winner(symbol)
 
     @pytest.mark.parametrize(
@@ -204,25 +209,51 @@ class TestGame:
             == expected_position
         )
 
-    def test_get_initial_arrays(self):
+    @pytest.mark.parametrize(
+        'symbol,position',
+        [
+            ('1', 15),
+            ('2', 3),
+            ('3', 7),
+            ('4', 11)
+        ])
+    def test_player_mini_pre_home_position(self, symbol, position):
+        assert (
+            self.mini_game
+            .get_player(symbol)
+            .get_prehome_position() == position
+        )
+
+    @pytest.mark.parametrize(
+        'symbol,position',
+        [
+            ('1', 39),
+            ('2', 9),
+            ('3', 19),
+            ('4', 29)
+        ])
+    def test_player_normal_pre_home_position(self, symbol, position):
+        assert (
+            self.full_game.get_player(symbol).get_prehome_position()
+            == position
+        )
+
+    @pytest.mark.parametrize(
+        'method,expected',
+        [
+            ('get_waiting_count_array', np.array(4 * [PIECES_PER_PLAYER])),
+            ('get_spaces_array', -1 * np.ones(len(mini_game.board.spaces))),
+            (
+                'get_homes_array',
+                -1 * np.ones((PIECES_PER_PLAYER, mini_game.n_players))
+            )
+        ]
+    )
+    def test_get_initial_arrays(self, method, expected):
         # Test get array methods for initialized game
-        # Waiting count array
-        np.testing.assert_array_equal(
-            self.mini_game.get_waiting_count_array(),
-            np.array(4 * [4])
-        )
-
-        # Spaces
-        np.testing.assert_array_equal(
-            self.mini_game.get_spaces_array(),
-            -1 * np.ones(len(self.mini_game.board.spaces))
-        )
-
-        # Homes
-        np.testing.assert_array_equal(
-            self.mini_game.get_homes_array(),
-            -1 * np.ones((4, self.mini_game.n_players))
-        )
+        game_array = getattr(self.mini_game, method)()
+        assert isinstance(game_array, np.ndarray)
+        np.testing.assert_array_equal(game_array, expected)
 
     @pytest.mark.parametrize(
         'symbol_idx,space_idx',
@@ -296,6 +327,43 @@ class TestGameAction:
         ]
     )
     def test_space_advance_is_valid(self, symbol, position, roll, expected):
-        assert self.game.space_advance_is_valid(
-            symbol=symbol, position=position, roll=roll
+        assert (
+            self.game.space_advance_is_valid(symbol, position, roll)
+            == expected
+        )
+
+    @pytest.mark.parametrize(
+        'symbol,position,roll,expected',
+        [
+            ('1', 15, 1, True),
+            ('2', 3, 1, True),
+            ('1', 15, 5, False),
+            ('3', 7, 1, False)  # occupied
+        ]
+    )
+    def test_home_advance_is_valid(self, symbol, position, roll, expected):
+        modified_game = deepcopy(self.game)
+        if symbol == '3':
+            modified_game.set_homes_array(symbol, 1)
+        assert modified_game.home_advance_is_valid(
+            symbol, position, roll
         ) == expected
+
+    @pytest.mark.parametrize(
+        'symbol,position,roll,expected',
+        [
+            ('1', 0, 1, True),
+            ('1', occupied_position - 1, 1, False),
+            ('1', 15, 1, True),
+            ('1', 15, 5, False),
+            ('3', 7, 1, False)  # occupied
+        ]
+    )
+    def test_advance_is_valid(self, symbol, position, roll, expected):
+        modified_game = deepcopy(self.game)
+        if symbol == '3':
+            modified_game.set_homes_array(symbol, 1)
+        assert (
+            modified_game.advance_is_valid(symbol, position, roll)
+            == expected
+        )
