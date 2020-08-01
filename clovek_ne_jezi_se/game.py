@@ -113,6 +113,7 @@ class Game:
         self._validate_n_players()
         self._set_player_symbols()
         self._set_player_start()
+        self._set_player_prehome()
 
     def _validate_n_players(self):
 
@@ -143,6 +144,10 @@ class Game:
         for idx, player in enumerate(self.players):
             player.set_start_position(idx, self.section_length)
 
+    def _set_player_prehome(self):
+        for idx, player in enumerate(self.players):
+            player.set_prehome_position(idx, self.section_length)
+
     def is_winner(self, symbol):
         return self.board.homes[symbol] == PIECES_PER_PLAYER * [symbol]
 
@@ -163,7 +168,7 @@ class Game:
             self.board.waiting_count.get(symbol)
             for symbol in self.player_symbols
         ]
-        self._waiting_count = res
+        self._waiting_count = np.array(res)
 
     def get_waiting_count_array(self):
         return self._waiting_count
@@ -191,10 +196,14 @@ class Game:
                 for symbol in self.board.homes.get(symbol)
             ])
 
-        self._homes_array = res
+        self._homes_array = np.array(res)
 
     def get_homes_array(self):
         return self._homes_array
+
+    def set_homes_array(self, symbol, position):
+        private_symbol = self._to_private_symbol(symbol)
+        self._homes_array[private_symbol, position] = private_symbol
 
     def _to_private_symbol(self, symbol):
         if symbol == EMPTY_VALUE:
@@ -224,6 +233,12 @@ class Game:
 
         return np.all(np.array(res))
 
+    def advance_is_valid(self, symbol, position, roll):
+        if self.is_space_advance(symbol, position, roll):
+            return self.space_advance_is_valid(symbol, position, roll)
+        else:
+            return self.home_advance_is_valid(symbol, position, roll)
+
     def is_space_advance(self, symbol, position, roll):
         """
         Determine if advance move is still among spaces, i.e.
@@ -247,3 +262,31 @@ class Game:
         Note: Assumes advance (position + roll) *is* a space advance
         """
         return self._spaces_array[roll + position] == -1
+
+    def home_advance_is_valid(self, symbol, position, roll):
+        """
+        A home advance can be invalid in two ways:
+          * the advance goes beyond the home spots
+          * the advance position is occupied
+        """
+        res = []
+
+        # Advance position not beyond last home spot, i.e. within home
+        symbol_prehome = self.get_player(symbol).get_prehome_position()
+        position_past_prehome = (
+            (position + roll - symbol_prehome) % len(self._spaces_array)
+        )
+        within_home = position_past_prehome <= PIECES_PER_PLAYER
+        res.append(within_home)
+
+        # Advance position unoccupied
+        if within_home:
+            private_symbol = self._to_private_symbol(symbol)
+            print(symbol)
+            print(self._homes_array[private_symbol, :])
+            advance_position_unoccupied = (
+                self._homes_array[private_symbol, position_past_prehome] == -1
+            )
+            res.append(advance_position_unoccupied)
+
+        return np.all(np.array(res))
