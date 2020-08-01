@@ -39,35 +39,6 @@ def small_initial_board():
     return board
 
 
-@pytest.fixture
-def expected_small_initial_board(small_initial_board):
-
-    symbols = ['1', '2', '3', '4']
-    """Stub test, for refactoring of board representation"""
-
-    res = (
-        "\n"
-        "    -------------\n"
-        "    | {6} | {7} | {8} |\n"
-        "----------------------\n"
-        "| {4} | {5} |    | {9} | {10} |\n"
-        "--------      -------|\n"
-        "| {3} |            | {11} |\n"
-        "--------      -------|\n"
-        "| {2} | {1} |    | {13} | {12} |\n"
-        "----------------------\n"
-        "    | {0} | {15} | {14} |\n"
-        "    -------------"
-    ).format(*(16 * (EMPTY_VALUE)))
-
-    for symbol in symbols:
-        res += (
-            "\nplayer {} home: {} | {} | {} | {} "
-            .format(symbol, * (4 * (EMPTY_VALUE)))
-        )
-    return res
-
-
 class TestBoard:
 
     def test_spaces_setup(self):
@@ -93,13 +64,6 @@ class TestBoard:
                 small_initial_board.homes[symbol]
                 == PIECES_PER_PLAYER * [EMPTY_VALUE]
             )
-
-    def test_board_representation(
-        self, small_initial_board,
-        expected_small_initial_board
-    ):
-
-        assert repr(small_initial_board) == expected_small_initial_board
 
     def test_player_representation(self, small_initial_board):
 
