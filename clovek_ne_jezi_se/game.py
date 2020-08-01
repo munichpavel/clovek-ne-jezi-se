@@ -243,4 +243,7 @@ class Game:
         return res
 
     def space_advance_is_valid(self, symbol, position, roll):
+        """
+        Note: Assumes advance (position + roll) *is* a space advance
+        """
         return self._spaces_array[roll + position] == -1
