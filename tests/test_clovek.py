@@ -289,12 +289,12 @@ class TestGameAction:
         )
 
     @pytest.mark.parametrize(
-            'symbol,position,roll,expected',
-            [
-                ('1', 0, 1, True),
-                ('1', occupied_position - 1, 1, False)
-            ]
-        )
+        'symbol,position,roll,expected',
+        [
+            ('1', 0, 1, True),
+            ('1', occupied_position - 1, 1, False)
+        ]
+    )
     def test_space_advance_is_valid(self, symbol, position, roll, expected):
         assert self.game.space_advance_is_valid(
             symbol=symbol, position=position, roll=roll
