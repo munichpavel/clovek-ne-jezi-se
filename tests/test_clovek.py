@@ -258,7 +258,8 @@ class TestGameAction:
     game.set_waiting_count_array('2', count=0)
 
     # Occupy one start position for an invalid move
-    game.set_space_array('1', game.get_player('3').get_start_position())
+    occupied_position = game.get_player('3').get_start_position()
+    game.set_space_array('1', occupied_position)
 
     def test_leave_home_is_valid(self):
 
@@ -291,9 +292,10 @@ class TestGameAction:
             'symbol,position,roll,expected',
             [
                 ('1', 0, 1, True),
+                ('1', occupied_position - 1, 1, False)
             ]
         )
-    def space_advance_is_valid(self, symbol, position, roll, expected):
+    def test_space_advance_is_valid(self, symbol, position, roll, expected):
         assert self.game.space_advance_is_valid(
             symbol=symbol, position=position, roll=roll
         ) == expected
