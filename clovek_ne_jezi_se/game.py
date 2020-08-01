@@ -178,6 +178,8 @@ class Game:
         return self._waiting_count
 
     def set_waiting_count_array(self, symbol, count):
+        self.board.waiting_count[symbol] = count
+
         private_symbol = self._to_private_symbol(symbol)
         self._waiting_count[private_symbol] = count
 
@@ -189,6 +191,8 @@ class Game:
         return self._spaces_array
 
     def set_space_array(self, symbol, position):
+        self.board.spaces[position] = symbol
+
         private_symbol = self._to_private_symbol(symbol)
         self._spaces_array[position] = private_symbol
 
@@ -206,6 +210,8 @@ class Game:
         return self._homes_array
 
     def set_homes_array(self, symbol, position):
+        self.board.homes[symbol][position] = symbol
+
         private_symbol = self._to_private_symbol(symbol)
         self._homes_array[private_symbol, position] = private_symbol
 

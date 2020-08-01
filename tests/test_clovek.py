@@ -238,7 +238,6 @@ class TestGame:
 
 
 class TestGameAction:
-
     symbols = ['1', '2', '3', '4']
     players = []
     for symbol in symbols:
@@ -255,6 +254,22 @@ class TestGameAction:
     # Occupy one start position for an invalid move
     occupied_position = game.get_player('3').get_start_position()
     game.set_space_array('1', occupied_position)
+
+    def test_update_board_waiting(self):
+        # From test class init
+        assert self.game.board.waiting_count['2'] == 0
+
+    def test_update_board_spaces(self):
+        assert self.game.board.spaces[self.occupied_position] == '1'
+
+    def test_update_board_homes(self):
+        modified_game = deepcopy(self.game)
+        modified_game.set_homes_array('1', 1)
+
+        assert (
+            modified_game.board.homes['1']
+            == [EMPTY_VALUE, '1', EMPTY_VALUE, EMPTY_VALUE]
+        )
 
     def test_leave_home_is_valid(self):
 
