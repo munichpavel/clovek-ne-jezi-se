@@ -27,16 +27,6 @@ class Player:
     def get_start_position(self):
         return self._start_position
 
-    def set_prehome_position(self, order, section_length):
-        res = (
-            (order * section_length - 1)
-            % (section_length * self.number_of_players)
-        )
-        self._prehome_position = res
-
-    def get_prehome_position(self):
-        return self._prehome_position
-
     def roll(self):
         res = Player._get_roll_value()
         if Player.roll_is_valid(res):

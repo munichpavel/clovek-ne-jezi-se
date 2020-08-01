@@ -204,35 +204,6 @@ class TestGame:
             == expected_position
         )
 
-    @pytest.mark.parametrize(
-        'symbol,position',
-        [
-            ('1', 15),
-            ('2', 3),
-            ('3', 7),
-            ('4', 11)
-        ])
-    def test_player_mini_pre_home_position(self, symbol, position):
-        assert (
-            self.mini_game
-            .get_player(symbol)
-            .get_prehome_position() == position
-        )
-
-    @pytest.mark.parametrize(
-        'symbol,position',
-        [
-            ('1', 39),
-            ('2', 9),
-            ('3', 19),
-            ('4', 29)
-        ])
-    def test_player_normal_pre_home_position(self, symbol, position):
-        assert (
-            self.full_game.get_player(symbol).get_prehome_position()
-            == position
-        )
-
     def test_get_initial_arrays(self):
         # Test get array methods for initialized game
         # Waiting count array
@@ -315,3 +286,14 @@ class TestGameAction:
                 symbol=symbol, position=position, roll=roll
             ) == expected
         )
+
+    @pytest.mark.parametrize(
+            'symbol,position,roll,expected',
+            [
+                ('1', 0, 1, True),
+            ]
+        )
+    def space_advance_is_valid(self, symbol, position, roll, expected):
+        assert self.game.space_advance_is_valid(
+            symbol=symbol, position=position, roll=roll
+        ) == expected

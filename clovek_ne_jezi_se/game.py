@@ -113,7 +113,6 @@ class Game:
         self._validate_n_players()
         self._set_player_symbols()
         self._set_player_start()
-        self._set_player_prehome()
 
     def _validate_n_players(self):
 
@@ -143,10 +142,6 @@ class Game:
     def _set_player_start(self):
         for idx, player in enumerate(self.players):
             player.set_start_position(idx, self.section_length)
-
-    def _set_player_prehome(self):
-        for idx, player in enumerate(self.players):
-            player.set_prehome_position(idx, self.section_length)
 
     def is_winner(self, symbol):
         return self.board.homes[symbol] == PIECES_PER_PLAYER * [symbol]
@@ -246,3 +241,6 @@ class Game:
         res = not bool(after_prehome_ratio_rounded)
 
         return res
+
+    def space_advance_is_valid(self, symbol, position, roll):
+        return self._spaces_array[roll + position] == -1
