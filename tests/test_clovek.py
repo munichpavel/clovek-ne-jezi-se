@@ -4,8 +4,10 @@ import pytest
 
 import numpy as np
 
-from clovek_ne_jezi_se.consts import EMPTY_VALUE, PIECES_PER_PLAYER
-from clovek_ne_jezi_se.game import Board, Game
+from clovek_ne_jezi_se.consts import (
+    EMPTY_VALUE, PIECES_PER_PLAYER, NR_OF_DICE_FACES
+)
+from clovek_ne_jezi_se.game import Board, Game, Move
 from clovek_ne_jezi_se.agent import Player
 
 
@@ -66,10 +68,10 @@ class TestBoard:
             )
 
     def test_player_representation(self, small_initial_board):
-
-        for i, symbol in enumerate(['1', '2', '3', '4']):
-            assert small_initial_board._get_private_symbol(symbol) == i
-            assert small_initial_board._get_public_symbol(i) == symbol
+        for symbol in ['1', '2', '3', '4']:
+            assert small_initial_board.get_public_symbol(
+                small_initial_board.get_private_symbol(symbol)
+             ) == symbol
 
 
 @pytest.fixture
@@ -237,6 +239,20 @@ class TestGame:
         )
 
 
+class TestMoves:
+    def test_validators(self):
+
+        with pytest.raises(TypeError):
+            # start and end positions are keyword-required arguments
+            Move('1', 'leave_home', 0, 2)
+
+        with pytest.raises(ValueError):
+            Move('1', 'nonsense_move', start=0, end=5)
+
+        with pytest.raises(ValueError):
+            # Start position must be None for leave_home move
+            Move('1', 'leave_home', start=0, end=5)
+
 class TestGameAction:
     symbols = ['1', '2', '3', '4']
     players = []
@@ -248,19 +264,23 @@ class TestGameAction:
     game = Game(players, section_length=4)
     game.initialize()
 
-    # Empty waiting area of one symbol for an invalid move
-    game.set_waiting_count_array('2', count=0)
-
-    # Occupy one start position for an invalid move
-    occupied_position = game.get_player('3').get_start_position()
-    game.set_space_array('1', occupied_position)
+    prehome_positions = {}
+    for symbol in symbols:
+        prehome_positions[symbol] = \
+            game.get_player(symbol).get_prehome_position()
 
     def test_update_board_waiting(self):
-        # From test class init
-        assert self.game.board.waiting_count['2'] == 0
+        modified_game = deepcopy(self.game)
+        modified_game.set_waiting_count_array('2', count=0)
+
+        assert modified_game.board.waiting_count['2'] == 0
 
     def test_update_board_spaces(self):
-        assert self.game.board.spaces[self.occupied_position] == '1'
+        modified_game = deepcopy(self.game)
+        occupied_position = modified_game.get_player('3').get_start_position()
+        modified_game.set_space_array('1', occupied_position)
+
+        assert modified_game.board.spaces[occupied_position] == '1'
 
     def test_update_board_homes(self):
         modified_game = deepcopy(self.game)
@@ -271,29 +291,69 @@ class TestGameAction:
             == [EMPTY_VALUE, '1', EMPTY_VALUE, EMPTY_VALUE]
         )
 
-    def test_leave_home_is_valid(self):
+    def test_get_symbol_space_position_array(self):
+        modified_game = deepcopy(self.game)
+        modified_game.set_space_array('1', 0)
+        modified_game.set_space_array('2', 1)
 
+        assert modified_game.get_symbol_space_positions('1') == np.array([0])
+        assert modified_game.get_symbol_space_positions('2') == np.array([1])
+
+    # Leave home move tests
+    def test_leave_home_is_valid(self):
         for symbol in ['1', '4']:
-            assert self.game.leave_home_is_valid(symbol=symbol, roll=6)
+            assert self.game.leave_home_is_valid(
+                symbol=symbol, roll=NR_OF_DICE_FACES
+            )
             # Any other roll is invalid to leave home
-            for roll in range(1, 6):
+            for roll in range(1, NR_OF_DICE_FACES):
                 assert not (
                     self.game.leave_home_is_valid(symbol=symbol, roll=roll)
                 )
 
+    def test_get_leave_home_moves(self):
+        modified_game = deepcopy(self.game)
+
+        symbol = '1'
+        roll = NR_OF_DICE_FACES
+        player = modified_game.get_player(symbol)
+        player_start_space = player.get_start_position()
+        expected = [Move(symbol, 'leave_home', end=player_start_space)]
+
+        assert modified_game.get_leave_home_moves(symbol, roll) == expected
+
+    @pytest.mark.parametrize(
+        'symbol,roll',
+        [
+            ('1', 1),
+            ('2', NR_OF_DICE_FACES),
+            ('3', NR_OF_DICE_FACES)
+        ]
+    )
+    def test_no_get_leave_home_moves(self, symbol, roll):
+        modified_game = deepcopy(self.game)
+
+        modified_game.set_waiting_count_array('2', 0)
+        modified_game.set_space_array(
+             '1', modified_game.get_player(symbol).get_start_position()
+        )
+
+        assert modified_game.get_leave_home_moves(symbol, roll) == []
+
+    # Test space advance moves
     @pytest.mark.parametrize(
         'symbol,position,roll,expected',
         [
             ('1', 0, 3, True),
             ('2', 0, 3, True),
             ('2', 0, 4, False),
-            ('1', 14, 1, True),
-            ('1', 15, 1, False)
+            ('1', prehome_positions['1'] - 1, 1, True),
+            ('1', prehome_positions['1'], 1, False)
         ]
     )
-    def test_is_space_advance(self, symbol, position, roll, expected):
+    def test_is_space_advance_move(self, symbol, position, roll, expected):
         assert (
-            self.game.is_space_advance(
+            self.game.is_space_advance_move(
                 symbol=symbol, position=position, roll=roll
             ) == expected
         )
@@ -302,47 +362,148 @@ class TestGameAction:
         'symbol,position,roll,expected',
         [
             ('1', 0, 1, True),
-            ('1', occupied_position - 1, 1, False)
+            ('1', 8 - 1, 1, False)  # see in test definition
         ]
     )
     def test_space_advance_is_valid(self, symbol, position, roll, expected):
-        assert (
-            self.game.space_advance_is_valid(symbol, position, roll)
+        modified_game = deepcopy(self.game)
+        modified_game.set_space_array('1', 8)
+        assert modified_game.space_advance_is_valid(symbol, position, roll) \
             == expected
+
+    def test_get_space_advance_moves(self):
+        modified_game = deepcopy(self.game)
+
+        symbol = '1'
+        modified_game.set_space_array(symbol, 0)
+        modified_game.set_space_array(symbol, 1)
+
+        roll = 1
+
+        assert (
+            modified_game.get_space_advance_moves(symbol, roll)
+            == [Move(symbol, 'space_advance', start=1, end=2)]
         )
+
+    # Test space to home moves
+    @pytest.mark.parametrize(
+        'symbol,position,roll,expected',
+        [
+            ('1', prehome_positions['1'], 1, True),
+            ('1', prehome_positions['1'] - 1, 1, False),
+            # Note: is move methods ignore validity
+            ('1', prehome_positions['1'] - 1, PIECES_PER_PLAYER, True)
+        ]
+    )
+    def test_is_space_to_home(self, symbol, position, roll, expected):
+        assert self.game.is_space_to_home_move(symbol, position, roll) \
+            == expected
 
     @pytest.mark.parametrize(
         'symbol,position,roll,expected',
         [
-            ('1', 15, 1, True),
+            ('1', prehome_positions['1'], 1, True),
             ('2', 3, 1, True),
-            ('1', 15, 5, False),
-            ('3', 7, 1, False)  # occupied
+            ('1', prehome_positions['1'], PIECES_PER_PLAYER + 1, False),
+            ('3', prehome_positions['3'], 1, False)  # occupied
         ]
     )
-    def test_home_advance_is_valid(self, symbol, position, roll, expected):
+    def test_space_to_home_is_valid(self, symbol, position, roll, expected):
         modified_game = deepcopy(self.game)
+
         if symbol == '3':
             modified_game.set_homes_array(symbol, 1)
-        assert modified_game.home_advance_is_valid(
+
+        assert modified_game.space_to_home_is_valid(
             symbol, position, roll
         ) == expected
 
     @pytest.mark.parametrize(
         'symbol,position,roll,expected',
         [
-            ('1', 0, 1, True),
-            ('1', occupied_position - 1, 1, False),
-            ('1', 15, 1, True),
-            ('1', 15, 5, False),
-            ('3', 7, 1, False)  # occupied
+            ('1', prehome_positions['1'], PIECES_PER_PLAYER + 1, []),
+            (
+                '1', prehome_positions['1'], 1,
+                [
+                    Move(
+                        '1', 'space_to_home',
+                        start=prehome_positions['1'], end=0)
+                ]
+            ),
+            ('1', prehome_positions['1'] - 1, 1, []),
+
         ]
     )
-    def test_advance_is_valid(self, symbol, position, roll, expected):
+    def test_get_space_to_home_moves(self, symbol, position, roll, expected):
         modified_game = deepcopy(self.game)
-        if symbol == '3':
-            modified_game.set_homes_array(symbol, 1)
+        modified_game.set_space_array(symbol, position)
+
         assert (
-            modified_game.advance_is_valid(symbol, position, roll)
+            modified_game.get_space_to_home_moves(symbol, roll)
             == expected
         )
+
+    def test_get_symbol_home_array(self):
+        modified_game = deepcopy(self.game)
+        symbol = '1'
+        modified_game.set_homes_array(symbol, position=0)
+        modified_game.set_homes_array(symbol, position=3)
+
+        np.testing.assert_array_equal(
+            modified_game.get_symbol_home_positions(symbol),
+            np.array([0, 3])
+        )
+
+    @pytest.mark.parametrize(
+        'position',
+        [(2), (2), (3)]
+    )
+    def test_get_home_positions(self, position):
+        modified_game = deepcopy(self.game)
+        symbol = '1'
+        # Occupy position 1 for all tests
+        modified_game.set_homes_array(symbol, position=0)
+        modified_game.set_homes_array(symbol, position)
+
+        np.testing.assert_array_equal(
+            modified_game.get_symbol_home_positions(symbol),
+            np.array([0, position])
+        )
+
+    @pytest.mark.parametrize(
+        'symbol,position,roll,expected',
+        [
+            ('1', 0, 1, True),
+            # Occupied
+            ('1', 0, 2, False),
+            ('1', 2, 1, True),
+            # Beyond home spaces
+            ('1',  0, 4, False)
+        ]
+    )
+    def test_home_advance_is_valid(self, symbol, position, roll, expected):
+        modified_game = deepcopy(self.game)
+        modified_game.set_homes_array(symbol, position=0)
+        modified_game.set_homes_array(symbol, position=2)
+
+        assert modified_game.home_advance_is_valid(symbol, position, roll) \
+            == expected
+
+    @pytest.mark.parametrize(
+        'symbol,roll,expected',
+        [
+            ('1', 1, [
+                Move('1', 'home_advance', start=0, end=0+1),
+                Move('1', 'home_advance', start=2, end=2+1)
+            ]),
+            # Blocked by occupation and beyond home spaces
+            ('1', 2, [])
+        ]
+    )
+    def test_get_home_advance_moves(self, symbol, roll, expected):
+        modified_game = deepcopy(self.game)
+        modified_game.set_homes_array(symbol, position=0)
+        modified_game.set_homes_array(symbol, position=2)
+
+        assert modified_game.get_home_advance_moves(symbol, roll) \
+            == expected

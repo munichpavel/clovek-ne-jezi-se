@@ -6,7 +6,7 @@ import attr
 import numpy as np
 
 from .consts import (
-    EMPTY_VALUE, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER
+    EMPTY_VALUE, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER, NR_OF_DICE_FACES
 )
 
 
@@ -60,11 +60,11 @@ class Board:
 
         self.waiting_count = res
 
-    def _get_private_symbol(self, public_symbol):
+    def get_private_symbol(self, public_symbol):
 
         return self.player_symbols.index(public_symbol)
 
-    def _get_public_symbol(self, private_symbol):
+    def get_public_symbol(self, private_symbol):
         return self.player_symbols[private_symbol]
 
     def __repr__(self):
@@ -101,10 +101,34 @@ class Board:
                 'Board representation only for 16 space main board'
             )
 
+@attr.s
+class Move:
+    """
+    Container for game moves based on array (internal) board representation
+    with validity checks.
+    """
+    symbol = attr.ib()
+    kinds = ('leave_home', 'space_advance', 'space_to_home', 'home_advance')
+    kind = attr.ib()
+    start = attr.ib(kw_only=True, default=None)
+    end = attr.ib(kw_only=True,
+                  validator=attr.validators.instance_of((int, np.int64)))
+
+    @kind.validator
+    def check_kind(self, attribute, value):
+        if value not in self.kinds:
+            raise ValueError(f'Move kind must be a member of {self.kinds}')
+
+    # TODO: Refactor as in exapmple
+    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
+    @start.validator
+    def check_start(self, attribute, value):
+        if value is not None and self.kind == 'leave_home':
+            raise ValueError('Leave home moves may not have a start position')
+
 
 @attr.s
 class Game:
-
     players = attr.ib()
     section_length = attr.ib(default=4)
 
@@ -167,6 +191,7 @@ class Game:
         idx = np.argmax(np.array(self.player_symbols) == symbol)
         return self.players[idx]
 
+    # Board methods
     def initialize_waiting_count_array(self):
         res = [
             self.board.waiting_count.get(symbol)
@@ -221,15 +246,46 @@ class Game:
         else:
             return self.player_symbols.index(symbol)
 
+    # Moves
     def assign_to_space(self, symbol, idx):
+        """TODO: Make private?"""
         self._spaces_array[idx] = self._to_private_symbol(symbol)
 
+    # Leave home move methods
+    def get_leave_home_moves(self, symbol, roll):
+        """
+        Parameters
+        ----------
+        symbol : string
+        roll : int
+
+        Returns
+        -------
+        res : list
+            List of Move's (possibly empty)
+        """
+        if not self.leave_home_is_valid(symbol, roll):
+            return []
+        player_start_space = self.get_player(symbol).get_start_position()
+
+        return [Move(symbol, 'leave_home', end=player_start_space)]
+
     def leave_home_is_valid(self, symbol, roll):
+        """
+        Parameters
+        ----------
+        symbol : string
+        roll : int
+
+        Returns
+        -------
+         : Boolean
+        """
         private_symbol = self._to_private_symbol(symbol)
         res = []
 
-        # Check if a 6 rolled
-        res.append(roll == 6)
+        # Check if a maximum rolled (usually 6)
+        res.append(roll == NR_OF_DICE_FACES)
 
         # Check if still symbol pieces in waiting area
         if self._waiting_count[private_symbol] > 0:
@@ -243,17 +299,68 @@ class Game:
 
         return np.all(np.array(res))
 
-    def advance_is_valid(self, symbol, position, roll):
-        if self.is_space_advance(symbol, position, roll):
-            return self.space_advance_is_valid(symbol, position, roll)
-        else:
-            return self.home_advance_is_valid(symbol, position, roll)
+    # Space advance move methods
+    def get_space_advance_moves(self, symbol, roll):
+        """
+        Parameters
+        ----------
+        symbol : string
+        position : int
+        roll : int
 
-    def is_space_advance(self, symbol, position, roll):
+        Returns
+        -------
+        res : list
+            List of Move's (possibly empty)
         """
-        Determine if advance move is still among spaces, i.e.
-        not in the symbol's home area
+        symbol_positions = self.get_symbol_space_positions(symbol)
+
+        res = []
+        for position in symbol_positions:
+            if not self.is_space_advance_move(symbol, position, roll):
+                return res
+
+            if self.space_advance_is_valid(symbol, position, roll):
+                res.append(Move(
+                    symbol, 'space_advance',
+                    start=position, end=position + roll
+                ))
+
+        return res
+
+    def get_symbol_space_positions(self, symbol):
         """
+        Parameters
+        ----------
+        symbol : string
+            Must be one of player symbols
+
+        Returns
+        -------
+        symbol_positions : numpy.array
+            1-d array of game board space indices where symbol has pieces
+        """
+        private_symbol = self._to_private_symbol(symbol)
+        spaces_array = self.get_spaces_array()
+        symbol_positions = np.where(spaces_array == private_symbol)[0]
+
+        return symbol_positions
+
+    def is_space_advance_move(self, symbol, position, roll):
+        """
+        Determine if space advance move, sans validity checks.
+
+
+        Parameters
+        ----------
+        symbol : string
+        position : int
+        roll : int
+
+        Returns
+        -------
+         : Boolean
+         """
         start = self.get_player(symbol).get_start_position()
         zeroed_position = (position - start) % len(self._spaces_array)
 
@@ -269,11 +376,62 @@ class Game:
 
     def space_advance_is_valid(self, symbol, position, roll):
         """
-        Note: Assumes advance (position + roll) *is* a space advance
+        Note: Assumes advance (position + roll) remains among spaces,
+        otherwise will throw an (index) error.
         """
         return self._spaces_array[roll + position] == -1
 
-    def home_advance_is_valid(self, symbol, position, roll):
+    # Space to home move methods
+    def get_space_to_home_moves(self, symbol, roll):
+        """
+        Parameters
+        ----------
+        symbol : string
+        position : int
+        roll : int
+
+        Returns
+        -------
+        res : list
+            List of Move's (possibly empty)
+        """
+        private_symbol = self._to_private_symbol(symbol)
+        spaces_array = self.get_spaces_array()
+        symbol_positions = np.where(spaces_array == private_symbol)[0]
+        res = []
+        for position in symbol_positions:
+            if not self.is_space_to_home_move(symbol, position, roll):
+                continue
+            if self.space_to_home_is_valid(symbol, position, roll):
+                # TODO add method to calculate space_to_home end position
+                pre_home_position = (
+                    self.get_player(symbol).get_prehome_position()
+                )
+                end = pre_home_position - position
+                res.append(Move(
+                    symbol, 'space_to_home',
+                    start=position, end=end
+                ))
+        return res
+
+    def is_space_to_home_move(self, symbol, position, roll):
+        """
+        Determine if move is from (main) board space to home area,
+        sans validity checks.
+
+        Parameters
+        ----------
+        symbol : string
+        position : int
+        roll : int
+
+        Returns
+        -------
+         : Boolean
+        """
+        return not self.is_space_advance_move(symbol, position, roll)
+
+    def space_to_home_is_valid(self, symbol, position, roll):
         """
         A home advance can be invalid in two ways:
           * the advance goes beyond the home spots
@@ -292,11 +450,93 @@ class Game:
         # Advance position unoccupied
         if within_home:
             private_symbol = self._to_private_symbol(symbol)
-            print(symbol)
-            print(self._homes_array[private_symbol, :])
             advance_position_unoccupied = (
                 self._homes_array[private_symbol, position_past_prehome] == -1
             )
             res.append(advance_position_unoccupied)
 
         return np.all(np.array(res))
+
+    # Home advance move methods
+    def get_symbol_home_positions(self, symbol):
+        """
+        Parameters
+        ----------
+        symbol : string
+
+        Returns
+        -------
+        symbol_positions : np.array
+            Positions occupied by a symbol piece.
+        """
+        symbol_home_array = self.get_symbol_home_array(symbol)
+        private_symbol = self._to_private_symbol(symbol)
+        symbol_positions = np.where(symbol_home_array == private_symbol)[0]
+
+        return symbol_positions
+
+    def get_symbol_home_array(self, symbol):
+        """
+        Parameters
+        ----------
+        symbol : string
+
+        Returns
+        -------
+         : np.array
+            Symbol home array representation.
+        """
+        private_symbol = self._to_private_symbol(symbol)
+
+        return self.get_homes_array()[private_symbol, :]
+
+    def home_advance_is_valid(self, symbol, position, roll):
+        """
+        A home advance is invalid if the end position is occupied
+        or would land outside of the home spaces.
+
+        Parameters
+        ----------
+        symbol : string
+        position : int
+        roll : int
+
+        Returns
+        -------
+         : Boolean
+        """
+        end = position + roll
+
+        if end > PIECES_PER_PLAYER - 1:
+            return False
+
+        symbol_home_positions = self.get_symbol_home_positions(symbol)
+
+        return end not in symbol_home_positions
+
+    def get_home_advance_moves(self, symbol, roll):
+        """
+        Parameters
+        ----------
+        symbol : string
+        roll : int
+
+        Returns
+        -------
+        res : list
+            List of Move's
+        """
+        symbol_home_positions = self.get_symbol_home_positions(symbol)
+        print(symbol_home_positions)
+
+        res = []
+        for position in symbol_home_positions:
+            if self.home_advance_is_valid(symbol, position, roll):
+                res.append(
+                    Move(
+                        symbol, 'home_advance',
+                        start=position, end=position + roll
+                    )
+                )
+
+        return res

@@ -1,7 +1,7 @@
 from random import randint
 import attr
 
-from .consts import EMPTY_VALUE
+from .consts import EMPTY_VALUE, NR_OF_DICE_FACES
 
 
 @attr.s
@@ -47,11 +47,11 @@ class Player:
 
     @staticmethod
     def _get_roll_value():
-        return randint(1, 6)
+        return randint(1, NR_OF_DICE_FACES)
 
     @staticmethod
     def roll_is_valid(roll_value):
-        return 1 <= roll_value <= 6
+        return 1 <= roll_value <= NR_OF_DICE_FACES
 
 
 class FurthestAlongAgent(Player):
