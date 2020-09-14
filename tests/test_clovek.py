@@ -244,14 +244,15 @@ class TestMoves:
 
         with pytest.raises(TypeError):
             # start and end positions are keyword-required arguments
-            Move('1', 'leave_home', 0, 2)
+            Move('1', 'space_advance', 0, 2)
 
         with pytest.raises(ValueError):
             Move('1', 'nonsense_move', start=0, end=5)
 
+        # Start position must be None for leave_home move
         with pytest.raises(ValueError):
-            # Start position must be None for leave_home move
-            Move('1', 'leave_home', start=0, end=5)
+            Move('1', 'leave_home', start=0)
+
 
 class TestGameAction:
     symbols = ['1', '2', '3', '4']

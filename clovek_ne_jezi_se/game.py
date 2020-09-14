@@ -101,6 +101,16 @@ class Board:
                 'Board representation only for 16 space main board'
             )
 
+
+def check_start(self, attribute, value):
+    # TODO: Refactor as in exapmple
+    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
+    if value is not None and self.kind == 'leave_home':
+        raise ValueError(
+            'Leave home moves may not have start or end position'
+        )
+
+
 @attr.s
 class Move:
     """
@@ -110,21 +120,13 @@ class Move:
     symbol = attr.ib()
     kinds = ('leave_home', 'space_advance', 'space_to_home', 'home_advance')
     kind = attr.ib()
-    start = attr.ib(kw_only=True, default=None)
-    end = attr.ib(kw_only=True,
-                  validator=attr.validators.instance_of((int, np.int64)))
+    start = attr.ib(kw_only=True, default=None, validator=check_start)
+    end = attr.ib(kw_only=True, default=None)
 
     @kind.validator
     def check_kind(self, attribute, value):
         if value not in self.kinds:
             raise ValueError(f'Move kind must be a member of {self.kinds}')
-
-    # TODO: Refactor as in exapmple
-    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
-    @start.validator
-    def check_start(self, attribute, value):
-        if value is not None and self.kind == 'leave_home':
-            raise ValueError('Leave home moves may not have a start position')
 
 
 @attr.s
@@ -540,3 +542,6 @@ class Game:
                 )
 
         return res
+   # Do moves
+    def do(self, move):
+        pass
