@@ -249,19 +249,66 @@ class Game:
         else:
             return self.player_symbols.index(symbol)
 
-    # Moves
     def assign_to_space(self, symbol, idx):
-        """TODO: Make private?"""
+        """Convenience function. TODO: Deprecate or make private?"""
         self._spaces_array[idx] = self._to_private_symbol(symbol)
 
-    def move_factory(self, symbol, move_kind, roll, start=None):
-        move = self._get_move(symbol, move_kind, roll, start)
-        is_valid = self._get_validator(move_kind)
+    # Moves
+    def get_all_moves(self, symbol, roll):
+        res = {}
+        for kind in MOVE_KINDS:
+            res[kind] = self.get_moves_of(symbol, kind, roll)
+
+        return res
+
+    def get_moves_of(self, symbol, kind, roll):
+        res = []
+        starts = self.get_move_starts(symbol, kind)
+        for start in starts:
+            try:
+                move = self.move_factory(symbol, kind, roll, start)
+                print(Move)
+                res.append(move)
+            except ValueError:
+                #print(f'Invalid move of {symbol}, {move_kind}, {roll}, {start}')
+                continue
+
+        return res
+
+    def get_move_starts(self, symbol, kind):
+        """
+        Get potential starting positions for symbol and move kind.
+        No validation is performed.
+        """
+        if kind == 'leave_waiting':
+            return self._get_leave_waiting_starts(symbol)
+        elif kind == 'space_advance':
+            return self._get_space_advance_starts(symbol)
+        elif kind == 'space_to_home':
+            return self._get_space_to_home_starts(symbol)
+        else:  # home_advance
+            return self._get_home_advance_starts(symbol)
+
+    def _get_leave_waiting_starts(self, symbol):
+        return [None]
+
+    def _get_space_advance_starts(self, symbol):
+        return self.get_symbol_space_positions(symbol)
+
+    def _get_space_to_home_starts(self, symbol):
+        return self.get_symbol_space_positions(symbol)
+
+    def _get_home_advance_starts(self, symbol):
+        return self.get_symbol_home_positions(symbol)
+
+    def move_factory(self, symbol, kind, roll, start=None):
+        move = self._get_move(symbol, kind, roll, start)
+        is_valid = self._get_validator(kind)
         if is_valid(move):
             return move
         else:
-            # TODO raise reasonable error
-            raise ValueError()
+            # TODO raise reasonable error--see #9.
+            raise ValueError('Invalid move entered')
 
     def _get_move(self, symbol, move_kind, roll, start):
         if move_kind == 'leave_waiting':
@@ -342,12 +389,12 @@ class Game:
 
     # Space advance move methods
     def space_advance_validator(self, move):
-        is_space_advance = self.is_space_advance_move(
-            move.symbol, move.roll, move.start)
-        is_not_blocked = self.space_advance_not_blocked(
-            move.symbol, move.roll, move.start)
+        if not self.is_space_advance_move(move.symbol, move.roll, move.start):
+            return False
 
-        return is_space_advance and is_not_blocked
+        return self.space_advance_not_blocked(
+            move.symbol, move.roll, move.start
+        )
 
     def get_space_advance_moves(self, symbol, roll):
         """
@@ -591,7 +638,7 @@ class Game:
             List of Move's
         """
         symbol_home_positions = self.get_symbol_home_positions(symbol)
-        print(symbol_home_positions)
+    #    print(symbol_home_positions)
 
         res = []
         for position in symbol_home_positions:
@@ -605,3 +652,14 @@ class Game:
 
         return res
 
+    # Do moves
+    def do(self, move):
+        # Check move validity
+        # TODO: Do I need this? Duplication of factory?
+        # Not if user can create own moves
+        is_valid = self._get_validator(move.kind)
+        if self._is_valid(move):
+            print('yoyowassup')
+        else:
+            # TODO determine which error to raise
+            raise ValueError
