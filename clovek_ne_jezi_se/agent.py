@@ -21,11 +21,11 @@ class Player:
     def set_order(self, order):
         self.order = order
 
-    def set_start_position(self, order, section_length):
-        self._start_position = order * section_length
+    def set_start(self, order, section_length):
+        self._start = order * section_length
 
-    def get_start_position(self):
-        return self._start_position
+    def get_start(self):
+        return self._start
 
     def set_prehome_position(self, order, section_length):
         res = (
