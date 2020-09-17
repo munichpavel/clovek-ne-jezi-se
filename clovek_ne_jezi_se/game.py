@@ -267,10 +267,8 @@ class Game:
         for start in starts:
             try:
                 move = self.move_factory(symbol, kind, roll, start)
-                print(Move)
                 res.append(move)
             except ValueError:
-                #print(f'Invalid move of {symbol}, {move_kind}, {roll}, {start}')
                 continue
 
         return res
@@ -369,24 +367,6 @@ class Game:
 
         return np.all(np.array(res))
 
-    # Leave home move methods
-    def get_leave_waiting_moves(self, symbol, roll):
-        """
-        Parameters
-        ----------
-        symbol : string
-        roll : int
-
-        Returns
-        -------
-        res : list
-            List of Move's (possibly empty)
-        """
-        if not self.leave_waiting_is_valid(symbol, roll):
-            return []
-
-        return [Move(symbol, 'leave_waiting', roll=roll)]
-
     # Space advance move methods
     def space_advance_validator(self, move):
         if not self.is_space_advance_move(move.symbol, move.roll, move.start):
@@ -395,34 +375,6 @@ class Game:
         return self.space_advance_not_blocked(
             move.symbol, move.roll, move.start
         )
-
-    def get_space_advance_moves(self, symbol, roll):
-        """
-        Parameters
-        ----------
-        symbol : string
-        position : int
-        roll : int
-
-        Returns
-        -------
-        res : list
-            List of Move's (possibly empty)
-        """
-        symbol_positions = self.get_symbol_space_positions(symbol)
-
-        res = []
-        for position in symbol_positions:
-            if not self.is_space_advance_move(symbol, roll, position):
-                return res
-
-            if self.space_advance_not_blocked(symbol, roll, position):
-                res.append(Move(
-                    symbol, 'space_advance',
-                    roll=roll, start=position
-                ))
-
-        return res
 
     def get_symbol_space_positions(self, symbol):
         """
@@ -488,38 +440,6 @@ class Game:
         )
 
         return is_space_to_home and is_valid
-
-    def get_space_to_home_moves(self, symbol, roll):
-        """
-        Parameters
-        ----------
-        symbol : string
-        position : int
-        roll : int
-
-        Returns
-        -------
-        res : list
-            List of Move's (possibly empty)
-        """
-        private_symbol = self._to_private_symbol(symbol)
-        spaces_array = self.get_spaces_array()
-        symbol_positions = np.where(spaces_array == private_symbol)[0]
-        res = []
-        for position in symbol_positions:
-            if not self.is_space_to_home_move(symbol, roll, position):
-                continue
-            if self.space_to_home_is_valid(symbol, roll, position):
-                # TODO add method to calculate space_to_home end position
-                pre_home_position = (
-                    self.get_player(symbol).get_prehome_position()
-                )
-                end = pre_home_position - position
-                res.append(Move(
-                    symbol, 'space_to_home',
-                    roll=roll, start=position
-                ))
-        return res
 
     def is_space_to_home_move(self, symbol, roll, start):
         """
@@ -624,33 +544,6 @@ class Game:
         private_symbol = self._to_private_symbol(symbol)
 
         return self.get_homes_array()[private_symbol, :]
-
-    def get_home_advance_moves(self, symbol, roll):
-        """
-        Parameters
-        ----------
-        symbol : string
-        roll : int
-
-        Returns
-        -------
-        res : list
-            List of Move's
-        """
-        symbol_home_positions = self.get_symbol_home_positions(symbol)
-    #    print(symbol_home_positions)
-
-        res = []
-        for position in symbol_home_positions:
-            if self.home_advance_is_valid(symbol, roll, position):
-                res.append(
-                    Move(
-                        symbol, 'home_advance',
-                        roll=roll, start=position
-                    )
-                )
-
-        return res
 
     # Do moves
     def do(self, move):
