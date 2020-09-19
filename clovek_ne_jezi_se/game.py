@@ -336,9 +336,9 @@ class Game:
         -------
         res : Boolean
         """
-        return self.leave_waiting_is_valid(move.symbol, move.roll)
+        return self._leave_waiting_is_valid(move.symbol, move.roll)
 
-    def leave_waiting_is_valid(self, symbol, roll):
+    def _leave_waiting_is_valid(self, symbol, roll):
         """
         Parameters
         ----------
@@ -369,10 +369,10 @@ class Game:
 
     # Space advance move methods
     def space_advance_validator(self, move):
-        if not self.is_space_advance_move(move.symbol, move.roll, move.start):
+        if not self._is_space_advance_move(move.symbol, move.roll, move.start):
             return False
 
-        return self.space_advance_not_blocked(
+        return self._space_advance_not_blocked(
             move.symbol, move.roll, move.start
         )
 
@@ -394,7 +394,7 @@ class Game:
 
         return symbol_positions
 
-    def is_space_advance_move(self, symbol, roll, start):
+    def _is_space_advance_move(self, symbol, roll, start):
         """
         Determine if space advance move, sans validity checks.
 
@@ -422,7 +422,7 @@ class Game:
 
         return res
 
-    def space_advance_not_blocked(self, symbol, roll, start):
+    def _space_advance_not_blocked(self, symbol, roll, start):
         """
         Note: Assumes advance (start + roll) remains among spaces,
         otherwise will throw an (index) error.
@@ -432,16 +432,16 @@ class Game:
     # Space to home move methods
     def space_to_home_validator(self, move):
         # TODO Refactor to follow single-responsibility principle
-        is_space_to_home = self.is_space_to_home_move(
+        is_space_to_home = self._is_space_to_home_move(
             move.symbol, move.roll, move.start
         )
-        is_valid = self.space_to_home_is_valid(
+        is_valid = self._space_to_home_is_valid(
             move.symbol, move.roll, move.start
         )
 
         return is_space_to_home and is_valid
 
-    def is_space_to_home_move(self, symbol, roll, start):
+    def _is_space_to_home_move(self, symbol, roll, start):
         """
         Determine if move is from (main) board space to home area,
         sans validity checks.
@@ -456,9 +456,9 @@ class Game:
         -------
          : Boolean
         """
-        return not self.is_space_advance_move(symbol, roll, start)
+        return not self._is_space_advance_move(symbol, roll, start)
 
-    def space_to_home_is_valid(self, symbol, roll, start):
+    def _space_to_home_is_valid(self, symbol, roll, start):
         """
         TODO: Refactor to follow single-responsibility principle
         A home advance can be invalid in two ways:
@@ -487,9 +487,9 @@ class Game:
 
     # Home advance move methods
     def home_advance_validator(self, move):
-        return self.home_advance_is_valid(move.symbol, move.roll, move.start)
+        return self._home_advance_is_valid(move.symbol, move.roll, move.start)
 
-    def home_advance_is_valid(self, symbol, roll, start):
+    def _home_advance_is_valid(self, symbol, roll, start):
         """
         A home advance is invalid if the end position is occupied
         or would land outside of the home spaces.
