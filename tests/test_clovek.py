@@ -73,16 +73,6 @@ class TestBoard:
              ) == symbol
 
 
-@pytest.fixture
-def players():
-    res = []
-    for symbol in ['1', '2', '3', '4']:
-        player = Player(symbol=symbol, number_of_players=4)
-        player.initialize_home()
-        res.append(player)
-    return res
-
-
 def game_state_is_equal(game_1, game_2):
     """
     Convenience method for testing board states.
