@@ -42,7 +42,6 @@ def small_initial_board():
 
 
 class TestBoard:
-
     def test_spaces_setup(self):
         board = Board(10)
         board.initialize()
@@ -82,6 +81,42 @@ def players():
         player.initialize_home()
         res.append(player)
     return res
+
+
+def game_state_is_equal(game_1, game_2):
+    """
+    Convenience method for testing board states.
+
+    Parameters
+    ----------
+    board_1 : triple of np.arrays
+        Triple of waiting counts array, spaces array and home array
+    board_2 : triple of np.arrays
+        Triple of waiting counts array, spaces array and home array
+
+    Returns
+    -------
+    res : Boolean
+        board_1 == board_2
+    """
+    print('yoyowassup')
+    res = []
+    res.append(np.array_equal(
+        game_1.get_waiting_count_array(),
+        game_2.get_waiting_count_array()
+        ))
+
+    res.append(np.array_equal(
+        game_1.get_spaces_array(),
+        game_2.get_spaces_array()
+    ))
+
+    res.append(np.array_equal(
+        game_1.get_homes_array(),
+        game_2.get_homes_array()
+    ))
+    print(res)
+    return np.all(np.array(res))
 
 
 class TestGame:
@@ -265,7 +300,7 @@ class TestGameAction:
     game = Game(players, section_length=4)
     game.initialize()
 
-    # Useful board space positions for test cases
+    # Define board space position variables for test cases
     starts = {}
     prehome_positions = {}
     for symbol in symbols:
@@ -273,6 +308,7 @@ class TestGameAction:
         starts[symbol] = player.get_start()
         prehome_positions[symbol] = player.get_prehome_position()
 
+    # Get position methods
     def test_get_symbol_space_position_array(self):
         modified_game = deepcopy(self.game)
         modified_game.set_space_array('1', 0)
@@ -280,6 +316,33 @@ class TestGameAction:
 
         assert modified_game.get_symbol_space_positions('1') == np.array([0])
         assert modified_game.get_symbol_space_positions('2') == np.array([1])
+
+    def test_get_symbol_home_array(self):
+        modified_game = deepcopy(self.game)
+        symbol = '1'
+        modified_game.set_homes_array(symbol, position=0)
+        modified_game.set_homes_array(symbol, position=3)
+
+        np.testing.assert_array_equal(
+            modified_game.get_symbol_home_positions(symbol),
+            np.array([0, 3])
+        )
+
+    @pytest.mark.parametrize(
+        'position',
+        [(2), (2), (3)]
+    )
+    def test_get_home_positions(self, position):
+        modified_game = deepcopy(self.game)
+        symbol = '1'
+        # Occupy position 1 for all tests
+        modified_game.set_homes_array(symbol, position=0)
+        modified_game.set_homes_array(symbol, position)
+
+        np.testing.assert_array_equal(
+            modified_game.get_symbol_home_positions(symbol),
+            np.array([0, position])
+        )
 
     # Test moves
     @pytest.mark.parametrize(
@@ -386,32 +449,21 @@ class TestGameAction:
 
         assert moves == expected
 
-    def test_get_symbol_home_array(self):
-        modified_game = deepcopy(self.game)
-        symbol = '1'
-        modified_game.set_homes_array(symbol, position=0)
-        modified_game.set_homes_array(symbol, position=3)
+    def test_game_state_is_equal(self):
+        """Test game state equality method"""
+        assert game_state_is_equal(self.game, self.game)
 
-        np.testing.assert_array_equal(
-            modified_game.get_symbol_home_positions(symbol),
-            np.array([0, 3])
-        )
+        modified_waiting = deepcopy(self.game)
+        modified_waiting.set_waiting_count_array('1', 0)
+        assert not game_state_is_equal(self.game, modified_waiting)
 
-    @pytest.mark.parametrize(
-        'position',
-        [(2), (2), (3)]
-    )
-    def test_get_home_positions(self, position):
-        modified_game = deepcopy(self.game)
-        symbol = '1'
-        # Occupy position 1 for all tests
-        modified_game.set_homes_array(symbol, position=0)
-        modified_game.set_homes_array(symbol, position)
+        modified_spaces = deepcopy(self.game)
+        modified_spaces.set_space_array('1', 0)
+        assert not game_state_is_equal(self.game, modified_spaces)
 
-        np.testing.assert_array_equal(
-            modified_game.get_symbol_home_positions(symbol),
-            np.array([0, position])
-        )
+        modified_homes = deepcopy(self.game)
+        modified_homes.set_space_array('1', 0)
+        assert not game_state_is_equal(self.game, modified_homes)
 
     # Board representation tests
     def test_update_board_waiting(self):
@@ -435,3 +487,5 @@ class TestGameAction:
             modified_game.board.homes['1']
             == [EMPTY_VALUE, '1', EMPTY_VALUE, EMPTY_VALUE]
         )
+
+
