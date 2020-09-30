@@ -6,7 +6,8 @@ import attr
 import numpy as np
 
 from .consts import (
-    EMPTY_VALUE, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER
+    EMPTY_SYMBOL, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER, NR_OF_DICE_FACES,
+    MOVE_KINDS
 )
 
 
@@ -42,14 +43,14 @@ class Board:
             raise ValueError('Sections must have even length')
 
         self.spaces = (
-            len(self.player_symbols) * self.section_length * [EMPTY_VALUE]
+            len(self.player_symbols) * self.section_length * [EMPTY_SYMBOL]
         )
 
     def setup_homes(self):
         """Each player's home base consisting of 4 spots"""
         res = {}
         for symbol in self.player_symbols:
-            res[symbol] = PIECES_PER_PLAYER * [EMPTY_VALUE]
+            res[symbol] = PIECES_PER_PLAYER * [EMPTY_SYMBOL]
 
         self.homes = res
 
@@ -60,12 +61,17 @@ class Board:
 
         self.waiting_count = res
 
-    def _get_private_symbol(self, public_symbol):
+    def get_private_symbol(self, public_symbol):
+        if public_symbol == EMPTY_SYMBOL:
+            return -1
+        else:
+            return self.player_symbols.index(public_symbol)
 
-        return self.player_symbols.index(public_symbol)
-
-    def _get_public_symbol(self, private_symbol):
-        return self.player_symbols[private_symbol]
+    def get_public_symbol(self, private_symbol):
+        if private_symbol == -1:
+            return EMPTY_SYMBOL
+        else:
+            return self.player_symbols[private_symbol]
 
     def __repr__(self):
         """Show board and players"""
@@ -102,9 +108,35 @@ class Board:
             )
 
 
+def check_start(self, attribute, value):
+    # TODO: Refactor as in exapmple
+    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
+    if value is not None and self.kind == 'leave_waiting':
+        raise ValueError(
+            'Leave home moves may not have a start position'
+        )
+
+
+@attr.s
+class Move:
+    """
+    Container for game moves based on array (internal) board representation.
+    """
+    symbol = attr.ib()
+    kinds = MOVE_KINDS
+    kind = attr.ib()
+    roll = attr.ib(kw_only=True, default=None)
+    start = attr.ib(kw_only=True, default=None, validator=check_start)
+#    end = attr.ib(kw_only=True, default=None)
+
+    @kind.validator
+    def check_kind(self, attribute, value):
+        if value not in self.kinds:
+            raise ValueError(f'Move kind must be a member of {self.kinds}')
+
+
 @attr.s
 class Game:
-
     players = attr.ib()
     section_length = attr.ib(default=4)
 
@@ -146,7 +178,7 @@ class Game:
 
     def _set_player_start(self):
         for idx, player in enumerate(self.players):
-            player.set_start_position(idx, self.section_length)
+            player.set_leave_waiting_position(idx, self.section_length)
 
     def _set_player_prehome(self):
         for idx, player in enumerate(self.players):
@@ -167,6 +199,7 @@ class Game:
         idx = np.argmax(np.array(self.player_symbols) == symbol)
         return self.players[idx]
 
+    # Board methods
     def initialize_waiting_count_array(self):
         res = [
             self.board.waiting_count.get(symbol)
@@ -176,6 +209,21 @@ class Game:
 
     def get_waiting_count_array(self):
         return self._waiting_count
+
+    def get_symbol_waiting_count(self, symbol):
+        """
+        Parameters
+        ----------
+        symbol : string
+
+        Returns
+        -------
+         : int
+            Symbol waiting count.
+        """
+        private_symbol = self._to_private_symbol(symbol)
+
+        return self.get_waiting_count_array()[private_symbol]
 
     def set_waiting_count_array(self, symbol, count):
         self.board.waiting_count[symbol] = count
@@ -209,6 +257,21 @@ class Game:
     def get_homes_array(self):
         return self._homes_array
 
+    def get_symbol_home_array(self, symbol):
+        """
+        Parameters
+        ----------
+        symbol : string
+
+        Returns
+        -------
+         : np.array
+            Symbol home array representation.
+        """
+        private_symbol = self._to_private_symbol(symbol)
+
+        return self.get_homes_array()[private_symbol, :]
+
     def set_homes_array(self, symbol, position):
         self.board.homes[symbol][position] = symbol
 
@@ -216,20 +279,189 @@ class Game:
         self._homes_array[private_symbol, position] = private_symbol
 
     def _to_private_symbol(self, symbol):
-        if symbol == EMPTY_VALUE:
+        if symbol == EMPTY_SYMBOL:
             return -1
         else:
             return self.player_symbols.index(symbol)
 
     def assign_to_space(self, symbol, idx):
+        """Convenience function. TODO: Deprecate or make private?"""
         self._spaces_array[idx] = self._to_private_symbol(symbol)
 
-    def leave_home_is_valid(self, symbol, roll):
-        private_symbol = self._to_private_symbol(symbol)
+    # Moves
+    # def get_all_moves(self, symbol, roll):
+    #     res = {}
+    #     for kind in MOVE_KINDS:
+    #         res[kind] = self.get_moves_of(symbol, kind, roll)
+
+    #     return res
+
+    def get_moves_of(self, symbol, kind, roll):
+        res = []
+        starts = self.get_move_starts(symbol, kind)
+        for start in starts:
+            try:
+                move = self.move_factory(symbol, kind, roll, start)
+                res += move
+            except ValueError:
+                continue
+
+        return res
+
+    def get_move_starts(self, symbol, kind):
+        """
+        Get potential starting positions for symbol and move kind.
+        No validation is performed.
+        """
+        if kind == 'leave_waiting':
+            return self._get_leave_waiting_starts(symbol)
+        elif kind == 'space_advance':
+            return self._get_space_advance_starts(symbol)
+        elif kind == 'space_to_home':
+            return self._get_space_to_home_starts(symbol)
+        elif kind == 'home_advance':
+            return self._get_home_advance_starts(symbol)
+        else:  # return_to_waiting
+            return self._get_return_to_waiting_starts(symbol)
+
+    def _get_leave_waiting_starts(self, symbol):
+        return [None]
+
+    def _get_space_advance_starts(self, symbol):
+        return self.get_symbol_space_array(symbol)
+
+    def _get_space_to_home_starts(self, symbol):
+        return self.get_symbol_space_array(symbol)
+
+    def _get_home_advance_starts(self, symbol):
+        return self.get_symbol_home_positions(symbol)
+
+    def _get_return_to_waiting_starts(self, symbol):
+        """
+        Returns [None] as return_to_waiting is an effect of another move
+        and hence cannot be chosen directly by an agent, so no potential
+        start positions returned.
+        """
+        return [None]
+
+    def move_factory(self, symbol, kind, roll, start=None):
+        """
+        Create valid Move instances corresponding to input
+
+        Parameters
+        ----------
+        symbol : str
+        kind : str
+            One of consts.MOVE_KINDS
+        roll : int
+            Roll value
+        start : int or None
+            Start space or home position, None for moves involving the
+            waiting area
+
+        Returns
+        -------
+        res = list
+            list of Move's
+        """
+        moves = self._get_moves(symbol, kind, roll, start)
+        for move in moves:
+            is_valid = self._get_validator(move.kind)
+            if not is_valid(move):
+                # TODO raise reasonable error--see #9.
+                raise ValueError(f'Invalid move entered: {move}')
+
+        return moves
+
+    def _get_moves(self, symbol, kind, roll, start):
         res = []
 
-        # Check if a 6 rolled
-        res.append(roll == 6)
+        if kind == 'leave_waiting':
+            res.append(Move(symbol, kind, roll=roll))
+
+        else:
+            res.append(Move(
+                symbol, kind, roll=roll, start=start
+            ))
+
+        # Check if move sends other symbol piece back to its waiting area
+        symbol_returned_to_waiting, position_returned_to_waiting = \
+            self._get_returned_to_waiting_symbol_position(
+                symbol, kind, roll, start
+             )
+        if symbol_returned_to_waiting is not None:
+            res.append(Move(
+                symbol_returned_to_waiting, 'return_to_waiting',
+                start=position_returned_to_waiting
+            ))
+
+        return res
+
+    def _get_returned_to_waiting_symbol_position(
+        self, symbol, kind, roll, start
+    ):
+        """
+        Returns tuple of symbol to be returned to waiting and its
+        position before being returned
+        """
+        if kind == 'leave_waiting':
+            position = self.get_player(symbol).get_leave_waiting_position()
+        elif (
+            kind == 'space_advance' and
+            self._is_space_advance_move(symbol, roll, start)
+        ):
+            position = roll + start
+        else:  # No other move kinds can send pieces back to waiting
+            return (None, None)
+
+        space_occupier = self.board.get_public_symbol(
+            self.get_spaces_array()[position]
+        )
+
+        if space_occupier not in [EMPTY_SYMBOL, symbol]:
+            return (space_occupier, position)
+        else:
+            return (None, None)
+
+    def _get_validator(self, kind):
+        if kind == 'leave_waiting':
+            return self.leave_waiting_validator
+        elif kind == 'space_advance':
+            return self.space_advance_validator
+        elif kind == 'space_to_home':
+            return self.space_to_home_validator
+        elif kind == 'home_advance':  # home_advance
+            return self.home_advance_validator
+        else:  # return_to_waiting
+            return self.return_to_waiting_validator
+
+    def leave_waiting_validator(self, move):
+        """
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+        """
+        return self._leave_waiting_is_valid(move.symbol, move.roll)
+
+    def _leave_waiting_is_valid(self, symbol, roll):
+        """
+        Parameters
+        ----------
+        symbol : string
+        roll : int
+
+        Returns
+        -------
+         : Boolean
+        """
+        private_symbol = self._to_private_symbol(symbol)
+        res = []
+        # Check if a maximum rolled (usually 6)
+        res.append(roll == NR_OF_DICE_FACES)
 
         # Check if still symbol pieces in waiting area
         if self._waiting_count[private_symbol] > 0:
@@ -237,26 +469,75 @@ class Game:
         else:
             res.append(False)
 
-        # Check if symbol's start position is occupied
-        start_position = self.get_player(symbol).get_start_position()
-        res.append(self._spaces_array[start_position] == -1)
+        # Check if symbol's start position is occupied by own piece
+        start = self.get_player(symbol).get_leave_waiting_position()
+        occupied_by = self.get_space_occupier(start)
+        res.append(occupied_by != symbol)
 
         return np.all(np.array(res))
 
-    def advance_is_valid(self, symbol, position, roll):
-        if self.is_space_advance(symbol, position, roll):
-            return self.space_advance_is_valid(symbol, position, roll)
-        else:
-            return self.home_advance_is_valid(symbol, position, roll)
-
-    def is_space_advance(self, symbol, position, roll):
+    def get_space_occupier(self, position):
         """
-        Determine if advance move is still among spaces, i.e.
-        not in the symbol's home area
-        """
-        start = self.get_player(symbol).get_start_position()
-        zeroed_position = (position - start) % len(self._spaces_array)
+        Get public symbol of occupier of board space position given, can be
+        the empty symbol consts.EMPTY_SYMBOL
 
+        Parameters
+        ----------
+        position : int
+            Index of Game._spaces_array
+
+        Returns
+        -------
+        res : str
+            Member of Game.player_symbols or consts.EMPTY_SYMBOL
+        """
+        occupier_private_symbol = self.get_spaces_array()[position]
+        return self.board.get_public_symbol(occupier_private_symbol)
+
+    # Space advance move methods
+    def space_advance_validator(self, move):
+        if not self._is_space_advance_move(move.symbol, move.roll, move.start):
+            return False
+
+        start_occupied = self._space_start_occupied(move.symbol, move.start)
+        end_occupied_by = self.get_spaces_array()[move.start + move.roll]
+
+        end_blocked = move.symbol == end_occupied_by
+        return start_occupied and not end_blocked
+
+    def get_symbol_space_array(self, symbol):
+        """
+        Parameters
+        ----------
+        symbol : string
+            Must be one of player symbols
+
+        Returns
+        -------
+        symbol_positions : numpy.array
+            1-d array of game board space indices where symbol has pieces
+        """
+        private_symbol = self._to_private_symbol(symbol)
+        spaces_array = self.get_spaces_array()
+        symbol_positions = np.where(spaces_array == private_symbol)[0]
+
+        return symbol_positions
+
+    def _is_space_advance_move(self, symbol, roll, start):
+        """
+        Determine if space advance move, sans validity checks.
+
+        Parameters
+        ----------
+        symbol : string
+        roll : int
+        move_start : int
+
+        Returns
+        -------
+         : Boolean
+         """
+        zeroed_position = self.get_zeroed_position(symbol, start)
         advance_ratio_of_spaces = (
             (zeroed_position + roll) / float(len(self._spaces_array))
         )
@@ -264,39 +545,165 @@ class Game:
         after_prehome_ratio_rounded = floor(advance_ratio_of_spaces)
 
         res = not bool(after_prehome_ratio_rounded)
-
         return res
 
-    def space_advance_is_valid(self, symbol, position, roll):
-        """
-        Note: Assumes advance (position + roll) *is* a space advance
-        """
-        return self._spaces_array[roll + position] == -1
+    def get_zeroed_position(self, symbol, position):
+        """Calculate position relative to symbol leave waiting position"""
+        leave_waiting = self.get_player(symbol).get_leave_waiting_position()
+        res = (position - leave_waiting) % len(self._spaces_array)
+        return res
 
-    def home_advance_is_valid(self, symbol, position, roll):
-        """
-        A home advance can be invalid in two ways:
-          * the advance goes beyond the home spots
-          * the advance position is occupied
-        """
-        res = []
+    def _space_start_occupied(self, symbol, start):
+        private_symbol = self._to_private_symbol(symbol)
+        return self.get_spaces_array()[start] == private_symbol
 
-        # Advance position not beyond last home spot, i.e. within home
-        symbol_prehome = self.get_player(symbol).get_prehome_position()
-        position_past_prehome = (
-            (position + roll - symbol_prehome) % len(self._spaces_array)
+    # Space to home move methods
+    def space_to_home_validator(self, move):
+        end = self.get_space_to_home_position(
+            move.symbol, move.roll, move.start
         )
-        within_home = position_past_prehome <= PIECES_PER_PLAYER
-        res.append(within_home)
+        if not self._position_within_home(end):
+            # Return to avoid index error if end is beyond home spaces
+            return False
 
-        # Advance position unoccupied
-        if within_home:
-            private_symbol = self._to_private_symbol(symbol)
-            print(symbol)
-            print(self._homes_array[private_symbol, :])
-            advance_position_unoccupied = (
-                self._homes_array[private_symbol, position_past_prehome] == -1
-            )
-            res.append(advance_position_unoccupied)
+        is_space_to_home = self._is_space_to_home_move(
+            move.symbol, move.roll, move.start
+        )
+        end_not_occupied = self._home_position_unoccupied(move.symbol, end)
 
-        return np.all(np.array(res))
+        return is_space_to_home and end_not_occupied
+
+    def get_space_to_home_position(self, symbol, roll, start):
+        """Get end position of space to home move, sans validity checks"""
+        zeroed_start = self.get_zeroed_position(symbol, start)
+        spaces_to_prehome = len(self._spaces_array) - zeroed_start
+
+        return roll - spaces_to_prehome
+
+    def _is_space_to_home_move(self, symbol, roll, start):
+        """
+        Determine if move is from (main) board space to home area,
+        sans validity checks.
+
+        Parameters
+        ----------
+        symbol : string
+        position : int
+        roll : int
+
+        Returns
+        -------
+         : Boolean
+        """
+        return not self._is_space_advance_move(symbol, roll, start)
+
+    def _home_position_unoccupied(self, symbol, position):
+        return self.get_symbol_home_array(symbol)[position] == -1
+
+    def _position_within_home(self, position):
+        return position <= PIECES_PER_PLAYER - 1
+
+    # Home advance move methods
+    def home_advance_validator(self, move):
+        return self._home_advance_is_valid(move.symbol, move.roll, move.start)
+
+    def _home_advance_is_valid(self, symbol, roll, start):
+        """
+        A home advance is invalid if the end position is occupied
+        or would land outside of the home spaces.
+
+        Parameters
+        ----------
+        symbol : string
+        roll : int
+        start : int
+
+        Returns
+        -------
+         : Boolean
+        """
+        end = start + roll
+
+        if end > PIECES_PER_PLAYER - 1:
+            return False
+
+        symbol_home_positions = self.get_symbol_home_positions(symbol)
+
+        return end not in symbol_home_positions
+
+    def get_symbol_home_positions(self, symbol):
+        """
+        Parameters
+        ----------
+        symbol : string
+
+        Returns
+        -------
+        symbol_positions : np.array
+            Positions occupied by a symbol piece.
+        """
+        symbol_home_array = self.get_symbol_home_array(symbol)
+        private_symbol = self._to_private_symbol(symbol)
+        symbol_positions = np.where(symbol_home_array == private_symbol)[0]
+
+        return symbol_positions
+
+    # Return to waiting methods
+    def return_to_waiting_validator(self, move):
+        """
+        Returns true, as return_to_waiting is generated within this class,
+        as it is an effect of another agent move
+        """
+        return True
+
+    # Do moves
+    def do(self, symbol, kind, roll, start=None):
+        """
+        Try to create specified move, and update board if valid.
+        """
+        try:
+            moves = self.move_factory(symbol, kind, roll=roll, start=start)
+            for move in moves:
+                update_with = self._get_updater(move.kind)
+                update_with(move)
+        except ValueError as err:
+            print(err, '- board not updated')
+
+    def _get_updater(self, move_kind):
+        if move_kind == 'leave_waiting':
+            return self._leave_waiting_updater
+        elif move_kind == 'space_advance':
+            return self._space_advance_updater
+        elif move_kind == 'space_to_home':
+            return self._space_to_home_updater
+        elif move_kind == 'return_to_waiting':
+            return self._return_to_waiting_updater
+        else:
+            raise NotImplementedError()
+
+    def _leave_waiting_updater(self, move):
+        current_count = self.get_symbol_waiting_count(move.symbol)
+        self.set_waiting_count_array(move.symbol, current_count - 1)
+        start = self.get_player(move.symbol).get_leave_waiting_position()
+        self.set_space_array(move.symbol, start)
+
+    def _space_advance_updater(self, move):
+        self.set_space_array(EMPTY_SYMBOL, move.start)
+        self.set_space_array(move.symbol, move.start + move.roll)
+
+    def _space_to_home_updater(self, move):
+        self.set_space_array(EMPTY_SYMBOL, move.start)
+        end = self.get_space_to_home_position(
+            move.symbol, move.roll, move.start
+        )
+        self.set_homes_array(move.symbol, end)
+
+    def _return_to_waiting_updater(self, move):
+        """
+        Only update waiting counts, as the move causing return to waiting
+        updates the spaces
+        """
+        pre_return_waiting_counts = self.get_symbol_waiting_count(move.symbol)
+        self.set_waiting_count_array(
+            move.symbol, pre_return_waiting_counts + 1
+        )

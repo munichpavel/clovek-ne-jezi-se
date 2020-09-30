@@ -1,7 +1,7 @@
 from random import randint
 import attr
 
-from .consts import EMPTY_VALUE
+from .consts import EMPTY_SYMBOL, NR_OF_DICE_FACES
 
 
 @attr.s
@@ -10,7 +10,7 @@ class Player:
     number_of_players = attr.ib(validator=attr.validators.instance_of(int))
 
     def initialize_home(self):
-        self.home = self.number_of_players * (EMPTY_VALUE)
+        self.home = self.number_of_players * (EMPTY_SYMBOL)
 
     def _set_symbol(self, symbol):
         if not isinstance(symbol, str):
@@ -21,11 +21,11 @@ class Player:
     def set_order(self, order):
         self.order = order
 
-    def set_start_position(self, order, section_length):
-        self._start_position = order * section_length
+    def set_leave_waiting_position(self, order, section_length):
+        self._start = order * section_length
 
-    def get_start_position(self):
-        return self._start_position
+    def get_leave_waiting_position(self):
+        return self._start
 
     def set_prehome_position(self, order, section_length):
         res = (
@@ -47,11 +47,11 @@ class Player:
 
     @staticmethod
     def _get_roll_value():
-        return randint(1, 6)
+        return randint(1, NR_OF_DICE_FACES)
 
     @staticmethod
     def roll_is_valid(roll_value):
-        return 1 <= roll_value <= 6
+        return 1 <= roll_value <= NR_OF_DICE_FACES
 
 
 class FurthestAlongAgent(Player):
