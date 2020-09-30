@@ -1,7 +1,7 @@
 from random import randint
 import attr
 
-from .consts import EMPTY_VALUE, NR_OF_DICE_FACES
+from .consts import EMPTY_SYMBOL, NR_OF_DICE_FACES
 
 
 @attr.s
@@ -10,7 +10,7 @@ class Player:
     number_of_players = attr.ib(validator=attr.validators.instance_of(int))
 
     def initialize_home(self):
-        self.home = self.number_of_players * (EMPTY_VALUE)
+        self.home = self.number_of_players * (EMPTY_SYMBOL)
 
     def _set_symbol(self, symbol):
         if not isinstance(symbol, str):
@@ -21,10 +21,10 @@ class Player:
     def set_order(self, order):
         self.order = order
 
-    def set_start(self, order, section_length):
+    def set_leave_waiting_position(self, order, section_length):
         self._start = order * section_length
 
-    def get_start(self):
+    def get_leave_waiting_position(self):
         return self._start
 
     def set_prehome_position(self, order, section_length):
