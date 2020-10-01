@@ -1,5 +1,6 @@
 """Clovek ne jezi se game board and plays"""
 from math import floor
+from random import randint
 
 import attr
 
@@ -232,7 +233,10 @@ class Game:
         self._waiting_count[private_symbol] = count
 
     def initialize_spaces_array(self):
-        res = [self.board.get_private_symbol(symbol) for symbol in self.board.spaces]
+        res = [
+            self.board.get_private_symbol(symbol)
+            for symbol in self.board.spaces
+        ]
         self._spaces_array = np.array(res)
 
     def get_spaces_array(self):
@@ -282,6 +286,20 @@ class Game:
         """Convenience function. TODO: Deprecate or make private?"""
         self._spaces_array[idx] = self.board.get_private_symbol(symbol)
 
+    def roll(self):
+        res = self._get_roll_value()
+        if self.roll_is_valid(res):
+            return res
+        else:
+            raise ValueError(f'Invalid roll value: {res}')
+
+    def _get_roll_value(self):
+        return randint(1, NR_OF_DICE_FACES)
+
+    def roll_is_valid(self, value):
+        return 1 <= value and value <= NR_OF_DICE_FACES
+
+    # Game moves
     def get_moves_of(self, symbol, kind, roll):
         res = []
         starts = self.get_move_starts(symbol, kind)

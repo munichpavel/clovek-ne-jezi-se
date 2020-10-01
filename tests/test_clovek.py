@@ -25,14 +25,6 @@ class TestPlayer:
     with pytest.raises(TypeError):
         Player(1, number_of_players=4)
 
-    def test_dice_roll_monkeypatch(self, monkeypatch):
-
-        monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(1))
-        assert self.player.roll_is_valid(self.player.roll())
-
-        monkeypatch.setattr(self.player, 'roll', lambda: monkey_roll(0))
-        assert ~self.player.roll_is_valid(self.player.roll())
-
 
 @pytest.fixture
 def small_initial_board():
@@ -73,7 +65,7 @@ class TestBoard:
              ) == symbol
 
 
-class TestGame:
+class TestGameSetup:
     players = []
     for symbol in ['1', '2', '3', '4']:
         player = Player(symbol=symbol, number_of_players=4)
@@ -155,7 +147,7 @@ class TestGame:
             ('4', 30)
         ]
     )
-    def test_player_normal_start(
+    def test_player_normal_leave_waiting(
         self, symbol, expected_position
     ):
         # Normal board
@@ -227,6 +219,13 @@ class TestGame:
             expected
         )
 
+    def test_dice_roll_monkeypatch(self, monkeypatch):
+        monkeypatch.setattr(self.mini_game, 'roll', lambda: monkey_roll(1))
+        assert self.mini_game.roll_is_valid(self.mini_game.roll())
+
+        monkeypatch.setattr(self.mini_game, 'roll', lambda: monkey_roll(0))
+        assert ~self.mini_game.roll_is_valid(self.mini_game.roll())
+
 
 class TestMoves:
     def test_validators(self):
@@ -243,7 +242,7 @@ class TestMoves:
             Move('1', 'leave_waiting', roll=NR_OF_DICE_FACES, start=0)
 
 
-class TestGameAction:
+class TestGameMoves:
     symbols = ['1', '2', '3', '4']
     players = []
     for symbol in symbols:

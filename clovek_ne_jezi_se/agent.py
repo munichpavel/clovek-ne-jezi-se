@@ -1,7 +1,7 @@
-from random import randint
+
 import attr
 
-from .consts import EMPTY_SYMBOL, NR_OF_DICE_FACES
+from .consts import EMPTY_SYMBOL
 
 
 @attr.s
@@ -36,22 +36,6 @@ class Player:
 
     def get_prehome_position(self):
         return self._prehome_position
-
-    def roll(self):
-        res = Player._get_roll_value()
-        if Player.roll_is_valid(res):
-            print("Player {} rolls a {}".format(self.symbol, res))
-            return res
-        else:
-            raise ValueError('Roll value must be between 1 and 6')
-
-    @staticmethod
-    def _get_roll_value():
-        return randint(1, NR_OF_DICE_FACES)
-
-    @staticmethod
-    def roll_is_valid(roll_value):
-        return 1 <= roll_value <= NR_OF_DICE_FACES
 
 
 class FurthestAlongAgent(Player):
