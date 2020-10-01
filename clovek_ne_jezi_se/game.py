@@ -232,7 +232,10 @@ class Game:
         self._waiting_count[private_symbol] = count
 
     def initialize_spaces_array(self):
-        res = [self.board.get_private_symbol(symbol) for symbol in self.board.spaces]
+        res = [
+            self.board.get_private_symbol(symbol)
+            for symbol in self.board.spaces
+        ]
         self._spaces_array = np.array(res)
 
     def get_spaces_array(self):
