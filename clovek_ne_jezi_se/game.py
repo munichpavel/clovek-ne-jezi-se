@@ -221,18 +221,18 @@ class Game:
          : int
             Symbol waiting count.
         """
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
 
         return self.get_waiting_count_array()[private_symbol]
 
     def set_waiting_count_array(self, symbol, count):
         self.board.waiting_count[symbol] = count
 
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         self._waiting_count[private_symbol] = count
 
     def initialize_spaces_array(self):
-        res = [self._to_private_symbol(symbol) for symbol in self.board.spaces]
+        res = [self.board.get_private_symbol(symbol) for symbol in self.board.spaces]
         self._spaces_array = np.array(res)
 
     def get_spaces_array(self):
@@ -241,14 +241,14 @@ class Game:
     def set_space_array(self, symbol, position):
         self.board.spaces[position] = symbol
 
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         self._spaces_array[position] = private_symbol
 
     def initialize_homes_array(self):
         res = []
         for symbol in self.player_symbols:
             res.append([
-                self._to_private_symbol(symbol)
+                self.board.get_private_symbol(symbol)
                 for symbol in self.board.homes.get(symbol)
             ])
 
@@ -268,25 +268,19 @@ class Game:
          : np.array
             Symbol home array representation.
         """
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
 
         return self.get_homes_array()[private_symbol, :]
 
     def set_homes_array(self, symbol, position):
         self.board.homes[symbol][position] = symbol
 
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         self._homes_array[private_symbol, position] = private_symbol
-
-    def _to_private_symbol(self, symbol):
-        if symbol == EMPTY_SYMBOL:
-            return -1
-        else:
-            return self.player_symbols.index(symbol)
 
     def assign_to_space(self, symbol, idx):
         """Convenience function. TODO: Deprecate or make private?"""
-        self._spaces_array[idx] = self._to_private_symbol(symbol)
+        self._spaces_array[idx] = self.board.get_private_symbol(symbol)
 
     def get_moves_of(self, symbol, kind, roll):
         res = []
@@ -450,7 +444,7 @@ class Game:
         -------
          : Boolean
         """
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         res = []
         # Check if a maximum rolled (usually 6)
         res.append(roll == NR_OF_DICE_FACES)
@@ -509,7 +503,7 @@ class Game:
         symbol_positions : numpy.array
             1-d array of game board space indices where symbol has pieces
         """
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         spaces_array = self.get_spaces_array()
         symbol_positions = np.where(spaces_array == private_symbol)[0]
 
@@ -546,7 +540,7 @@ class Game:
         return res
 
     def _space_start_occupied(self, symbol, start):
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         return self.get_spaces_array()[start] == private_symbol
 
     # Space to home move methods
@@ -635,7 +629,7 @@ class Game:
             Positions occupied by a symbol piece.
         """
         symbol_home_array = self.get_symbol_home_array(symbol)
-        private_symbol = self._to_private_symbol(symbol)
+        private_symbol = self.board.get_private_symbol(symbol)
         symbol_positions = np.where(symbol_home_array == private_symbol)[0]
 
         return symbol_positions
