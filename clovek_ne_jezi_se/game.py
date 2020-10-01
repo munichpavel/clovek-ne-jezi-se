@@ -288,14 +288,6 @@ class Game:
         """Convenience function. TODO: Deprecate or make private?"""
         self._spaces_array[idx] = self._to_private_symbol(symbol)
 
-    # Moves
-    # def get_all_moves(self, symbol, roll):
-    #     res = {}
-    #     for kind in MOVE_KINDS:
-    #         res[kind] = self.get_moves_of(symbol, kind, roll)
-
-    #     return res
-
     def get_moves_of(self, symbol, kind, roll):
         res = []
         starts = self.get_move_starts(symbol, kind)
