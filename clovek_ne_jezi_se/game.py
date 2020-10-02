@@ -275,12 +275,6 @@ class Game:
 
         return self.get_homes_array()[private_symbol, :]
 
-    def set_homes_array(self, symbol, position):
-        self.board.homes[symbol][position] = symbol
-
-        private_symbol = self.board.get_private_symbol(symbol)
-        self._homes_array[private_symbol, position] = private_symbol
-
     def roll(self):
         res = self._get_roll_value()
         if self.roll_is_valid(res):
@@ -696,6 +690,12 @@ class Game:
             move.symbol, move.roll, move.start
         )
         self.set_homes_array(move.symbol, end)
+
+    def set_homes_array(self, symbol, position):
+        self.board.homes[symbol][position] = symbol
+
+        private_symbol = self.board.get_private_symbol(symbol)
+        self._homes_array[private_symbol, position] = private_symbol
 
     def _return_to_waiting_updater(self, move):
         """
