@@ -241,7 +241,7 @@ class Game:
     def get_spaces_array(self):
         return self._spaces_array
 
-    def set_space_array(self, symbol, position):
+    def set_symbol_space_array(self, symbol, position):
         self.board.spaces[position] = symbol
 
         private_symbol = self.board.get_private_symbol(symbol)
@@ -684,14 +684,14 @@ class Game:
         current_count = self.get_symbol_waiting_count(move.symbol)
         self.set_waiting_count_array(move.symbol, current_count - 1)
         start = self.get_player(move.symbol).get_leave_waiting_position()
-        self.set_space_array(move.symbol, start)
+        self.set_symbol_space_array(move.symbol, start)
 
     def _space_advance_updater(self, move):
-        self.set_space_array(EMPTY_SYMBOL, move.start)
-        self.set_space_array(move.symbol, move.start + move.roll)
+        self.set_symbol_space_array(EMPTY_SYMBOL, move.start)
+        self.set_symbol_space_array(move.symbol, move.start + move.roll)
 
     def _space_to_home_updater(self, move):
-        self.set_space_array(EMPTY_SYMBOL, move.start)
+        self.set_symbol_space_array(EMPTY_SYMBOL, move.start)
         end = self.get_space_to_home_position(
             move.symbol, move.roll, move.start
         )
