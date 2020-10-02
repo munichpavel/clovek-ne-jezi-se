@@ -226,12 +226,14 @@ class Game:
         return self.get_waiting_count_array()[private_symbol]
 
     def set_waiting_count_array(self, symbol, count):
+        """Set symbol waiting count value"""
         self.board.waiting_count[symbol] = count
 
         private_symbol = self.board.get_private_symbol(symbol)
         self._waiting_count[private_symbol] = count
 
     def initialize_spaces_array(self):
+        """Initialize internal spaces representation"""
         res = [
             self.board.get_private_symbol(symbol)
             for symbol in self.board.spaces
@@ -248,6 +250,7 @@ class Game:
         self._spaces_array[position] = private_symbol
 
     def initialize_homes_array(self):
+        """Initialize internal homes representation"""
         res = []
         for symbol in self.player_symbols:
             res.append([
@@ -276,6 +279,7 @@ class Game:
         return self.get_homes_array()[private_symbol, :]
 
     def roll(self):
+        """Roll dice method"""
         res = self._get_roll_value()
         if self.roll_is_valid(res):
             return res
