@@ -225,7 +225,7 @@ class Game:
 
         return self.get_waiting_count_array()[private_symbol]
 
-    def set_waiting_count_array(self, symbol, count):
+    def set_symbol_waiting_count(self, symbol, count):
         """Set symbol waiting count value"""
         self.board.waiting_count[symbol] = count
 
@@ -680,7 +680,7 @@ class Game:
 
     def _leave_waiting_updater(self, move):
         current_count = self.get_symbol_waiting_count(move.symbol)
-        self.set_waiting_count_array(move.symbol, current_count - 1)
+        self.set_symbol_waiting_count(move.symbol, current_count - 1)
         start = self.get_player(move.symbol).get_leave_waiting_position()
         self.set_symbol_space_array(move.symbol, start)
 
@@ -707,6 +707,6 @@ class Game:
         updates the spaces
         """
         pre_return_waiting_counts = self.get_symbol_waiting_count(move.symbol)
-        self.set_waiting_count_array(
+        self.set_symbol_waiting_count(
             move.symbol, pre_return_waiting_counts + 1
         )
