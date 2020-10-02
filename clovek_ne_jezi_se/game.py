@@ -148,7 +148,7 @@ class Game:
         self.n_players = len(self.players)
         self._validate_n_players()
         self._set_player_symbols()
-        self._set_player_start()
+        self._set_player_leave_waiting()
         self._set_player_prehome()
 
     def _validate_n_players(self):
@@ -176,7 +176,7 @@ class Game:
 
         self.player_symbols = symbols
 
-    def _set_player_start(self):
+    def _set_player_leave_waiting(self):
         for idx, player in enumerate(self.players):
             player.set_leave_waiting_position(idx, self.section_length)
 
