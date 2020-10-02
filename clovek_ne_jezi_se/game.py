@@ -282,10 +282,6 @@ class Game:
         private_symbol = self.board.get_private_symbol(symbol)
         self._homes_array[private_symbol, position] = private_symbol
 
-    def assign_to_space(self, symbol, idx):
-        """Convenience function. TODO: Deprecate or make private?"""
-        self._spaces_array[idx] = self.board.get_private_symbol(symbol)
-
     def roll(self):
         res = self._get_roll_value()
         if self.roll_is_valid(res):

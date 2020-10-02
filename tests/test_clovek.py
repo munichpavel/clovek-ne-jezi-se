@@ -202,23 +202,6 @@ class TestGameSetup:
         assert isinstance(game_array, np.ndarray)
         np.testing.assert_array_equal(game_array, expected)
 
-    @pytest.mark.parametrize(
-        'symbol_idx,space_idx',
-        [(0, 0), (1, 0), (3, 1)]
-    )
-    def test_assignments(self, symbol_idx, space_idx):
-        symbol = self.mini_game.player_symbols[symbol_idx]
-        self.mini_game.assign_to_space(symbol, space_idx)
-
-        # Define expected array by modifying spaces array
-        expected = self.mini_game.get_spaces_array()
-        expected[space_idx] = symbol_idx
-
-        np.testing.assert_array_equal(
-            self.mini_game.get_spaces_array(),
-            expected
-        )
-
     def test_dice_roll_monkeypatch(self, monkeypatch):
         monkeypatch.setattr(self.mini_game, 'roll', lambda: monkey_roll(1))
         assert self.mini_game.roll_is_valid(self.mini_game.roll())
