@@ -128,7 +128,6 @@ class Move:
     kind = attr.ib()
     roll = attr.ib(kw_only=True, default=None)
     start = attr.ib(kw_only=True, default=None, validator=check_start)
-#    end = attr.ib(kw_only=True, default=None)
 
     @kind.validator
     def check_kind(self, attribute, value):
