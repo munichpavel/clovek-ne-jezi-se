@@ -343,7 +343,7 @@ class Game:
 
     def move_factory(self, symbol, kind, roll, start=None):
         """
-        Create valid Move instances corresponding to input
+        Create valid Move instances corresponding to input.
 
         Parameters
         ----------
@@ -556,6 +556,15 @@ class Game:
 
     # Space to home move methods
     def space_to_home_validator(self, move):
+        """
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+        """
         end = self.get_space_to_home_position(
             move.symbol, move.roll, move.start
         )
@@ -602,6 +611,15 @@ class Game:
 
     # Home advance move methods
     def home_advance_validator(self, move):
+        """
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+        """
         return self._home_advance_is_valid(move.symbol, move.roll, move.start)
 
     def _home_advance_is_valid(self, symbol, roll, start):
@@ -649,7 +667,16 @@ class Game:
     def return_to_waiting_validator(self, move):
         """
         Returns true, as return_to_waiting is generated within this class,
-        as it is an effect of another agent move
+        as it is an effect of another agent move.
+
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+            Always returns True
         """
         return True
 
