@@ -128,7 +128,6 @@ class Move:
     kind = attr.ib()
     roll = attr.ib(kw_only=True, default=None)
     start = attr.ib(kw_only=True, default=None, validator=check_start)
-#    end = attr.ib(kw_only=True, default=None)
 
     @kind.validator
     def check_kind(self, attribute, value):
@@ -149,7 +148,7 @@ class Game:
         self.n_players = len(self.players)
         self._validate_n_players()
         self._set_player_symbols()
-        self._set_player_start()
+        self._set_player_leave_waiting()
         self._set_player_prehome()
 
     def _validate_n_players(self):
@@ -177,7 +176,7 @@ class Game:
 
         self.player_symbols = symbols
 
-    def _set_player_start(self):
+    def _set_player_leave_waiting(self):
         for idx, player in enumerate(self.players):
             player.set_leave_waiting_position(idx, self.section_length)
 
@@ -226,13 +225,15 @@ class Game:
 
         return self.get_waiting_count_array()[private_symbol]
 
-    def set_waiting_count_array(self, symbol, count):
+    def set_symbol_waiting_count(self, symbol, count):
+        """Set symbol waiting count value"""
         self.board.waiting_count[symbol] = count
 
         private_symbol = self.board.get_private_symbol(symbol)
         self._waiting_count[private_symbol] = count
 
     def initialize_spaces_array(self):
+        """Initialize internal spaces representation"""
         res = [
             self.board.get_private_symbol(symbol)
             for symbol in self.board.spaces
@@ -242,13 +243,14 @@ class Game:
     def get_spaces_array(self):
         return self._spaces_array
 
-    def set_space_array(self, symbol, position):
+    def set_symbol_space_array(self, symbol, position):
         self.board.spaces[position] = symbol
 
         private_symbol = self.board.get_private_symbol(symbol)
         self._spaces_array[position] = private_symbol
 
     def initialize_homes_array(self):
+        """Initialize internal homes representation"""
         res = []
         for symbol in self.player_symbols:
             res.append([
@@ -276,17 +278,8 @@ class Game:
 
         return self.get_homes_array()[private_symbol, :]
 
-    def set_homes_array(self, symbol, position):
-        self.board.homes[symbol][position] = symbol
-
-        private_symbol = self.board.get_private_symbol(symbol)
-        self._homes_array[private_symbol, position] = private_symbol
-
-    def assign_to_space(self, symbol, idx):
-        """Convenience function. TODO: Deprecate or make private?"""
-        self._spaces_array[idx] = self.board.get_private_symbol(symbol)
-
     def roll(self):
+        """Roll dice method"""
         res = self._get_roll_value()
         if self.roll_is_valid(res):
             return res
@@ -350,7 +343,7 @@ class Game:
 
     def move_factory(self, symbol, kind, roll, start=None):
         """
-        Create valid Move instances corresponding to input
+        Create valid Move instances corresponding to input.
 
         Parameters
         ----------
@@ -563,6 +556,15 @@ class Game:
 
     # Space to home move methods
     def space_to_home_validator(self, move):
+        """
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+        """
         end = self.get_space_to_home_position(
             move.symbol, move.roll, move.start
         )
@@ -609,6 +611,15 @@ class Game:
 
     # Home advance move methods
     def home_advance_validator(self, move):
+        """
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+        """
         return self._home_advance_is_valid(move.symbol, move.roll, move.start)
 
     def _home_advance_is_valid(self, symbol, roll, start):
@@ -656,7 +667,16 @@ class Game:
     def return_to_waiting_validator(self, move):
         """
         Returns true, as return_to_waiting is generated within this class,
-        as it is an effect of another agent move
+        as it is an effect of another agent move.
+
+        Parameters
+        ----------
+        move : Move
+
+        Returns
+        -------
+        res : Boolean
+            Always returns True
         """
         return True
 
@@ -687,20 +707,26 @@ class Game:
 
     def _leave_waiting_updater(self, move):
         current_count = self.get_symbol_waiting_count(move.symbol)
-        self.set_waiting_count_array(move.symbol, current_count - 1)
+        self.set_symbol_waiting_count(move.symbol, current_count - 1)
         start = self.get_player(move.symbol).get_leave_waiting_position()
-        self.set_space_array(move.symbol, start)
+        self.set_symbol_space_array(move.symbol, start)
 
     def _space_advance_updater(self, move):
-        self.set_space_array(EMPTY_SYMBOL, move.start)
-        self.set_space_array(move.symbol, move.start + move.roll)
+        self.set_symbol_space_array(EMPTY_SYMBOL, move.start)
+        self.set_symbol_space_array(move.symbol, move.start + move.roll)
 
     def _space_to_home_updater(self, move):
-        self.set_space_array(EMPTY_SYMBOL, move.start)
+        self.set_symbol_space_array(EMPTY_SYMBOL, move.start)
         end = self.get_space_to_home_position(
             move.symbol, move.roll, move.start
         )
         self.set_homes_array(move.symbol, end)
+
+    def set_homes_array(self, symbol, position):
+        self.board.homes[symbol][position] = symbol
+
+        private_symbol = self.board.get_private_symbol(symbol)
+        self._homes_array[private_symbol, position] = private_symbol
 
     def _return_to_waiting_updater(self, move):
         """
@@ -708,6 +734,6 @@ class Game:
         updates the spaces
         """
         pre_return_waiting_counts = self.get_symbol_waiting_count(move.symbol)
-        self.set_waiting_count_array(
+        self.set_symbol_waiting_count(
             move.symbol, pre_return_waiting_counts + 1
         )

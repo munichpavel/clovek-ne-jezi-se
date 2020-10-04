@@ -202,23 +202,6 @@ class TestGameSetup:
         assert isinstance(game_array, np.ndarray)
         np.testing.assert_array_equal(game_array, expected)
 
-    @pytest.mark.parametrize(
-        'symbol_idx,space_idx',
-        [(0, 0), (1, 0), (3, 1)]
-    )
-    def test_assignments(self, symbol_idx, space_idx):
-        symbol = self.mini_game.player_symbols[symbol_idx]
-        self.mini_game.assign_to_space(symbol, space_idx)
-
-        # Define expected array by modifying spaces array
-        expected = self.mini_game.get_spaces_array()
-        expected[space_idx] = symbol_idx
-
-        np.testing.assert_array_equal(
-            self.mini_game.get_spaces_array(),
-            expected
-        )
-
     def test_dice_roll_monkeypatch(self, monkeypatch):
         monkeypatch.setattr(self.mini_game, 'roll', lambda: monkey_roll(1))
         assert self.mini_game.roll_is_valid(self.mini_game.roll())
@@ -266,13 +249,13 @@ class TestGameMoves:
         assert self.game.get_symbol_waiting_count('1') == PIECES_PER_PLAYER
 
         modified_game = deepcopy(self.game)
-        modified_game.set_waiting_count_array('1', 0)
+        modified_game.set_symbol_waiting_count('1', 0)
         assert modified_game.get_symbol_waiting_count('1') == 0
 
     def test_get_symbol_space_position_array(self):
         modified_game = deepcopy(self.game)
-        modified_game.set_space_array('1', 0)
-        modified_game.set_space_array('2', 1)
+        modified_game.set_symbol_space_array('1', 0)
+        modified_game.set_symbol_space_array('2', 1)
 
         assert modified_game.get_symbol_space_array('1') == np.array([0])
         assert modified_game.get_symbol_space_array('2') == np.array([1])
@@ -307,7 +290,7 @@ class TestGameMoves:
     @pytest.mark.parametrize('position,symbol', [(0, '1'), (1, EMPTY_SYMBOL)])
     def test_get_space_occupier(self, position, symbol):
         modified_game = deepcopy(self.game)
-        modified_game.set_space_array('1', 0)
+        modified_game.set_symbol_space_array('1', 0)
 
         assert modified_game.get_space_occupier(position) == symbol
 
@@ -385,13 +368,13 @@ class TestGameMoves:
     def test_move_factory(self, arg_dict, expected):
         modified_game = deepcopy(self.game)
 
-        modified_game.set_space_array('1', 1)
-        modified_game.set_space_array('1', self.prehome_positions['1'])
-        modified_game.set_waiting_count_array('1', PIECES_PER_PLAYER - 2)
+        modified_game.set_symbol_space_array('1', 1)
+        modified_game.set_symbol_space_array('1', self.prehome_positions['1'])
+        modified_game.set_symbol_waiting_count('1', PIECES_PER_PLAYER - 2)
 
-        modified_game.set_space_array('2', self.leave_waiting_positions['1'])
-        modified_game.set_space_array('2', self.prehome_positions['1'] - 1)
-        modified_game.set_waiting_count_array('2', PIECES_PER_PLAYER - 1)
+        modified_game.set_symbol_space_array('2', self.leave_waiting_positions['1'])
+        modified_game.set_symbol_space_array('2', self.prehome_positions['1'] - 1)
+        modified_game.set_symbol_waiting_count('2', PIECES_PER_PLAYER - 1)
 
         move = modified_game.move_factory(**arg_dict)
 
@@ -420,9 +403,9 @@ class TestGameMoves:
     )
     def test_move_factory_errors(self, symbol, kind, roll, start):
         modified_game = deepcopy(self.game)
-        modified_game.set_waiting_count_array('1', 0)
+        modified_game.set_symbol_waiting_count('1', 0)
 
-        modified_game.set_space_array('2', self.leave_waiting_positions['2'])
+        modified_game.set_symbol_space_array('2', self.leave_waiting_positions['2'])
 
         modified_game.set_homes_array('3', 0)
         modified_game.set_homes_array('4', 2)
@@ -463,11 +446,11 @@ class TestGameMoves:
     )
     def test_get_moves_of(self, symbol, kind, roll, expected):
         modified_game = deepcopy(self.game)
-        modified_game.set_waiting_count_array('2', 0)
-        modified_game.set_space_array(
+        modified_game.set_symbol_waiting_count('2', 0)
+        modified_game.set_symbol_space_array(
              '2', self.leave_waiting_positions['2']
         )
-        modified_game.set_space_array(
+        modified_game.set_symbol_space_array(
              '3', self.prehome_positions['3']
         )
         modified_game.set_homes_array('4', 1)
@@ -482,15 +465,15 @@ class TestGameMoves:
         assert game_state_is_equal(self.game, self.game)
 
         modified_waiting = deepcopy(self.game)
-        modified_waiting.set_waiting_count_array('1', 0)
+        modified_waiting.set_symbol_waiting_count('1', 0)
         assert not game_state_is_equal(self.game, modified_waiting)
 
         modified_spaces = deepcopy(self.game)
-        modified_spaces.set_space_array('1', 0)
+        modified_spaces.set_symbol_space_array('1', 0)
         assert not game_state_is_equal(self.game, modified_spaces)
 
         modified_homes = deepcopy(self.game)
-        modified_homes.set_space_array('1', 0)
+        modified_homes.set_symbol_space_array('1', 0)
         assert not game_state_is_equal(self.game, modified_homes)
 
     def test_do(self):
@@ -499,18 +482,18 @@ class TestGameMoves:
 
         # Prepopulate board
         for game in [modified_game, expected_game]:
-            game.set_space_array('2', self.leave_waiting_positions['1'])
-            game.set_waiting_count_array('2', PIECES_PER_PLAYER - 1)
+            game.set_symbol_space_array('2', self.leave_waiting_positions['1'])
+            game.set_symbol_waiting_count('2', PIECES_PER_PLAYER - 1)
 
-            game.set_space_array('4', self.prehome_positions['4'])
-            game.set_waiting_count_array('4', PIECES_PER_PLAYER - 1)
+            game.set_symbol_space_array('4', self.prehome_positions['4'])
+            game.set_symbol_waiting_count('4', PIECES_PER_PLAYER - 1)
 
         # Leave waiting and send opponent piece back to waiting
         modified_game.do('1', 'leave_waiting', roll=NR_OF_DICE_FACES)
-        expected_game.set_waiting_count_array('1', PIECES_PER_PLAYER - 1)
+        expected_game.set_symbol_waiting_count('1', PIECES_PER_PLAYER - 1)
         pre_move_waiting_count = expected_game.get_symbol_waiting_count('2')
-        expected_game.set_waiting_count_array('2',  pre_move_waiting_count + 1)
-        expected_game.set_space_array('1', self.leave_waiting_positions['1'])
+        expected_game.set_symbol_waiting_count('2',  pre_move_waiting_count + 1)
+        expected_game.set_symbol_space_array('1', self.leave_waiting_positions['1'])
 
         assert game_state_is_equal(modified_game, expected_game)
 
@@ -522,7 +505,7 @@ class TestGameMoves:
         modified_game.do(
             '4', 'space_to_home', roll=1, start=self.prehome_positions['4']
         )
-        expected_game.set_space_array(
+        expected_game.set_symbol_space_array(
             EMPTY_SYMBOL, self.prehome_positions['4']
         )
         expected_game.set_homes_array('4', 0)
@@ -535,7 +518,7 @@ class TestGameMoves:
         occupied_position = (
             modified_game.get_player('3').get_leave_waiting_position()
         )
-        modified_game.set_space_array('1', occupied_position)
+        modified_game.set_symbol_space_array('1', occupied_position)
 
         assert modified_game.board.spaces[occupied_position] == '1'
 
