@@ -1,8 +1,13 @@
 """Clovek ne jezi se game board and plays"""
-from math import floor
+from math import floor, pi
 from random import randint
+from typing import Sequence
 
 import attr
+
+import networkx as nx
+
+import matplotlib.pyplot as plt
 
 import numpy as np
 
@@ -10,6 +15,209 @@ from .consts import (
     EMPTY_SYMBOL, MINIMUM_SECTION_LENGTH, PIECES_PER_PLAYER, NR_OF_DICE_FACES,
     MOVE_KINDS
 )
+
+
+def make_even_points_on_circle(
+    center: Sequence, radius: float, n_points: int,
+    start_radians=0, clockwise=True
+) -> np.array:
+    """"""
+    if clockwise:
+        endpoint_sign = -1
+    else:
+        endpoint_sign = 1
+
+    radians = [
+        idx for idx in np.linspace(
+            start_radians, endpoint_sign * 2 * pi + start_radians,
+            num=n_points, endpoint=False
+        )
+    ]
+    res = []
+    for radian in radians:
+        x = center[0] + radius * np.cos(radian)
+        y = center[1] + radius * np.sin(radian)
+        point = np.array([x, y])
+        res.append(point)
+
+    return np.array(res)
+
+
+@attr.s
+class GameState:
+    """
+    Game state including board and player pieces. The board consists of three
+    areas: the waiting areas for each, the main board, and the home areas for
+    each player.
+    """
+    # TODOs: add validators, like positivity, player symbols must be strings
+    player_names = attr.ib(type=Sequence)
+    pieces_per_player = attr.ib(type=int)
+    section_length = attr.ib(type=int)
+
+    def initialize(self):
+        self._main_board_length = len(self.player_names) * self.section_length
+        self._graph = nx.DiGraph()
+        self._create_main_graph()
+   #     self._annotate_main_edges()
+        self._create_waiting_graphs()
+        self._create_home_graphs()
+        # self._set_home_edges()
+
+    def _create_main_graph(self):
+        main_board_graph = nx.cycle_graph(
+            [f'm{idx}' for idx in range(self._main_board_length)],
+            create_using=nx.DiGraph
+        )
+
+        # Annotate nodes
+        for idx, node_name in enumerate(main_board_graph.nodes()):
+            main_board_graph.nodes[node_name]['idx'] = idx
+            main_board_graph.nodes[node_name]['kind'] = 'main'
+            main_board_graph.nodes[node_name]['occupied_by'] = EMPTY_SYMBOL
+            main_board_graph.nodes[node_name]['allowed_occupants'] = 'all'
+
+        self._graph.update(main_board_graph)
+
+    def _create_waiting_graphs(self):
+
+        for player_name in self.player_names:
+            player_waiting_graph = nx.Graph()
+            player_waiting_graph.add_nodes_from(
+                [
+                    (
+                        f'w-{player_name}-{idx}',
+                        dict(
+                            kind='waiting', idx=idx, occupied_by=player_name,
+                            allowed_occupants=player_name
+                        )
+                    )
+                    for idx in range(self.pieces_per_player)
+                ],
+
+            )
+            # Add to main graph
+            self._graph.update(player_waiting_graph)
+
+    def _create_home_graphs(self):
+        home_graphs = {
+                player_name: nx.path_graph(
+                    [
+                        f'h-{player_name}-{idx}'
+                        for idx in range(self.pieces_per_player)
+                    ],
+                    create_using=nx.DiGraph
+                )
+                for player_name in self.player_names
+            }
+
+        for player_name in self.player_names:
+            # Annotate
+            player_home_graph = home_graphs[player_name]
+            for idx, node_name in enumerate(player_home_graph.nodes()):
+                player_home_graph.nodes[node_name]['idx'] = idx
+                player_home_graph.nodes[node_name]['kind'] = 'home'
+                player_home_graph.nodes[node_name]['occupied_by'] \
+                    = EMPTY_SYMBOL
+                player_home_graph.nodes[node_name]['allowed_occupants'] \
+                    = player_name
+
+            # Add to main graph
+            self._graph.update(player_home_graph)
+
+    def get_board_space(self, kind: str, idx: int, allowed_occupants='all') -> "BoardSpace":
+        """Get BoardSpace instance of given kind and index"""
+        space_subgraph = self._get_node_filtered_subgraph(
+            dict(kind=kind, idx=idx, allowed_occupants=allowed_occupants)
+        )
+        # TODO throw error if not space_subgraph.number_of_nodes() == 1 ?
+        if space_subgraph.number_of_nodes() == 0:
+            return None
+
+        node_name = list(space_subgraph.nodes())[0]
+        node_data = space_subgraph.nodes[node_name]
+        return BoardSpace(**node_data)
+
+    def _get_node_filtered_subgraph(self, query_dict: dict) -> nx.DiGraph:
+        def filter_node(node_name):
+            res = []
+            for key, value in query_dict.items():
+                res.append(self._graph.nodes[node_name].get(key) == value)
+            return np.all(res)
+
+        return nx.subgraph_view(self._graph, filter_node=filter_node)
+
+    def draw(self, figsize=(12, 8)):
+        """Show game state graph with human-readable coordinates"""
+        start_radians = -pi/2 - 2 * pi / self._main_board_length
+        main_radius = 2
+        main_center = (0, 0)
+
+        pos = {}
+        main_coords = list(make_even_points_on_circle(
+            center=main_center, radius=main_radius,
+            n_points=self._main_board_length,
+            start_radians=start_radians)
+        )
+
+        main_subgraph_nodes = self._get_node_filtered_subgraph(
+            dict(kind='main')
+        ).nodes()
+        main_node_names = list(main_subgraph_nodes)
+        pos_main = dict(zip(main_node_names, main_coords))
+
+        pos_players_waiting = {}
+        player_waiting_centers = make_even_points_on_circle(
+            center=main_center, radius=main_radius + 0.75,
+            n_points=len(self.player_names), start_radians=start_radians
+        )
+        for idx, player_name in enumerate(self.player_names):
+            player_waiting_coords = list(make_even_points_on_circle(
+                center=player_waiting_centers[idx], radius=0.5,
+                n_points=self.pieces_per_player, start_radians=pi / 4
+            ))
+            player_waiting_nodes = self._get_node_filtered_subgraph(
+                dict(kind='waiting', allowed_occupants=player_name)
+            )
+            player_waiting_node_names = list(player_waiting_nodes)
+            pos_players_waiting = {
+                **pos_players_waiting,
+                **dict(zip(player_waiting_node_names, player_waiting_coords))
+            }
+
+        pos_players_home = {}
+
+        for home_order in range(self.pieces_per_player):
+            players_home_coords = make_even_points_on_circle(
+                center=main_center,
+                radius=main_radius - 0.4 * (home_order + 1),
+                n_points=len(self.player_names),
+                start_radians=-pi / 2
+            )
+            players_home_nodes = self._get_node_filtered_subgraph(
+                dict(kind='home', idx=home_order)
+            )
+            players_home_node_names = list(players_home_nodes)
+            pos_players_home = {
+                **pos_players_home,
+                **dict(zip(players_home_node_names, players_home_coords))
+            }
+
+        pos = {**pos, **pos_players_waiting, **pos_main, **pos_players_home}
+
+        plt.figure(figsize=figsize)
+        nx.draw(self._graph, pos, with_labels=True)
+
+        return pos
+
+
+@attr.s
+class BoardSpace:
+    # TODO Add validators, e.g. kind in ['waiting', 'main', 'home']
+    kind = attr.ib(type=str)
+    idx = attr.ib(type=int)
+    occupied_by = attr.ib(type=str, default=EMPTY_SYMBOL)
+    allowed_occupants = attr.ib(type=str, default='all')
 
 
 class Board:

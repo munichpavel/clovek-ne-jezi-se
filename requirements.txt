@@ -1,6 +1,8 @@
 # not-just-dev
 numpy
 attrs
+networkx
+matplotlib
 
 # dev
 pytest
