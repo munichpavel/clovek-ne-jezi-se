@@ -1,5 +1,5 @@
 """Clovek ne jezi se game board and plays"""
-from math import floor, pi
+from math import floor
 from random import randint
 from typing import Sequence
 
@@ -16,31 +16,10 @@ from .consts import (
     MOVE_KINDS
 )
 
-
-def make_even_points_on_circle(
-    center: Sequence, radius: float, n_points: int,
-    start_radians=0, clockwise=True
-) -> np.array:
-    """"""
-    if clockwise:
-        endpoint_sign = -1
-    else:
-        endpoint_sign = 1
-
-    radians = [
-        idx for idx in np.linspace(
-            start_radians, endpoint_sign * 2 * pi + start_radians,
-            num=n_points, endpoint=False
-        )
-    ]
-    res = []
-    for radian in radians:
-        x = center[0] + radius * np.cos(radian)
-        y = center[1] + radius * np.sin(radian)
-        point = np.array([x, y])
-        res.append(point)
-
-    return np.array(res)
+from .utils import (
+    make_even_points_on_circle, make_even_points_on_circle,
+    get_node_filtered_subgraph
+)
 
 
 @attr.s
@@ -59,10 +38,11 @@ class GameState:
         self._main_board_length = len(self.player_names) * self.section_length
         self._graph = nx.DiGraph()
         self._create_main_graph()
-   #     self._annotate_main_edges()
+       # self._annotate_main_edges()
         self._create_waiting_graphs()
+        self._join_waiting_graphs_to_main()
         self._create_home_graphs()
-        # self._set_home_edges()
+        #self._set_home_edges()
 
     def _create_main_graph(self):
         main_board_graph = nx.cycle_graph(
@@ -76,6 +56,26 @@ class GameState:
             main_board_graph.nodes[node_name]['kind'] = 'main'
             main_board_graph.nodes[node_name]['occupied_by'] = EMPTY_SYMBOL
             main_board_graph.nodes[node_name]['allowed_occupants'] = 'all'
+
+        for start_node, stop_node in main_board_graph.edges():
+            main_board_graph[start_node][stop_node]['allowed_traversers'] \
+                = self.player_names
+
+        # for player_name in self.player_names:
+        #     waiting_to_main_idx = self.get_player_waiting_to_main_index(
+        #         player_name
+        #     )
+        #     waiting_to_main_node_name = self._get_query_node_names(
+        #         dict(kind='main', idx=waiting_to_main_idx)
+        #     )
+        #     print(waiting_to_main_idx, waiting_to_main_node_name)
+
+        #     pre_home_node_name = next(
+        #         main_board_graph.predecessors(waiting_to_main_node_name)
+        #     )
+        #     main_board_graph[pre_home_node_name][waiting_to_main_node_name][
+        #         'allowed_occupants'
+        #     ].remove(player_name)
 
         self._graph.update(main_board_graph)
 
@@ -98,6 +98,43 @@ class GameState:
             )
             # Add to main graph
             self._graph.update(player_waiting_graph)
+
+    def _join_waiting_graphs_to_main(self):
+        for player_name in self.player_names:
+            waiting_node_names = self._get_query_node_names(
+                dict(kind='waiting', allowed_occupants=player_name)
+            )
+            main_board_entry_index = self.get_player_waiting_to_main_index(
+                player_name
+            )
+            main_entry_node_name = self._get_query_node_names(
+                dict(kind='main', idx=main_board_entry_index)
+            )[0]
+            edge_value_dict = dict(weight=6, allowed_traversers=[player_name])
+            self._graph.add_edges_from(
+                [
+                    (node_name, main_entry_node_name)
+                    for node_name in waiting_node_names
+                ],
+                **edge_value_dict
+            )
+
+    def get_player_waiting_to_main_index(self, player_name):
+        player_order = self.player_names.index(player_name)
+        return player_order * self.section_length
+
+    def _get_query_node_names(self, query_dict: dict) -> list:
+        nodes = get_node_filtered_subgraph(self._graph, query_dict)
+        return list(nodes)
+
+    # def _get_node_filtered_subgraph(self, query_dict: dict) -> nx.DiGraph:
+    #     def filter_node(node_name):
+    #         res = []
+    #         for key, value in query_dict.items():
+    #             res.append(self._graph.nodes[node_name].get(key) == value)
+    #         return np.all(res)
+
+    #     return nx.subgraph_view(self._graph, filter_node=filter_node)
 
     def _create_home_graphs(self):
         home_graphs = {
@@ -125,9 +162,12 @@ class GameState:
             # Add to main graph
             self._graph.update(player_home_graph)
 
-    def get_board_space(self, kind: str, idx: int, allowed_occupants='all') -> "BoardSpace":
+    def get_board_space(
+        self, kind: str, idx: int, allowed_occupants='all'
+    ) -> "BoardSpace":
         """Get BoardSpace instance of given kind and index"""
-        space_subgraph = self._get_node_filtered_subgraph(
+        space_subgraph = get_node_filtered_subgraph(
+            self._graph,
             dict(kind=kind, idx=idx, allowed_occupants=allowed_occupants)
         )
         # TODO throw error if not space_subgraph.number_of_nodes() == 1 ?
@@ -138,15 +178,22 @@ class GameState:
         node_data = space_subgraph.nodes[node_name]
         return BoardSpace(**node_data)
 
-    def _get_node_filtered_subgraph(self, query_dict: dict) -> nx.DiGraph:
-        def filter_node(node_name):
-            res = []
-            for key, value in query_dict.items():
-                res.append(self._graph.nodes[node_name].get(key) == value)
-            return np.all(res)
+    # Moves
+    def move_factory(
+        self, from_space: 'BoardSpace', roll: int
+    ) -> 'MoveContainer':
+        player_name = from_space.occupied_by
+        to_space = BoardSpace(
+            kind='main',
+            idx=self.get_player_waiting_to_main_index(player_name),
+            occupied_by=EMPTY_SYMBOL, allowed_occupants='all'
+        )
+        return MoveContainer(
+            from_space=from_space,
+            to_space=to_space
+        )
 
-        return nx.subgraph_view(self._graph, filter_node=filter_node)
-
+    # Visualization
     def draw(self, figsize=(12, 8)):
         """Show game state graph with human-readable coordinates"""
         start_radians = -pi/2 - 2 * pi / self._main_board_length
@@ -154,17 +201,13 @@ class GameState:
         main_center = (0, 0)
 
         pos = {}
+        main_node_names = self._get_query_node_names(dict(kind='main'))
         main_coords = list(make_even_points_on_circle(
             center=main_center, radius=main_radius,
             n_points=self._main_board_length,
             start_radians=start_radians)
         )
-
-        main_subgraph_nodes = self._get_node_filtered_subgraph(
-            dict(kind='main')
-        ).nodes()
-        main_node_names = list(main_subgraph_nodes)
-        pos_main = dict(zip(main_node_names, main_coords))
+        pos_main = make_dict_from_lists(main_node_names, main_coords)
 
         pos_players_waiting = {}
         player_waiting_centers = make_even_points_on_circle(
@@ -172,35 +215,37 @@ class GameState:
             n_points=len(self.player_names), start_radians=start_radians
         )
         for idx, player_name in enumerate(self.player_names):
+            player_waiting_node_names = self._get_query_node_names(
+                dict(kind='waiting', allowed_occupants=player_name)
+            )
             player_waiting_coords = list(make_even_points_on_circle(
                 center=player_waiting_centers[idx], radius=0.5,
                 n_points=self.pieces_per_player, start_radians=pi / 4
             ))
-            player_waiting_nodes = self._get_node_filtered_subgraph(
-                dict(kind='waiting', allowed_occupants=player_name)
-            )
-            player_waiting_node_names = list(player_waiting_nodes)
             pos_players_waiting = {
                 **pos_players_waiting,
-                **dict(zip(player_waiting_node_names, player_waiting_coords))
+                **make_dict_from_lists(
+                    player_waiting_node_names, player_waiting_coords
+                )
             }
 
         pos_players_home = {}
-
+        # Add home nodes in concentric rings inside main board
         for home_order in range(self.pieces_per_player):
+            player_home_node_names = self._get_query_node_names(
+                dict(kind='home', idx=home_order)
+            )
             players_home_coords = make_even_points_on_circle(
                 center=main_center,
                 radius=main_radius - 0.4 * (home_order + 1),
                 n_points=len(self.player_names),
                 start_radians=-pi / 2
             )
-            players_home_nodes = self._get_node_filtered_subgraph(
-                dict(kind='home', idx=home_order)
-            )
-            players_home_node_names = list(players_home_nodes)
             pos_players_home = {
                 **pos_players_home,
-                **dict(zip(players_home_node_names, players_home_coords))
+                **make_dict_from_lists(
+                    player_home_node_names, players_home_coords
+                )
             }
 
         pos = {**pos, **pos_players_waiting, **pos_main, **pos_players_home}
@@ -211,6 +256,7 @@ class GameState:
         return pos
 
 
+
 @attr.s
 class BoardSpace:
     # TODO Add validators, e.g. kind in ['waiting', 'main', 'home']
@@ -218,6 +264,12 @@ class BoardSpace:
     idx = attr.ib(type=int)
     occupied_by = attr.ib(type=str, default=EMPTY_SYMBOL)
     allowed_occupants = attr.ib(type=str, default='all')
+
+
+@attr.s
+class MoveContainer:
+    from_space = attr.ib(type=BoardSpace)
+    to_space = attr.ib(type=BoardSpace)
 
 
 class Board:
