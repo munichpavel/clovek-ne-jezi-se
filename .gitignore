@@ -63,6 +63,7 @@ target/
 
 # environment variables
 .env
+.envrc
 
 # vs code
 .vscode
