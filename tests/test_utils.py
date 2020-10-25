@@ -1,10 +1,12 @@
+from math import sqrt, pi
+
 import pytest
 
 import numpy as np
 
 from clovek_ne_jezi_se.utils import (
-    make_even_points_on_circle, make_even_points_on_circle
-    #get_node_filtered_subgraph
+    make_even_points_on_circle, make_dict_from_lists,
+    get_node_filtered_subgraph
 )
 
 

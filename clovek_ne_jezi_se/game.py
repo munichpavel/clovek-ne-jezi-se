@@ -127,15 +127,6 @@ class GameState:
         nodes = get_node_filtered_subgraph(self._graph, query_dict)
         return list(nodes)
 
-    # def _get_node_filtered_subgraph(self, query_dict: dict) -> nx.DiGraph:
-    #     def filter_node(node_name):
-    #         res = []
-    #         for key, value in query_dict.items():
-    #             res.append(self._graph.nodes[node_name].get(key) == value)
-    #         return np.all(res)
-
-    #     return nx.subgraph_view(self._graph, filter_node=filter_node)
-
     def _create_home_graphs(self):
         home_graphs = {
                 player_name: nx.path_graph(
