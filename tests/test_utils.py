@@ -1,12 +1,15 @@
 from math import sqrt, pi
+from copy import deepcopy
 
 import pytest
 
 import numpy as np
 
+import networkx as nx
+
 from clovek_ne_jezi_se.utils import (
     make_even_points_on_circle, make_dict_from_lists,
-    get_node_filtered_subgraph
+    is_labeled_isomorphic, get_node_filtered_subgraph
 )
 
 
@@ -64,6 +67,69 @@ def test_make_dict_from_lists():
 
     expected = dict(key1='v1', key2='v2')
     assert make_dict_from_lists(key_list, value_list) == expected
+
+
+# Define test graphs
+two_cycle_digraph = nx.cycle_graph(2, create_using=nx.DiGraph)
+
+labeled_two_cycle_digraph = deepcopy(two_cycle_digraph)
+# Assign node label values
+labeled_two_cycle_digraph.nodes[0]['descriptor'] = 'schlamazel'
+labeled_two_cycle_digraph.nodes[1]['descriptor'] = 'yutz'
+# Assign edge label value
+labeled_two_cycle_digraph[0][1]['color'] = 'orange'
+
+var_labeled_two_cycle_digraph = deepcopy(labeled_two_cycle_digraph)
+# Add node label value
+var_labeled_two_cycle_digraph.nodes[0]['sign'] = 'pisces'
+# Add edge label value
+var_labeled_two_cycle_digraph[0][1]['mood'] = 'happy'
+
+
+@pytest.mark.parametrize(
+    'graph,other,kwarg_dict,expected',
+    [
+        (two_cycle_digraph, two_cycle_digraph, {}, True),
+        (
+            two_cycle_digraph, labeled_two_cycle_digraph,
+            dict(categorical_node_labels=['descriptor']),
+            False
+        ),
+        (
+            labeled_two_cycle_digraph, labeled_two_cycle_digraph,
+            dict(categorical_node_labels=['descriptor']),
+            True
+        ),
+        (
+            labeled_two_cycle_digraph, var_labeled_two_cycle_digraph,
+            dict(categorical_node_labels=['descriptor']),
+            True
+        ),
+        (
+            labeled_two_cycle_digraph, var_labeled_two_cycle_digraph,
+            dict(categorical_node_labels=['descriptor', 'sign']),
+            False
+        ),
+        (
+            labeled_two_cycle_digraph, labeled_two_cycle_digraph,
+            dict(categorical_edge_labels=['color']),
+            True
+        ),
+        (
+            labeled_two_cycle_digraph, var_labeled_two_cycle_digraph,
+            dict(categorical_edge_labels=['color']),
+            True
+        ),
+        (
+            labeled_two_cycle_digraph, var_labeled_two_cycle_digraph,
+            dict(categorical_edge_labels=['color', 'mood']),
+            False
+        )
+    ]
+)
+def test_is_labeled_isomorphic(graph, other, kwarg_dict, expected):
+
+    assert is_labeled_isomorphic(graph, other, **kwarg_dict) == expected
 
 
 # def test_get_node_filtered_subgraph():
