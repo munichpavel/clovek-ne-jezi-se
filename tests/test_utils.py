@@ -12,7 +12,8 @@ from networkx.algorithms import isomorphism as iso
 from clovek_ne_jezi_se.utils import (
     make_even_points_on_circle, make_dict_from_lists,
     GraphLabelMatcher,
-    is_labeled_isomorphic, get_node_filtered_subgraph
+    is_label_matched, is_label_isomorphic,
+    get_node_filtered_subgraph
 )
 
 
@@ -153,7 +154,6 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
     [
         (
             two_cycle_digraph, labeled_two_cycle_digraph,
-            # dict(categorical_node_labels=['descriptor']),
             GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['descriptor']
@@ -161,7 +161,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
             False
         ),
         (
-            labeled_two_cycle_digraph, labeled_two_cycle_digraph,
+            labeled_two_cycle_digraph, deepcopy(labeled_two_cycle_digraph),
             GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['descriptor']
@@ -225,7 +225,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
             False
         ),
         (
-            labeled_two_cycle_digraph, labeled_two_cycle_digraph,
+            labeled_two_cycle_digraph, deepcopy(labeled_two_cycle_digraph),
             GraphLabelMatcher(
                 match_type='edge', value_type='numerical',
                 labels=['strength']
@@ -243,22 +243,42 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
 
     ]
 )
-def test_is_labeled_isomorphic(
+def test_is_label_matched(
     graph, other, graph_label_matcher, expected
 ):
-    assert is_labeled_isomorphic(graph, other, graph_label_matcher) \
+    assert is_label_matched(graph, other, graph_label_matcher) \
         == expected
 
 
-# def test_get_node_filtered_subgraph():
-#     g = nx.cycle_graph(3, create_using=nx.DiGraph)
-#     descriptors = ['schlamazel', 'yutz', 'yutz']
-#     for node_name, descriptor in zip(g.nodes(), descriptors):
-#         g.nodes[node_name]['descriptor'] = descriptor
+def test_is_label_isomorphic():
+    assert is_label_isomorphic(
+        labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
+        graph_label_matchers=[
+            GraphLabelMatcher(
+                match_type='node', value_type='categorical',
+                labels=['descriptor']
+            ),
+            GraphLabelMatcher(
+                match_type='edge', value_type='categorical',
+                labels=['color']
+            ),
+        ]
+    )
 
-#     expected = nx.DiGraph()
-#     expected.add_nodes_from([1,2], descriptor='yutz')
-#     expected.add_edge(1,2)
-
-#     query_dict=dict(descriptor='yutz')
-#     assert get_node_filtered_subgraph(g, query_dict) == expected
+    assert not is_label_isomorphic(
+        labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
+        graph_label_matchers=[
+            GraphLabelMatcher(
+                match_type='node', value_type='categorical',
+                labels=['descriptor']
+            ),
+            GraphLabelMatcher(
+                match_type='node', value_type='numerical',
+                labels=['trombone_count']
+            ),
+            GraphLabelMatcher(
+                match_type='edge', value_type='categorical',
+                labels=['color']
+            ),
+        ]
+    )

@@ -43,7 +43,11 @@ def make_dict_from_lists(key_list: list, value_list: list) -> dict:
 def is_label_isomorphic(
     graph, other, graph_label_matchers: list
 ) -> bool:
-    pass
+    res = []
+    res.append(iso.is_isomorphic(graph, other))
+    for matcher in graph_label_matchers:
+        res.append(is_label_matched(graph, other, matcher))
+    return np.all(res)
 
 
 def is_label_matched(
