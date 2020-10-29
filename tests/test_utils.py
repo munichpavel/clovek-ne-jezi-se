@@ -11,7 +11,7 @@ from networkx.algorithms import isomorphism as iso
 
 from clovek_ne_jezi_se.utils import (
     make_even_points_on_circle, make_dict_from_lists,
-    GraphAnnotationMatcher,
+    GraphLabelMatcher,
     is_labeled_isomorphic, get_node_filtered_subgraph
 )
 
@@ -72,7 +72,7 @@ def test_make_dict_from_lists():
     assert make_dict_from_lists(key_list, value_list) == expected
 
 
-# Test GraphAnnotationMatcher
+# Test GraphLabelMatcher
 @pytest.mark.parametrize(
     'matcher_args',
     [
@@ -80,37 +80,37 @@ def test_make_dict_from_lists():
         (dict(match_type='node', value_type='tubular', labels=['a_label'])),
     ]
 )
-def test_graph_annotation_matcher_errors(matcher_args):
+def test_graph_label_matcher_errors(matcher_args):
     with pytest.raises(ValueError):
-        GraphAnnotationMatcher(**matcher_args)
+        GraphLabelMatcher(**matcher_args)
 
 
 @pytest.mark.parametrize(
     'matcher,expected_match_function',
     [
         (
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='numerical',
                 labels=['a_number']
             ),
             iso.numerical_node_match(['a_number'], [np.nan])
         ),
         (
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['a_category']
             ),
             iso.categorical_node_match(['a_category'], [None])
         ),
         (
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='numerical',
                 labels=['a_number']
             ),
             iso.numerical_edge_match(['a_number'], [np.nan])
         ),
         (
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='categorical',
                 labels=['a_category']
             ),
@@ -118,7 +118,7 @@ def test_graph_annotation_matcher_errors(matcher_args):
         ),
     ]
 )
-def test_graph_annotation_matcher(matcher, expected_match_function):
+def test_graph_label_matcher(matcher, expected_match_function):
     # Comparing byte code idea from
     # https://stackoverflow.com/questions/20059011/check-if-two-python-functions-are-equal
     assert matcher.get_match_function().__code__.co_code == \
@@ -149,12 +149,12 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
 
 
 @pytest.mark.parametrize(
-    'graph,other,graph_annotation_matcher,expected',
+    'graph,other,graph_label_matcher,expected',
     [
         (
             two_cycle_digraph, labeled_two_cycle_digraph,
             # dict(categorical_node_labels=['descriptor']),
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['descriptor']
             ),
@@ -162,7 +162,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['descriptor']
             ),
@@ -170,7 +170,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['descriptor']
             ),
@@ -178,7 +178,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='categorical',
                 labels=['descriptor', 'sign']
             ),
@@ -186,7 +186,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='numerical',
                 labels=['trombone_count']
             ),
@@ -194,7 +194,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='node', value_type='numerical',
                 labels=['trombone_count']
             ),
@@ -202,7 +202,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='categorical',
                 labels=['color']
             ),
@@ -210,7 +210,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='categorical',
                 labels=['color']
             ),
@@ -218,7 +218,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='categorical',
                 labels=['color', 'mood']
             ),
@@ -226,7 +226,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='numerical',
                 labels=['strength']
             ),
@@ -234,7 +234,7 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
         ),
         (
             labeled_two_cycle_digraph, other_labeled_two_cycle_digraph,
-            GraphAnnotationMatcher(
+            GraphLabelMatcher(
                 match_type='edge', value_type='numerical',
                 labels=['strength']
             ),
@@ -244,9 +244,9 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
     ]
 )
 def test_is_labeled_isomorphic(
-    graph, other, graph_annotation_matcher, expected
+    graph, other, graph_label_matcher, expected
 ):
-    assert is_labeled_isomorphic(graph, other, graph_annotation_matcher) \
+    assert is_labeled_isomorphic(graph, other, graph_label_matcher) \
         == expected
 
 

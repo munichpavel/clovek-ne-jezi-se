@@ -58,40 +58,10 @@ def is_labeled_isomorphic(
             graph, other,
             edge_match=graph_annotation_matcher.get_match_function()
         )
-    # res = []
-
-    # # TODO replace label list args with GraphAnnotationMatcher args
-
-    # matcher = GraphAnnotationMatcher(
-    #     match_type='node', value_type='categorical',
-    #     labels=categorical_node_labels
-    # )
-    # res.append(iso.is_isomorphic(
-    #     graph, other, node_match=matcher.get_match_function()
-    # ))
-
-    # matcher = GraphAnnotationMatcher(
-    #     match_type='node', value_type='numerical',
-    #     labels=numerical_node_labels
-    # )
-    # res.append(iso.is_isomorphic(
-    #     graph, other,
-    #     node_match=matcher.get_match_function()
-    # ))
-
-    # matcher = GraphAnnotationMatcher(
-    #     match_type='edge', value_type='categorical',
-    #     labels=categorical_edge_labels
-    # )
-    # res.append(iso.is_isomorphic(
-    #     graph, other, edge_match=matcher.get_match_function()
-    # ))
-    # # TODO numerical edge match
-    # return np.all(res)
 
 
 @attr.s
-class GraphAnnotationMatcher:
+class GraphLabelMatcher:
     match_type = attr.ib(type=str)
     value_type = attr.ib(type=str)
     labels = attr.ib(type=list)
