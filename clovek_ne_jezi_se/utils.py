@@ -40,23 +40,29 @@ def make_dict_from_lists(key_list: list, value_list: list) -> dict:
     return dict(zip(key_list, value_list))
 
 
-def is_labeled_isomorphic(
-    graph, other, graph_annotation_matcher
+def is_label_isomorphic(
+    graph, other, graph_label_matchers: list
+) -> bool:
+    pass
+
+
+def is_label_matched(
+    graph, other, graph_label_matcher
 ) -> bool:
     """
     Returns True if and only if graphs are isomorphic and all labeled values
     are identical.
 
     """
-    if graph_annotation_matcher.match_type == 'node':
+    if graph_label_matcher.match_type == 'node':
         return iso.is_isomorphic(
             graph, other,
-            node_match=graph_annotation_matcher.get_match_function()
+            node_match=graph_label_matcher.get_match_function()
         )
-    elif graph_annotation_matcher.match_type == 'edge':
+    elif graph_label_matcher.match_type == 'edge':
         return iso.is_isomorphic(
             graph, other,
-            edge_match=graph_annotation_matcher.get_match_function()
+            edge_match=graph_label_matcher.get_match_function()
         )
 
 
