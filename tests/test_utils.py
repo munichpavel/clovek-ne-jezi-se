@@ -13,7 +13,7 @@ from clovek_ne_jezi_se.utils import (
     make_even_points_on_circle, make_dict_from_lists,
     GraphLabelMatcher,
     is_label_matched, is_label_isomorphic,
-    get_node_filtered_subgraph
+    get_node_filtered_subgraph, get_edge_filtered_subgraph
 )
 
 
@@ -288,7 +288,7 @@ def test_is_label_isomorphic():
 pre_filter_graph = nx.cycle_graph(3, create_using=nx.DiGraph)
 pre_filter_graph.nodes[0]['descriptor'] = 'schlamazel'
 pre_filter_graph.nodes[1]['descriptor'] = 'yutz'
-pre_filter_graph.nodes[0]['descriptor'] = 'yutz'
+pre_filter_graph.nodes[2]['descriptor'] = 'yutz'
 pre_filter_graph[1][2]['trombone_count'] = 76
 
 expected_filtered = nx.DiGraph()
@@ -300,6 +300,24 @@ expected_filtered[1][2]['trombone_count'] = 76
 def test_get_node_filtered_subgraph():
     query_dict = dict(descriptor='yutz')
     res = get_node_filtered_subgraph(pre_filter_graph, query_dict)
+    assert is_label_isomorphic(
+        res, expected_filtered,
+        graph_label_matchers=[
+            GraphLabelMatcher(
+                match_type='node', value_type='categorical',
+                labels=['descriptor']
+            ),
+            GraphLabelMatcher(
+                match_type='node', value_type='numerical',
+                labels=['trombone_count']
+            ),
+        ]
+    )
+
+
+def test_get_edge_filtered_subgraph():
+    query_dict = dict(trombone_count=76)
+    res = get_edge_filtered_subgraph(pre_filter_graph, query_dict)
     assert is_label_isomorphic(
         res, expected_filtered,
         graph_label_matchers=[

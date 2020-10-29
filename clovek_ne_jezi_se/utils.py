@@ -47,6 +47,7 @@ def is_label_isomorphic(
     res.append(iso.is_isomorphic(graph, other))
     for matcher in graph_label_matchers:
         res.append(is_label_matched(graph, other, matcher))
+    print(res)
     return np.all(res)
 
 
@@ -121,3 +122,20 @@ def get_node_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
         return np.all(res)
 
     return nx.subgraph_view(graph, filter_node=filter_node)
+
+
+def get_edge_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
+    def filter_edge(node_start, node_stop):
+        res = []
+        for key, value in query_dict.items():
+            res.append(graph[node_start][node_stop].get(key) == value)
+        return np.all(res)
+
+    res = nx.subgraph_view(graph, filter_edge=filter_edge)
+    # Keep only nodes of degree > 0 after edge filtering
+    subgraph_node_names = []
+    for node_name in res.nodes:
+        if nx.degree(res, node_name) > 0:
+            subgraph_node_names.append(node_name)
+    res = nx.subgraph(res, subgraph_node_names)
+    return res
