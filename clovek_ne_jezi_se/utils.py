@@ -41,32 +41,96 @@ def make_dict_from_lists(key_list: list, value_list: list) -> dict:
 
 
 def is_labeled_isomorphic(
-    graph, other,
-    numeric_node_labels=[], categorical_node_labels=[],
-    numerica_edge_labels=[], categorical_edge_labels=[]
+    graph, other, graph_annotation_matcher
 ) -> bool:
     """
     Returns True if and only if graphs are isomorphic and all labeled values
     are identical.
 
     """
-    res = []
+    if graph_annotation_matcher.match_type == 'node':
+        return iso.is_isomorphic(
+            graph, other,
+            node_match=graph_annotation_matcher.get_match_function()
+        )
+    elif graph_annotation_matcher.match_type == 'edge':
+        return iso.is_isomorphic(
+            graph, other,
+            edge_match=graph_annotation_matcher.get_match_function()
+        )
+    # res = []
 
-    categorical_node_match = iso.categorical_node_match(
-        categorical_node_labels, len(categorical_node_labels) * [None]
-    )
-    res.append(iso.is_isomorphic(
-        graph, other, node_match=categorical_node_match
-    ))
+    # # TODO replace label list args with GraphAnnotationMatcher args
 
-    categorical_edge_match = iso.categorical_edge_match(
-        categorical_edge_labels, len(categorical_edge_labels) * [None]
-    )
-    res.append(iso.is_isomorphic(
-        graph, other, edge_match=categorical_edge_match
-    ))
+    # matcher = GraphAnnotationMatcher(
+    #     match_type='node', value_type='categorical',
+    #     labels=categorical_node_labels
+    # )
+    # res.append(iso.is_isomorphic(
+    #     graph, other, node_match=matcher.get_match_function()
+    # ))
 
-    return np.all(res)
+    # matcher = GraphAnnotationMatcher(
+    #     match_type='node', value_type='numerical',
+    #     labels=numerical_node_labels
+    # )
+    # res.append(iso.is_isomorphic(
+    #     graph, other,
+    #     node_match=matcher.get_match_function()
+    # ))
+
+    # matcher = GraphAnnotationMatcher(
+    #     match_type='edge', value_type='categorical',
+    #     labels=categorical_edge_labels
+    # )
+    # res.append(iso.is_isomorphic(
+    #     graph, other, edge_match=matcher.get_match_function()
+    # ))
+    # # TODO numerical edge match
+    # return np.all(res)
+
+
+@attr.s
+class GraphAnnotationMatcher:
+    match_type = attr.ib(type=str)
+    value_type = attr.ib(type=str)
+    labels = attr.ib(type=list)
+
+    @match_type.validator
+    def check_match_type(self, attribute, value):
+        allowed_values = ['node', 'edge']
+        if value not in allowed_values:
+            raise ValueError(f'match_type must be in {allowed_values}')
+
+    @value_type.validator
+    def check_value_type(self, attribute, value):
+        allowed_values = ['numerical', 'categorical']
+        if value not in allowed_values:
+            raise ValueError(f'value_type must be in {allowed_values}')
+
+    def get_match_function(self):
+        return self._matcher_factory(self.match_type, self.value_type)
+
+    def _matcher_factory(self, match_type, value_type):
+        factory_dict = dict(node=dict(), edge=dict())
+
+        # TODO Is this dangerous?
+        numerical_default = 0.
+        categorical_default = None
+        factory_dict['node']['categorical'] = iso.categorical_node_match(
+            self.labels, len(self.labels) * [categorical_default]
+        )
+        factory_dict['node']['numerical'] = iso.numerical_node_match(
+            self.labels, len(self.labels) * [numerical_default]
+        )
+        factory_dict['edge']['categorical'] = iso.categorical_edge_match(
+            self.labels, len(self.labels) * [categorical_default]
+        )
+        factory_dict['edge']['numerical'] = iso.numerical_edge_match(
+            self.labels, len(self.labels) * [numerical_default]
+        )
+
+        return factory_dict[match_type][value_type]
 
 
 def get_node_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
