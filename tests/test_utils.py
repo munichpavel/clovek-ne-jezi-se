@@ -284,7 +284,7 @@ def test_is_label_isomorphic():
     )
 
 
-# Fixtures for graph filtering
+# Fixtures for graph filtering tests
 pre_filter_graph = nx.cycle_graph(3, create_using=nx.DiGraph)
 pre_filter_graph.nodes[0]['descriptor'] = 'schlamazel'
 pre_filter_graph.nodes[1]['descriptor'] = 'yutz'
@@ -293,15 +293,30 @@ pre_filter_graph[1][2]['trombone_count'] = 76
 
 expected_filtered = nx.DiGraph()
 expected_filtered.add_nodes_from([1, 2], descriptor='yutz')
-expected_filtered.add_edge(1,2)
+expected_filtered.add_edge(1, 2)
 expected_filtered[1][2]['trombone_count'] = 76
 
 
 def test_get_node_filtered_subgraph():
     query_dict = dict(descriptor='yutz')
     res = get_node_filtered_subgraph(pre_filter_graph, query_dict)
+
     assert is_label_isomorphic(
         res, expected_filtered,
+        graph_label_matchers=[
+            GraphLabelMatcher(
+                match_type='node', value_type='categorical',
+                labels=['descriptor']
+            ),
+            GraphLabelMatcher(
+                match_type='node', value_type='numerical',
+                labels=['trombone_count']
+            ),
+        ]
+    )
+
+    assert not is_label_isomorphic(
+        res, pre_filter_graph,
         graph_label_matchers=[
             GraphLabelMatcher(
                 match_type='node', value_type='categorical',
@@ -318,8 +333,23 @@ def test_get_node_filtered_subgraph():
 def test_get_edge_filtered_subgraph():
     query_dict = dict(trombone_count=76)
     res = get_edge_filtered_subgraph(pre_filter_graph, query_dict)
+
     assert is_label_isomorphic(
         res, expected_filtered,
+        graph_label_matchers=[
+            GraphLabelMatcher(
+                match_type='node', value_type='categorical',
+                labels=['descriptor']
+            ),
+            GraphLabelMatcher(
+                match_type='node', value_type='numerical',
+                labels=['trombone_count']
+            ),
+        ]
+    )
+
+    assert not is_label_isomorphic(
+        res, pre_filter_graph,
         graph_label_matchers=[
             GraphLabelMatcher(
                 match_type='node', value_type='categorical',
