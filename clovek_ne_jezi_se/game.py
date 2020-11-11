@@ -1,5 +1,5 @@
 """Clovek ne jezi se game board and plays"""
-from math import floor
+from math import floor, pi
 from random import randint
 from typing import Sequence
 
@@ -17,7 +17,7 @@ from .consts import (
 )
 
 from .utils import (
-    make_even_points_on_circle, make_even_points_on_circle,
+    make_even_points_on_circle, make_dict_from_lists,
     get_node_filtered_subgraph
 )
 
@@ -187,6 +187,12 @@ class GameState:
     # Visualization
     def draw(self, figsize=(12, 8)):
         """Show game state graph with human-readable coordinates"""
+        pos = self._get_graph_positions()
+
+        plt.figure(figsize=figsize)
+        nx.draw(self._graph, pos, with_labels=True)
+
+    def _get_graph_positions(self):
         start_radians = -pi/2 - 2 * pi / self._main_board_length
         main_radius = 2
         main_center = (0, 0)
@@ -240,12 +246,7 @@ class GameState:
             }
 
         pos = {**pos, **pos_players_waiting, **pos_main, **pos_players_home}
-
-        plt.figure(figsize=figsize)
-        nx.draw(self._graph, pos, with_labels=True)
-
         return pos
-
 
 
 @attr.s
