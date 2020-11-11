@@ -43,20 +43,37 @@ def make_dict_from_lists(key_list: list, value_list: list) -> dict:
 def is_label_isomorphic(
     graph, other, graph_label_matchers: list
 ) -> bool:
+    """
+    Returns True if and only if graphs are isomorphic and specified labels
+    in all of the graph_label_matchers are identical. Wrapper around
+    is_label_matched.
+
+    Parameters
+    ----------
+    graph : networkx.graph
+    other : networks.graph
+    graph_label_matcher : list
+        List of GraphLabelMatcher's
+    """
     res = []
     res.append(iso.is_isomorphic(graph, other))
     for matcher in graph_label_matchers:
         res.append(is_label_matched(graph, other, matcher))
-    print(res)
     return np.all(res)
 
 
 def is_label_matched(
-    graph, other, graph_label_matcher
+    graph, other, graph_label_matcher: "GraphLabelMatcher"
 ) -> bool:
     """
-    Returns True if and only if graphs are isomorphic and all labeled values
-    are identical.
+    Returns True if and only if graphs are isomorphic and specified labels
+    in graph_label_matcher are identical.
+
+    Parameters
+    ----------
+    graph : networkx.Graph
+    other : networkx.Graph
+    graph_label_matcher : GraphLabelMatcher
 
     """
     if graph_label_matcher.match_type == 'node':
@@ -73,6 +90,21 @@ def is_label_matched(
 
 @attr.s
 class GraphLabelMatcher:
+    """
+    Specification of graph annotation matching method for labeled graphs
+    to be considered equal. The matching methods are from
+    `networkx.algorithms.isomorphism`.
+
+
+    Parameters
+    ----------
+    match_type : str
+        One of 'node', 'edge'
+    value_type : str
+        One of 'numerical', 'categorical'
+    labels : list
+        The edge or node label values for which to check equality
+    """
     match_type = attr.ib(type=str)
     value_type = attr.ib(type=str)
     labels = attr.ib(type=list)
@@ -114,7 +146,17 @@ class GraphLabelMatcher:
         return factory_dict[match_type][value_type]
 
 
-def get_node_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
+def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
+    """
+    Return a subgraph of input graph according to node values specified in
+    the query_dict.
+
+    Parameters
+    ----------
+    graph: nx.Graph
+    query_dict: dict
+        Dict of form {<node_label_name>: node_label_value}
+    """
     def filter_node(node_name):
         res = []
         for key, value in query_dict.items():
@@ -125,6 +167,16 @@ def get_node_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
 
 
 def get_edge_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
+    """
+    Return a subgraph of input graph according to edge values specified in
+    the query_dict. Nodes of degree 0 after filtering are removed.
+
+    Parameters
+    ----------
+    graph: nx.Graph
+    query_dict: dict
+        Dict of form {<edge_label_name>: edge_label_value}
+    """
     def filter_edge(node_start, node_stop):
         res = []
         for key, value in query_dict.items():
