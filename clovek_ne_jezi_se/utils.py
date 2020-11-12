@@ -153,8 +153,8 @@ def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
 
     Parameters
     ----------
-    graph: nx.Graph
-    query_dict: dict
+    graph : nx.Graph
+    query_dict : dict
         Dict of form {<node_label_name>: node_label_value}
     """
     def filter_node(node_name):
@@ -166,22 +166,37 @@ def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
     return nx.subgraph_view(graph, filter_node=filter_node)
 
 
-def get_edge_filtered_subgraph(graph, query_dict: dict) -> nx.DiGraph:
+def get_edge_filtered_subgraph(
+    graph, query_dict: dict, query_type: str
+) -> nx.DiGraph:
     """
     Return a subgraph of input graph according to edge values specified in
     the query_dict. Nodes of degree 0 after filtering are removed.
 
     Parameters
     ----------
-    graph: nx.Graph
-    query_dict: dict
+    graph : nx.Graph
+    query_dict : dict
         Dict of form {<edge_label_name>: edge_label_value}
+    query_type : str
+        Dictates whether filtering is by value equality or inclusion
     """
-    def filter_edge(node_start, node_stop):
+    def filter_edge_by_equality(node_start, node_stop):
         res = []
         for key, value in query_dict.items():
             res.append(graph[node_start][node_stop].get(key) == value)
         return np.all(res)
+
+    def filter_edge_by_inclusion(node_start, node_stop):
+        res = []
+        for key, value in query_dict.items():
+            res.append(value in graph[node_start][node_stop].get(key))
+        return np.all(res)
+
+    if query_type == 'equality':
+        filter_edge = filter_edge_by_equality
+    elif query_type == 'inclusion':
+        filter_edge = filter_edge_by_inclusion
 
     res = nx.subgraph_view(graph, filter_edge=filter_edge)
     # Keep only nodes of degree > 0 after edge filtering

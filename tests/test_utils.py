@@ -348,6 +348,7 @@ pre_filter_graph[2][3]['trombone_count'] = 76
 # For filtering by edge value inclusion
 pre_filter_graph[0][1]['allowed_instruments'] = ['trumpet']
 pre_filter_graph[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
+pre_filter_graph[2][3]['allowed_instruments'] = ['trombone']
 pre_filter_graph[3][0]['allowed_instruments'] = ['trumpet']
 
 # For filtering by edge value equality
@@ -355,13 +356,14 @@ expected_filtered[1][2]['trombone_count'] = 76
 expected_filtered[2][3]['trombone_count'] = 76
 # For filtering by edge value inclusion
 expected_filtered[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
+expected_filtered[2][3]['allowed_instruments'] = ['trombone']
 
 
 @pytest.mark.parametrize(
-    'graph,query_dict,label_matchers,match_candidate,expected',
+    'graph,query_dict,query_type,label_matchers,match_candidate,expected',
     [
         (
-            pre_filter_graph, dict(trombone_count=76),
+            pre_filter_graph, dict(trombone_count=76), 'equality',
             [
                 GraphLabelMatcher(
                     match_type='edge', value_type='numerical',
@@ -371,7 +373,7 @@ expected_filtered[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
             expected_filtered, True
         ),
         (
-            pre_filter_graph, dict(trombone_count=76),
+            pre_filter_graph, dict(trombone_count=76), 'equality',
             [
                 GraphLabelMatcher(
                     match_type='edge', value_type='numerical',
@@ -379,12 +381,35 @@ expected_filtered[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
                 )
             ],
             pre_filter_graph, False  # as pre and post filter graphs are same
-        )
+        ),
+        (
+            pre_filter_graph,
+            dict(allowed_instruments='trombone'), 'inclusion',
+            [
+                GraphLabelMatcher(
+                    match_type='edge', value_type='categorical',
+                    labels=['allowed_instruments']
+                )
+            ],
+            expected_filtered, True
+        ),
+        (
+            pre_filter_graph,
+            dict(allowed_instruments='trumpet'), 'inclusion',
+            [
+                GraphLabelMatcher(
+                    match_type='edge', value_type='categorical',
+                    labels=['allowed_instruments']
+                )
+            ],
+            expected_filtered, False  # as query is for trumpets
+        ),
     ]
 )
 def test_get_edge_filtered_subgraph(
-    graph, query_dict, label_matchers, match_candidate, expected
+    graph, query_dict, query_type, label_matchers, match_candidate, expected
 ):
-    res = get_edge_filtered_subgraph(graph, query_dict)
+    res = get_edge_filtered_subgraph(graph, query_dict, query_type)
+    print(res.nodes(), match_candidate.nodes())
     assert is_label_isomorphic(res, match_candidate, label_matchers) \
         == expected
