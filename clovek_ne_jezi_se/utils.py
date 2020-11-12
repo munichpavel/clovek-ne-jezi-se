@@ -45,8 +45,9 @@ def is_label_isomorphic(
 ) -> bool:
     """
     Returns True if and only if graphs are isomorphic and specified labels
-    in all of the graph_label_matchers are identical. Wrapper around
-    is_label_matched.
+    in all of the graph_label_matchers are identical for the two graphs.
+
+    Wrapper around is_label_matched.
 
     Parameters
     ----------
@@ -74,7 +75,6 @@ def is_label_matched(
     graph : networkx.Graph
     other : networkx.Graph
     graph_label_matcher : GraphLabelMatcher
-
     """
     if graph_label_matcher.match_type == 'node':
         return iso.is_isomorphic(
