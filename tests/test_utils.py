@@ -297,37 +297,47 @@ expected_filtered.add_edge(1, 2)
 expected_filtered.add_edge(2, 3)
 
 
-def test_get_node_filtered_subgraph():
-    query_dict = dict(descriptor='yutz')
-    res = get_node_filtered_subgraph(pre_filter_graph, query_dict)
+@pytest.mark.parametrize(
+    'graph,query_dict,label_matchers,match_candidate,expected',
+    [
+        (
+            pre_filter_graph, dict(descriptor='yutz'),
+            [
+                GraphLabelMatcher(
+                    match_type='node', value_type='categorical',
+                    labels=['descriptor']
+                ),
+                GraphLabelMatcher(
+                    match_type='node', value_type='numerical',
+                    labels=['trombone_count']
+                ),
+            ],
+            expected_filtered, True
+        ),
+        (
+            pre_filter_graph, dict(descriptor='yutz'),
+            [
+                GraphLabelMatcher(
+                    match_type='node', value_type='categorical',
+                    labels=['descriptor']
+                ),
+                GraphLabelMatcher(
+                    match_type='node', value_type='numerical',
+                    labels=['trombone_count']
+                ),
+            ],
+            pre_filter_graph, False  # as pre and post filter graphs are same
+        )
+    ]
+)
+def test_get_node_filtered_subgraph(
+    graph, query_dict, label_matchers, match_candidate, expected
+):
 
-    assert is_label_isomorphic(
-        res, expected_filtered,
-        graph_label_matchers=[
-            GraphLabelMatcher(
-                match_type='node', value_type='categorical',
-                labels=['descriptor']
-            ),
-            GraphLabelMatcher(
-                match_type='node', value_type='numerical',
-                labels=['trombone_count']
-            ),
-        ]
-    )
+    res = get_node_filtered_subgraph(graph, query_dict)
 
-    assert not is_label_isomorphic(
-        res, pre_filter_graph,
-        graph_label_matchers=[
-            GraphLabelMatcher(
-                match_type='node', value_type='categorical',
-                labels=['descriptor']
-            ),
-            GraphLabelMatcher(
-                match_type='node', value_type='numerical',
-                labels=['trombone_count']
-            ),
-        ]
-    )
+    assert is_label_isomorphic(res, match_candidate, label_matchers) \
+        == expected
 
 
 # For filtering by edge value equality
@@ -347,34 +357,34 @@ expected_filtered[2][3]['trombone_count'] = 76
 expected_filtered[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
 
 
-def test_get_edge_filtered_subgraph():
-    query_dict = dict(trombone_count=76)
-    res = get_edge_filtered_subgraph(pre_filter_graph, query_dict)
-
-    assert is_label_isomorphic(
-        res, expected_filtered,
-        graph_label_matchers=[
-            GraphLabelMatcher(
-                match_type='edge', value_type='categorical',
-                labels=['descriptor']
-            ),
-            GraphLabelMatcher(
-                match_type='edge', value_type='numerical',
-                labels=['trombone_count']
-            ),
-        ]
-    )
-
-    assert not is_label_isomorphic(
-        res, pre_filter_graph,
-        graph_label_matchers=[
-            GraphLabelMatcher(
-                match_type='edge', value_type='categorical',
-                labels=['descriptor']
-            ),
-            GraphLabelMatcher(
-                match_type='edge', value_type='numerical',
-                labels=['trombone_count']
-            ),
-        ]
-    )
+@pytest.mark.parametrize(
+    'graph,query_dict,label_matchers,match_candidate,expected',
+    [
+        (
+            pre_filter_graph, dict(trombone_count=76),
+            [
+                GraphLabelMatcher(
+                    match_type='edge', value_type='numerical',
+                    labels=['trombone_count']
+                )
+            ],
+            expected_filtered, True
+        ),
+        (
+            pre_filter_graph, dict(trombone_count=76),
+            [
+                GraphLabelMatcher(
+                    match_type='edge', value_type='numerical',
+                    labels=['trombone_count']
+                )
+            ],
+            pre_filter_graph, False  # as pre and post filter graphs are same
+        )
+    ]
+)
+def test_get_edge_filtered_subgraph(
+    graph, query_dict, label_matchers, match_candidate, expected
+):
+    res = get_edge_filtered_subgraph(graph, query_dict)
+    assert is_label_isomorphic(res, match_candidate, label_matchers) \
+        == expected
