@@ -190,7 +190,7 @@ def get_edge_filtered_subgraph(
     def filter_edge_by_inclusion(node_start, node_stop):
         res = []
         for key, value in query_dict.items():
-            res.append(value in graph[node_start][node_stop].get(key))
+            res.append(value in graph[node_start][node_stop].get(key, []))
         return np.all(res)
 
     if query_type == 'equality':

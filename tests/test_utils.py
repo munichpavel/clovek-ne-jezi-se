@@ -345,11 +345,10 @@ pre_filter_graph[0][1]['trombone_count'] = 0
 pre_filter_graph[1][2]['trombone_count'] = 76
 pre_filter_graph[2][3]['trombone_count'] = 76
 
-# For filtering by edge value inclusion
+# For filtering by edge value inclusion, note that not all edges are labeled
 pre_filter_graph[0][1]['allowed_instruments'] = ['trumpet']
 pre_filter_graph[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
 pre_filter_graph[2][3]['allowed_instruments'] = ['trombone']
-pre_filter_graph[3][0]['allowed_instruments'] = ['trumpet']
 
 # For filtering by edge value equality
 expected_filtered[1][2]['trombone_count'] = 76
