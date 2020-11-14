@@ -2,6 +2,7 @@
 
 from typing import Sequence
 from math import pi
+from numbers import Number
 
 import numpy as np
 import attr
@@ -146,6 +147,26 @@ class GraphLabelMatcher:
         return factory_dict[match_type][value_type]
 
 
+@attr.s
+class GraphQueryParams:
+    """Container for doing graph filtering"""
+    graph_component = attr.ib(validator=attr.validators.in_(['node', 'edge']))
+    query_type = attr.ib(
+        validator=attr.validators.in_(['numerical', 'categorical'])
+    )
+    label = attr.ib()
+    value = attr.ib()
+
+    @value.validator
+    def matches_query_type(self, attribute, value):
+        if self.query_type == 'numerical':
+            value_type = Number
+        elif self.query_type == 'categorical':
+            value_type = str
+        if not isinstance(value, value_type):
+            raise TypeError(f'Value {value} is not {self.query_type}.')
+
+
 def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
     """
     Return a subgraph of input graph according to node values specified in
@@ -164,13 +185,6 @@ def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
         return np.all(res)
 
     return nx.subgraph_view(graph, filter_node=filter_node)
-
-
-def get_node_filtered_node_names(graph: nx.Graph, query_dict: dict) -> list:
-    """Return a list of node names from the subgraph query"""
-    subgraph = get_node_filtered_subgraph(graph, query_dict)
-    res = list(subgraph.nodes)
-    return res
 
 
 def get_edge_filtered_subgraph(
@@ -212,4 +226,11 @@ def get_edge_filtered_subgraph(
         if nx.degree(res, node_name) > 0:
             subgraph_node_names.append(node_name)
     res = nx.subgraph(res, subgraph_node_names)
+    return res
+
+
+def get_node_filtered_node_names(graph: nx.Graph, query_dict: dict) -> list:
+    """Return a list of node names from the subgraph query"""
+    subgraph = get_node_filtered_subgraph(graph, query_dict)
+    res = list(subgraph.nodes)
     return res

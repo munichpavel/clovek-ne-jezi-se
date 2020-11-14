@@ -13,6 +13,7 @@ from clovek_ne_jezi_se.utils import (
     make_even_points_on_circle, make_dict_from_lists,
     GraphLabelMatcher,
     is_label_matched, is_label_isomorphic,
+    GraphQueryParams,
     get_node_filtered_subgraph,
     get_node_filtered_node_names,
     get_edge_filtered_subgraph
@@ -284,6 +285,51 @@ def test_is_label_isomorphic():
             ),
         ]
     )
+
+
+# Tests for graph filtering
+
+@pytest.mark.parametrize(
+    'args,Error',
+    [
+        (
+            dict(graph_component='node', label='descriptor', value='yutz'),
+            TypeError
+        ),
+        (
+            dict(graph_component='node', query_type='categorical',
+                 label='descriptor'),
+            TypeError
+        ),
+        (
+            dict(graph_component='node', query_type='categorical',
+                 value='yutz'),
+            TypeError
+        ),
+        (
+            dict(label='descriptor', query_type='categorical', value='yutz'),
+            TypeError
+        ),
+        (
+            dict(graph_component='bupkis', query_type='categorical',
+                 label='descriptor', value='yutz'),
+            ValueError
+        ),
+        (
+            dict(graph_component='edge', query_type='goyish',
+                 label='descriptor', value='yutz'),
+            ValueError
+        ),
+        (
+            dict(graph_component='edge', query_type='numerical',
+                 label='descriptor', value='yutz'),
+            TypeError
+        ),
+    ]
+)
+def test_graph_query_paramserrors(args, Error):
+    with pytest.raises(Error):
+        GraphQueryParams(**args)
 
 
 # Fixtures for graph filtering tests
