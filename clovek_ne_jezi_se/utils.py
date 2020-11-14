@@ -166,6 +166,13 @@ def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
     return nx.subgraph_view(graph, filter_node=filter_node)
 
 
+def get_node_filtered_node_names(graph: nx.Graph, query_dict: dict) -> list:
+    """Return a list of node names from the subgraph query"""
+    subgraph = get_node_filtered_subgraph(graph, query_dict)
+    res = list(subgraph.nodes)
+    return res
+
+
 def get_edge_filtered_subgraph(
     graph, query_dict: dict, query_type: str
 ) -> nx.DiGraph:

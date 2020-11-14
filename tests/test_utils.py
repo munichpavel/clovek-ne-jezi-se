@@ -13,7 +13,9 @@ from clovek_ne_jezi_se.utils import (
     make_even_points_on_circle, make_dict_from_lists,
     GraphLabelMatcher,
     is_label_matched, is_label_isomorphic,
-    get_node_filtered_subgraph, get_edge_filtered_subgraph
+    get_node_filtered_subgraph,
+    get_node_filtered_node_names,
+    get_edge_filtered_subgraph
 )
 
 
@@ -73,7 +75,7 @@ def test_make_dict_from_lists():
     assert make_dict_from_lists(key_list, value_list) == expected
 
 
-# Test GraphLabelMatcher
+# Tests of graph utility functions
 @pytest.mark.parametrize(
     'matcher_args',
     [
@@ -338,6 +340,17 @@ def test_get_node_filtered_subgraph(
 
     assert is_label_isomorphic(res, match_candidate, label_matchers) \
         == expected
+
+
+@pytest.mark.parametrize(
+    'graph,query,expected',
+    [
+        (pre_filter_graph, dict(descriptor='schlamazel'), [0]),
+        (pre_filter_graph, dict(descriptor='yutz'), [1, 2, 3])
+    ]
+)
+def test_get_node_filtered_node_names(graph, query, expected):
+    assert get_node_filtered_node_names(graph, query) == expected
 
 
 # For filtering by edge value equality
