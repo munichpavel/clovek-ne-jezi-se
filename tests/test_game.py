@@ -27,23 +27,23 @@ class TestGameState:
     game_state.initialize()
 
     # Set further variables for test cases
-    player_waiting_to_main_indices = []
+    player_enter_main_indices = []
     for player_name in player_names:
-        player_waiting_to_main_indices.append(
-            game_state.get_player_waiting_to_main_index(player_name)
+        player_enter_main_indices.append(
+            game_state.get_player_enter_main_index(player_name)
         )
 
     @pytest.mark.parametrize(
         'player_name,expected',
         [
-            (player_names[0], player_waiting_to_main_indices[0]),
-            (player_names[1], player_waiting_to_main_indices[1]),
-            (player_names[2], player_waiting_to_main_indices[2]),
-            (player_names[3], player_waiting_to_main_indices[3])
+            (player_names[0], player_enter_main_indices[0]),
+            (player_names[1], player_enter_main_indices[1]),
+            (player_names[2], player_enter_main_indices[2]),
+            (player_names[3], player_enter_main_indices[3])
         ]
     )
-    def test_get_player_waiting_to_main_index(self, player_name, expected):
-        assert self.game_state.get_player_waiting_to_main_index(player_name) \
+    def test_get_player_enter_main_index(self, player_name, expected):
+        assert self.game_state.get_player_enter_main_index(player_name) \
             == expected
 
     @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
@@ -56,7 +56,7 @@ class TestGameState:
 
     @pytest.mark.parametrize(
         "kind,idx",
-        [('yadda', 0), ('main', 42), ('main', range(3))]
+        [('yadda', 0), ('main', 42)]
     )
     def test_get_board_space_returns_none(self, kind, idx):
         assert self.game_state.get_board_space(kind=kind, idx=idx) is None
@@ -99,6 +99,6 @@ class TestGameState:
     #             ),
     #             to_space=BoardSpace(
     #                 kind='main',
-    #                 idx=self.player_waiting_to_main_indices[player_idx],
+    #                 idx=self.player_enter_main_indices[player_idx],
     #                 occupied_by=EMPTY_SYMBOL, allowed_occupants='all')
     #         )

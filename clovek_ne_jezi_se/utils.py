@@ -3,6 +3,7 @@
 from typing import Sequence
 from math import pi
 from numbers import Number
+from copy import deepcopy
 
 import numpy as np
 import attr
@@ -41,8 +42,9 @@ def make_dict_from_lists(key_list: list, value_list: list) -> dict:
     return dict(zip(key_list, value_list))
 
 
+#TODO Deprecate
 def is_label_isomorphic(
-    graph, other, graph_label_matchers: list
+    graph, other, graph_query_paramses: list
 ) -> bool:
     """
     Returns True if and only if graphs are isomorphic and specified labels
@@ -54,144 +56,164 @@ def is_label_isomorphic(
     ----------
     graph : networkx.graph
     other : networks.graph
-    graph_label_matcher : list
-        List of GraphLabelMatcher's
+    graph_query_paramses : list
+        List of GraphQueryParam's
     """
     res = []
     res.append(iso.is_isomorphic(graph, other))
-    for matcher in graph_label_matchers:
-        res.append(is_label_matched(graph, other, matcher))
+    for query_params in graph_query_paramses:
+        res.append(_is_single_label_isomorphic(graph, other, query_params))
     return np.all(res)
 
 
-def is_label_matched(
-    graph, other, graph_label_matcher: "GraphLabelMatcher"
+def _is_single_label_isomorphic(
+    graph, other, graph_query_params: "GraphQueryParams"
 ) -> bool:
     """
-    Returns True if and only if graphs are isomorphic and specified labels
-    in graph_label_matcher are identical.
+    Returns True if and only if graphs are isomorphic and specified label
+    in graph_query_params are identical.
 
     Parameters
     ----------
     graph : networkx.Graph
     other : networkx.Graph
-    graph_label_matcher : GraphLabelMatcher
+    graph_query_params : GraphQueryParams
     """
-    if graph_label_matcher.match_type == 'node':
+    if graph_query_params.graph_component == 'node':
         return iso.is_isomorphic(
             graph, other,
-            node_match=graph_label_matcher.get_match_function()
+            node_match=graph_query_params.get_match_function()
         )
-    elif graph_label_matcher.match_type == 'edge':
+    elif graph_query_params.graph_component == 'edge':
         return iso.is_isomorphic(
             graph, other,
-            edge_match=graph_label_matcher.get_match_function()
+            edge_match=graph_query_params.get_match_function()
         )
 
 
 @attr.s
-class GraphLabelMatcher:
+class GraphQueryParams:
     """
-    Specification of graph annotation matching method for labeled graphs
-    to be considered equal. The matching methods are from
-    `networkx.algorithms.isomorphism`.
-
+    Container for doing graph filtering
 
     Parameters
-    ----------
-    match_type : str
-        One of 'node', 'edge'
-    value_type : str
-        One of 'numerical', 'categorical'
-    labels : list
-        The edge or node label values for which to check equality
+    -----------
+    graph_component : str
+        One of 'node' or 'edge'
+    query_type: str
+        One of 'equality' or 'inclusion'
+    label : str
+        Graph component label for the query
+    value : str, Numeric or None
+        Label value for query
+    value_type: str or None
     """
-    match_type = attr.ib(type=str)
-    value_type = attr.ib(type=str)
-    labels = attr.ib(type=list)
+    graph_component = attr.ib(validator=attr.validators.in_(['node', 'edge']))
+    label = attr.ib()
+    query_type = attr.ib(
+        default=None,
+        validator=attr.validators.in_(['equality', 'inclusion', None])
+    )
+    value = attr.ib(default=None)
+    value_type = attr.ib(default=None)
 
-    @match_type.validator
-    def check_match_type(self, attribute, value):
-        allowed_values = ['node', 'edge']
-        if value not in allowed_values:
-            raise ValueError(f'match_type must be in {allowed_values}')
-
-    @value_type.validator
-    def check_value_type(self, attribute, value):
-        allowed_values = ['numerical', 'categorical']
-        if value not in allowed_values:
-            raise ValueError(f'value_type must be in {allowed_values}')
+    def set_value_type(self):
+        """Impute value_type based on value."""
+        if isinstance(self.value, str):
+            self.value_type = 'categorical'
+        elif isinstance(self.value, Number):
+            self.value_type = 'numerical'
+        else:
+            raise TypeError(
+                f'value {self.value} is neither {str} nor {Number}'
+            )
 
     def get_match_function(self):
-        return self._matcher_factory(self.match_type, self.value_type)
+        return self._matcher_factory(self.graph_component, self.value_type)
 
-    def _matcher_factory(self, match_type, value_type):
+    def _matcher_factory(self, graph_component, value_type):
         factory_dict = dict(node=dict(), edge=dict())
 
         # TODO Is this dangerous?
         numerical_default = 0.
         categorical_default = None
+
         factory_dict['node']['categorical'] = iso.categorical_node_match(
-            self.labels, len(self.labels) * [categorical_default]
+            self.label, categorical_default
         )
         factory_dict['node']['numerical'] = iso.numerical_node_match(
-            self.labels, len(self.labels) * [numerical_default]
+            self.label, numerical_default
         )
         factory_dict['edge']['categorical'] = iso.categorical_edge_match(
-            self.labels, len(self.labels) * [categorical_default]
+            self.label, categorical_default
         )
         factory_dict['edge']['numerical'] = iso.numerical_edge_match(
-            self.labels, len(self.labels) * [numerical_default]
+            self.label, numerical_default
         )
 
-        return factory_dict[match_type][value_type]
+        return factory_dict[graph_component][value_type]
 
 
-@attr.s
-class GraphQueryParams:
-    """Container for doing graph filtering"""
-    graph_component = attr.ib(validator=attr.validators.in_(['node', 'edge']))
-    query_type = attr.ib(
-        validator=attr.validators.in_(['numerical', 'categorical'])
-    )
-    label = attr.ib()
-    value = attr.ib()
-
-    @value.validator
-    def matches_query_type(self, attribute, value):
-        if self.query_type == 'numerical':
-            value_type = Number
-        elif self.query_type == 'categorical':
-            value_type = str
-        if not isinstance(value, value_type):
-            raise TypeError(f'Value {value} is not {self.query_type}.')
-
-
-def get_node_filtered_subgraph(graph: nx.Graph, query_dict: dict) -> nx.Graph:
+def get_filtered_subgraph_view(
+    graph: nx.Graph, query_paramses: list
+) -> nx.Graph:
     """
-    Return a subgraph of input graph according to node values specified in
+    Return a subgraph view of the input graph that satisifies all queries
+    specified in the query_paramses list.
+    """
+    res = deepcopy(graph)
+    for query_params in query_paramses:
+        res = _get_single_filtered_subgraph(res, query_params)
+
+    return res
+
+
+def _get_single_filtered_subgraph(
+    graph: nx.Graph, query_params: "GraphQueryParams"
+) -> nx.Graph:
+    """
+    Return a subgraph of input graph according to the query specified in the
+    input GraphQueryParams.
+
+    Parameters
+    ----------
+    graph : nx.Graph
+    query_params:
+        Instance of GraphQueryParams
+    """
+    if query_params.graph_component == 'node':
+        return get_node_filtered_subgraph_view(graph, query_params)
+
+    elif query_params.graph_component == 'edge':
+        return get_edge_filtered_subgraph_view(graph, query_params)
+
+
+def get_node_filtered_subgraph_view(
+    graph: nx.Graph, query_params: "GraphQueryParams"
+) -> nx.Graph:
+    """
+    Return a subgraph view of input graph according to node values specified in
     the query_dict.
 
     Parameters
     ----------
     graph : nx.Graph
-    query_dict : dict
-        Dict of form {<node_label_name>: node_label_value}
+    query_params:
+        Instance of GraphQueryParams
     """
     def filter_node(node_name):
-        res = []
-        for key, value in query_dict.items():
-            res.append(graph.nodes[node_name].get(key) == value)
-        return np.all(res)
+        res = graph.nodes[node_name].get(query_params.label) \
+            == query_params.value
+        return res
 
     return nx.subgraph_view(graph, filter_node=filter_node)
 
 
-def get_edge_filtered_subgraph(
-    graph, query_dict: dict, query_type: str
-) -> nx.DiGraph:
+def get_edge_filtered_subgraph_view(
+    graph: nx.Graph, query_params: "GraphQueryParams"
+) -> nx.Graph:
     """
-    Return a subgraph of input graph according to edge values specified in
+    Return a subgraph view of input graph according to edge values specified in
     the query_dict. Nodes of degree 0 after filtering are removed.
 
     Parameters
@@ -203,23 +225,23 @@ def get_edge_filtered_subgraph(
         Dictates whether filtering is by value equality or inclusion
     """
     def filter_edge_by_equality(node_start, node_stop):
-        res = []
-        for key, value in query_dict.items():
-            res.append(graph[node_start][node_stop].get(key) == value)
-        return np.all(res)
+        res = graph[node_start][node_stop].get(query_params.label) \
+            == query_params.value
+        return res
 
     def filter_edge_by_inclusion(node_start, node_stop):
-        res = []
-        for key, value in query_dict.items():
-            res.append(value in graph[node_start][node_stop].get(key, []))
-        return np.all(res)
+        res = query_params.value in \
+            graph[node_start][node_stop].get(query_params.label, [])
+        return res
 
-    if query_type == 'equality':
+    if query_params.query_type == 'equality':
         filter_edge = filter_edge_by_equality
-    elif query_type == 'inclusion':
+
+    elif query_params.query_type == 'inclusion':
         filter_edge = filter_edge_by_inclusion
 
     res = nx.subgraph_view(graph, filter_edge=filter_edge)
+
     # Keep only nodes of degree > 0 after edge filtering
     subgraph_node_names = []
     for node_name in res.nodes:
@@ -229,8 +251,21 @@ def get_edge_filtered_subgraph(
     return res
 
 
-def get_node_filtered_node_names(graph: nx.Graph, query_dict: dict) -> list:
-    """Return a list of node names from the subgraph query"""
-    subgraph = get_node_filtered_subgraph(graph, query_dict)
+def get_filtered_node_names(
+    graph: nx.Graph, query_paramses: list
+) -> list:
+    """
+    Return a list of node names from the subgraph query
+
+    Parameters
+    ----------
+    graph : nx.Graph
+    query_paramses : list of GraphQueryParams's
+
+    Returns
+    -------
+    res : list
+    """
+    subgraph = get_filtered_subgraph_view(graph, query_paramses)
     res = list(subgraph.nodes)
     return res

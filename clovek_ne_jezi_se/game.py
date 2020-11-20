@@ -18,7 +18,7 @@ from .consts import (
 
 from .utils import (
     make_even_points_on_circle, make_dict_from_lists,
-    get_node_filtered_subgraph
+    GraphQueryParams, get_filtered_subgraph_view, get_filtered_node_names
 )
 
 
@@ -38,11 +38,10 @@ class GameState:
         self._main_board_length = len(self.player_names) * self.section_length
         self._graph = nx.DiGraph()
         self._create_main_graph()
-       # self._annotate_main_edges()
         self._create_waiting_graphs()
         self._join_waiting_graphs_to_main()
         self._create_home_graphs()
-        #self._set_home_edges()
+        # self._join_home_graphs_to_main()
 
     def _create_main_graph(self):
         main_board_graph = nx.cycle_graph(
@@ -57,27 +56,55 @@ class GameState:
             main_board_graph.nodes[node_name]['occupied_by'] = EMPTY_SYMBOL
             main_board_graph.nodes[node_name]['allowed_occupants'] = 'all'
 
+        # Annotation of edges
         for start_node, stop_node in main_board_graph.edges():
             main_board_graph[start_node][stop_node]['allowed_traversers'] \
                 = self.player_names
 
-        # for player_name in self.player_names:
-        #     waiting_to_main_idx = self.get_player_waiting_to_main_index(
-        #         player_name
-        #     )
-        #     waiting_to_main_node_name = self._get_query_node_names(
-        #         dict(kind='main', idx=waiting_to_main_idx)
-        #     )
-        #     print(waiting_to_main_idx, waiting_to_main_node_name)
+        # Adjust annotation of main edges to ensure player enters home
+        # after a circuit and does not loop around main board ad infinitum
+        self._set_enter_main_node_names(main_board_graph)
+        for player_name in self.player_names:
+            enter_main_node_name = self._enter_main_node_names[player_name]
 
-        #     pre_home_node_name = next(
-        #         main_board_graph.predecessors(waiting_to_main_node_name)
-        #     )
-        #     main_board_graph[pre_home_node_name][waiting_to_main_node_name][
-        #         'allowed_occupants'
-        #     ].remove(player_name)
+            prehome_node_name = next(
+                main_board_graph.predecessors(enter_main_node_name)
+            )
+            other_player_names = [
+                other_player_name for other_player_name in self.player_names
+                if other_player_name != player_name
+            ]
+            main_board_graph[prehome_node_name][enter_main_node_name][
+                'allowed_traversers'
+            ] = other_player_names
 
         self._graph.update(main_board_graph)
+
+    def _set_enter_main_node_names(self, main_board_graph):
+        res = {}
+        query_mains = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='kind', value='main'
+        )
+        query_mains.set_value_type()
+        for player_name in self.player_names:
+            enter_main_idx = self.get_player_enter_main_index(player_name)
+
+            query_entry_idx = GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='idx', value=enter_main_idx
+            )
+            query_entry_idx.set_value_type()
+            enter_main_node_name = get_filtered_node_names(
+                main_board_graph, [query_mains, query_entry_idx]
+            )[0]
+            res[player_name] = enter_main_node_name
+
+        self._enter_main_node_names = res
+
+    def get_player_enter_main_index(self, player_name):
+        player_order = self.player_names.index(player_name)
+        return player_order * self.section_length
 
     def _create_waiting_graphs(self):
 
@@ -101,31 +128,29 @@ class GameState:
 
     def _join_waiting_graphs_to_main(self):
         for player_name in self.player_names:
-            waiting_node_names = self._get_query_node_names(
-                dict(kind='waiting', allowed_occupants=player_name)
+            query_waitings = GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='kind', value='waiting'
             )
-            main_board_entry_index = self.get_player_waiting_to_main_index(
-                player_name
+            query_waitings.set_value_type()
+            query_allowed_occupants = GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='allowed_occupants', value=player_name
             )
-            main_entry_node_name = self._get_query_node_names(
-                dict(kind='main', idx=main_board_entry_index)
-            )[0]
+            query_allowed_occupants.set_value_type()
+
+            waiting_node_names = get_filtered_node_names(
+                self._graph, [query_waitings, query_allowed_occupants]
+            )
+
             edge_value_dict = dict(weight=6, allowed_traversers=[player_name])
             self._graph.add_edges_from(
                 [
-                    (node_name, main_entry_node_name)
+                    (node_name, self._enter_main_node_names[player_name])
                     for node_name in waiting_node_names
                 ],
                 **edge_value_dict
             )
-
-    def get_player_waiting_to_main_index(self, player_name):
-        player_order = self.player_names.index(player_name)
-        return player_order * self.section_length
-
-    def _get_query_node_names(self, query_dict: dict) -> list:
-        nodes = get_node_filtered_subgraph(self._graph, query_dict)
-        return list(nodes)
 
     def _create_home_graphs(self):
         home_graphs = {
@@ -157,15 +182,35 @@ class GameState:
         self, kind: str, idx: int, allowed_occupants='all'
     ) -> "BoardSpace":
         """Get BoardSpace instance of given kind and index"""
-        space_subgraph = get_node_filtered_subgraph(
-            self._graph,
-            dict(kind=kind, idx=idx, allowed_occupants=allowed_occupants)
+        kind_query = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='kind', value=kind
+        )
+        kind_query.set_value_type()
+
+        idx_query = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='idx', value=idx
+        )
+        idx_query.set_value_type()
+
+        allowed_occupants_query = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='allowed_occupants', value=allowed_occupants
+        )
+        allowed_occupants_query.set_value_type()
+
+        space_subgraph = get_filtered_subgraph_view(
+            self._graph, [kind_query, idx_query, allowed_occupants_query]
+
         )
         # TODO throw error if not space_subgraph.number_of_nodes() == 1 ?
         if space_subgraph.number_of_nodes() == 0:
             return None
 
-        node_name = list(space_subgraph.nodes())[0]
+        node_name = get_filtered_node_names(
+            self._graph, [kind_query, idx_query, allowed_occupants_query]
+        )[0]
         node_data = space_subgraph.nodes[node_name]
         return BoardSpace(**node_data)
 
@@ -176,7 +221,7 @@ class GameState:
         player_name = from_space.occupied_by
         to_space = BoardSpace(
             kind='main',
-            idx=self.get_player_waiting_to_main_index(player_name),
+            idx=self.get_player_enter_main_index(player_name),
             occupied_by=EMPTY_SYMBOL, allowed_occupants='all'
         )
         return MoveContainer(
@@ -198,7 +243,13 @@ class GameState:
         main_center = (0, 0)
 
         pos = {}
-        main_node_names = self._get_query_node_names(dict(kind='main'))
+        query_main = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='kind', value='main'
+        )
+        query_main.set_value_type()
+        main_node_names = get_filtered_node_names(self._graph, [query_main])
+
         main_coords = list(make_even_points_on_circle(
             center=main_center, radius=main_radius,
             n_points=self._main_board_length,
@@ -211,10 +262,23 @@ class GameState:
             center=main_center, radius=main_radius + 0.75,
             n_points=len(self.player_names), start_radians=start_radians
         )
-        for idx, player_name in enumerate(self.player_names):
-            player_waiting_node_names = self._get_query_node_names(
-                dict(kind='waiting', allowed_occupants=player_name)
+
+        query_waiting = GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='kind', value='waiting'
             )
+        query_waiting.set_value_type()
+        for idx, player_name in enumerate(self.player_names):
+
+            query_allowed_occupants = GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='allowed_occupants', value=player_name
+            )
+            query_allowed_occupants.set_value_type()
+            player_waiting_node_names = get_filtered_node_names(
+                self._graph, [query_waiting, query_allowed_occupants]
+            )
+
             player_waiting_coords = list(make_even_points_on_circle(
                 center=player_waiting_centers[idx], radius=0.5,
                 n_points=self.pieces_per_player, start_radians=pi / 4
@@ -228,10 +292,21 @@ class GameState:
 
         pos_players_home = {}
         # Add home nodes in concentric rings inside main board
+        query_home = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='kind', value='home'
+        )
+        query_home.set_value_type()
         for home_order in range(self.pieces_per_player):
-            player_home_node_names = self._get_query_node_names(
-                dict(kind='home', idx=home_order)
+            query_home_order = GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='idx', value=home_order
             )
+            query_home_order.set_value_type()
+            player_home_node_names = get_filtered_node_names(
+                self._graph, [query_home, query_home_order]
+            )
+
             players_home_coords = make_even_points_on_circle(
                 center=main_center,
                 radius=main_radius - 0.4 * (home_order + 1),
