@@ -11,6 +11,7 @@ Welcome to clovek-ne-jezi-se's documentation!
    :caption: Contents:
 
    INSTALL
+   api
 
 
 
