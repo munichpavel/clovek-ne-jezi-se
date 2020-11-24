@@ -1,3 +1,6 @@
+"""Constants for clovek_ne_jezi_se game setup"""
+
+
 EMPTY_SYMBOL = '-'
 
 MINIMUM_SECTION_LENGTH = 4

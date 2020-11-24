@@ -32,8 +32,9 @@ release = '0.0.1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',
+    'sphinx.ext.coverage',
     'sphinx.ext.viewcode'
 ]
 
@@ -57,3 +58,7 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# For autodoc_typehints
+set_type_checking_flag = True
+always_document_param_types = True

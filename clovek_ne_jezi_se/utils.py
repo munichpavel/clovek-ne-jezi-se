@@ -14,9 +14,24 @@ import networkx.algorithms.isomorphism as iso
 
 def make_even_points_on_circle(
     center: Sequence, radius: float, n_points: int,
-    start_radians=0, clockwise=True
+    start_radians: float = 0, clockwise: bool = True
 ) -> np.array:
-    """"""
+    """
+    Generate evenly spaces points on a circle.
+
+    Parameters
+    ----------
+    center :
+        2-tuple of coordinates in R2 for center
+    radius :
+        Radius of circle
+    n_points :
+        Number of points to be distributed on circle
+    start_radians :
+        Angle in radians for initial points placement
+    clockwise :
+        Placement order of points, clockwise or counter-clockwise
+    """
     if clockwise:
         endpoint_sign = -1
     else:
@@ -39,12 +54,13 @@ def make_even_points_on_circle(
 
 
 def make_dict_from_lists(key_list: list, value_list: list) -> dict:
+    """Return dict with given keys and values."""
     return dict(zip(key_list, value_list))
 
 
-#TODO Deprecate
 def is_label_isomorphic(
-    graph, other, graph_query_paramses: list
+    graph: nx.Graph, other: nx.Graph,
+    graph_query_paramses: Sequence["GraphQueryParams"]
 ) -> bool:
     """
     Returns True if and only if graphs are isomorphic and specified labels
@@ -54,9 +70,9 @@ def is_label_isomorphic(
 
     Parameters
     ----------
-    graph : networkx.graph
-    other : networks.graph
-    graph_query_paramses : list
+    graph :
+    other :
+    graph_query_paramses :
         List of GraphQueryParam's
     """
     res = []
@@ -67,17 +83,11 @@ def is_label_isomorphic(
 
 
 def _is_single_label_isomorphic(
-    graph, other, graph_query_params: "GraphQueryParams"
+    graph: nx.Graph, other: nx.Graph, graph_query_params: "GraphQueryParams"
 ) -> bool:
     """
     Returns True if and only if graphs are isomorphic and specified label
     in graph_query_params are identical.
-
-    Parameters
-    ----------
-    graph : networkx.Graph
-    other : networkx.Graph
-    graph_query_params : GraphQueryParams
     """
     if graph_query_params.graph_component == 'node':
         return iso.is_isomorphic(
@@ -96,7 +106,7 @@ class GraphQueryParams:
     """
     Container for doing graph filtering
 
-    Parameters
+    Attributes
     -----------
     graph_component : str
         One of 'node' or 'edge'
@@ -129,6 +139,7 @@ class GraphQueryParams:
             )
 
     def get_match_function(self):
+        """Return matching function for instance"""
         return self._matcher_factory(self.graph_component, self.value_type)
 
     def _matcher_factory(self, graph_component, value_type):
@@ -155,7 +166,7 @@ class GraphQueryParams:
 
 
 def get_filtered_subgraph_view(
-    graph: nx.Graph, query_paramses: list
+    graph: nx.Graph, query_paramses: Sequence["GraphQueryParams"]
 ) -> nx.Graph:
     """
     Return a subgraph view of the input graph that satisifies all queries
@@ -174,12 +185,6 @@ def _get_single_filtered_subgraph(
     """
     Return a subgraph of input graph according to the query specified in the
     input GraphQueryParams.
-
-    Parameters
-    ----------
-    graph : nx.Graph
-    query_params:
-        Instance of GraphQueryParams
     """
     if query_params.graph_component == 'node':
         return get_node_filtered_subgraph_view(graph, query_params)
@@ -194,12 +199,6 @@ def get_node_filtered_subgraph_view(
     """
     Return a subgraph view of input graph according to node values specified in
     the query_dict.
-
-    Parameters
-    ----------
-    graph : nx.Graph
-    query_params:
-        Instance of GraphQueryParams
     """
     def filter_node(node_name):
         res = graph.nodes[node_name].get(query_params.label) \
@@ -215,14 +214,6 @@ def get_edge_filtered_subgraph_view(
     """
     Return a subgraph view of input graph according to edge values specified in
     the query_dict. Nodes of degree 0 after filtering are removed.
-
-    Parameters
-    ----------
-    graph : nx.Graph
-    query_dict : dict
-        Dict of form {<edge_label_name>: edge_label_value}
-    query_type : str
-        Dictates whether filtering is by value equality or inclusion
     """
     def filter_edge_by_equality(node_start, node_stop):
         res = graph[node_start][node_stop].get(query_params.label) \
@@ -252,19 +243,10 @@ def get_edge_filtered_subgraph_view(
 
 
 def get_filtered_node_names(
-    graph: nx.Graph, query_paramses: list
+    graph: nx.Graph, query_paramses: Sequence["GraphQueryParams"]
 ) -> list:
     """
-    Return a list of node names from the subgraph query
-
-    Parameters
-    ----------
-    graph : nx.Graph
-    query_paramses : list of GraphQueryParams's
-
-    Returns
-    -------
-    res : list
+    Return a list of node names from the subgraph query.
     """
     subgraph = get_filtered_subgraph_view(graph, query_paramses)
     res = list(subgraph.nodes)
