@@ -446,15 +446,6 @@ class Board:
             )
 
 
-def check_start(self, attribute, value):
-    # TODO: Refactor as in exapmple
-    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
-    if value is not None and self.kind == 'leave_waiting':
-        raise ValueError(
-            'Leave home moves may not have a start position'
-        )
-
-
 @attr.s
 class Move:
     """
