@@ -358,12 +358,15 @@ class Board:
         self.player_symbols = player_symbols
 
     def initialize(self):
+        """Initialize the board representation."""
         self.setup_spaces()
         self.setup_homes()
         self.setup_waiting_count()
 
     def setup_spaces(self):
-
+        """
+        Set attributes related to main board spaces.
+        """
         if self.section_length < MINIMUM_SECTION_LENGTH:
             raise ValueError(
                 f'Sections must have length {MINIMUM_SECTION_LENGTH}'
@@ -378,7 +381,10 @@ class Board:
         )
 
     def setup_homes(self):
-        """Each player's home base consisting of 4 spots"""
+        """
+        Set attribute for homes, where each player's home base consisting of
+        PIECES_PER_PLAYER spots
+        """
         res = {}
         for symbol in self.player_symbols:
             res[symbol] = PIECES_PER_PLAYER * [EMPTY_SYMBOL]
@@ -386,6 +392,7 @@ class Board:
         self.homes = res
 
     def setup_waiting_count(self):
+        """Set waiting count area attributes."""
         res = {}
         for symbol in self.player_symbols:
             res[symbol] = PIECES_PER_PLAYER
@@ -405,7 +412,7 @@ class Board:
             return self.player_symbols[private_symbol]
 
     def __repr__(self):
-        """Show board and players"""
+        """Show board and players."""
         if self.section_length == 4:
             res = (
                 "\n"
