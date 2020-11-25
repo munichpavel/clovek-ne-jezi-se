@@ -41,7 +41,7 @@ class GameState:
         self._create_waiting_graphs()
         self._join_waiting_graphs_to_main()
         self._create_home_graphs()
-        # self._join_home_graphs_to_main()
+        #self._join_home_graphs_to_main()
 
     def _create_main_graph(self):
         main_board_graph = nx.cycle_graph(
@@ -327,6 +327,14 @@ class GameState:
         pos = {**pos, **pos_players_waiting, **pos_main, **pos_players_home}
         return pos
 
+
+def check_start(self, attribute, value):
+    # TODO: Refactor as in exapmple
+    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
+    if value is not None and self.kind == 'leave_waiting':
+        raise ValueError(
+            'Leave home moves may not have a start position'
+        )
 
 @attr.s
 class BoardSpace:
