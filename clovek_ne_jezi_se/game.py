@@ -41,7 +41,7 @@ class GameState:
         self._create_waiting_graphs()
         self._join_waiting_graphs_to_main()
         self._create_home_graphs()
-        #self._join_home_graphs_to_main()
+        self._join_home_graphs_to_main()
 
     def _create_main_graph(self):
         main_board_graph = nx.cycle_graph(
@@ -178,6 +178,40 @@ class GameState:
 
             # Add to main graph
             self._graph.update(player_home_graph)
+
+    def _join_home_graphs_to_main(self):
+        for player_name in self.player_names:
+
+            enter_main_node_name = self._enter_main_node_names[player_name]
+            # TODO: Is this dangerous? Do I modify the graph in-place?
+            prehome_node_name = next(
+                self._graph.predecessors(enter_main_node_name)
+            )
+
+            # First waiting space
+            query_first_waiting_space = [
+                GraphQueryParams(
+                    graph_component='node', query_type='equality',
+                    label='idx', value=0
+                ),
+                GraphQueryParams(
+                    graph_component='node', query_type='equality',
+                    label='kind', value='home'
+                ),
+                GraphQueryParams(
+                    graph_component='node', query_type='equality',
+                    label='allowed_occupants', value=player_name
+                )
+            ]
+            first_waiting_space_name = get_filtered_node_names(
+                self._graph, query_first_waiting_space
+            )[0]
+
+            edge_value_dict = dict(weight=1, allowed_traversers=[player_name])
+            self._graph.add_edge(
+                prehome_node_name, first_waiting_space_name,
+                **edge_value_dict
+            )
 
     def get_board_space(
         self, kind: str, idx: int, allowed_occupants: str = 'all'
