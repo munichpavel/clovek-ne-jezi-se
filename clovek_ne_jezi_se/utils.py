@@ -1,6 +1,6 @@
 '''Utility functions'''
 
-from typing import Sequence
+from typing import Sequence, Union
 from math import pi
 from numbers import Number
 from copy import deepcopy
@@ -103,29 +103,17 @@ def _is_single_label_isomorphic(
 
 @attr.s
 class GraphQueryParams:
-    """
-    Container for doing graph filtering
-
-    Attributes
-    -----------
-    graph_component : str
-        One of 'node' or 'edge'
-    query_type: str
-        One of 'equality' or 'inclusion'
-    label : str
-        Graph component label for the query
-    value : str, Numeric or None
-        Label value for query
-    value_type: str or None
-    """
-    graph_component = attr.ib(validator=attr.validators.in_(['node', 'edge']))
-    label = attr.ib()
-    query_type = attr.ib(
+    """Container for doing graph filtering"""
+    graph_component: str = attr.ib(
+        validator=attr.validators.in_(['node', 'edge'])
+    )
+    label: str = attr.ib()
+    query_type: str = attr.ib(
         default=None,
         validator=attr.validators.in_(['equality', 'inclusion', None])
     )
-    value = attr.ib(default=None)
-    value_type = attr.ib(default=None)
+    value: Union[str, int, float, None] = attr.ib(default=None)
+    value_type: Union[str, None] = attr.ib(default=None)
 
     def set_value_type(self):
         """Impute value_type based on value."""

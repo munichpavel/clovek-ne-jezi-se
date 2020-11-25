@@ -103,6 +103,7 @@ class GameState:
         self._enter_main_node_names = res
 
     def get_player_enter_main_index(self, player_name):
+        """Get main board index where player enters from waiting."""
         player_order = self.player_names.index(player_name)
         return player_order * self.section_length
 
@@ -179,9 +180,9 @@ class GameState:
             self._graph.update(player_home_graph)
 
     def get_board_space(
-        self, kind: str, idx: int, allowed_occupants='all'
+        self, kind: str, idx: int, allowed_occupants: str = 'all'
     ) -> "BoardSpace":
-        """Get BoardSpace instance of given kind and index"""
+        """Get BoardSpace instance of given kind and index."""
         kind_query = GraphQueryParams(
             graph_component='node', query_type='equality',
             label='kind', value=kind
@@ -218,6 +219,9 @@ class GameState:
     def move_factory(
         self, from_space: 'BoardSpace', roll: int
     ) -> 'MoveContainer':
+        """
+        Return MoveContainer for given BoardSpace start ('from') and roll.
+        """
         player_name = from_space.occupied_by
         to_space = BoardSpace(
             kind='main',
@@ -231,7 +235,7 @@ class GameState:
 
     # Visualization
     def draw(self, figsize=(12, 8)):
-        """Show game state graph with human-readable coordinates"""
+        """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
 
         plt.figure(figsize=figsize)
@@ -326,6 +330,7 @@ class GameState:
 
 @attr.s
 class BoardSpace:
+    """Container for board spaces"""
     # TODO Add validators, e.g. kind in ['waiting', 'main', 'home']
     kind = attr.ib(type=str)
     idx = attr.ib(type=int)
@@ -335,6 +340,7 @@ class BoardSpace:
 
 @attr.s
 class MoveContainer:
+    """Container for board moves."""
     from_space = attr.ib(type=BoardSpace)
     to_space = attr.ib(type=BoardSpace)
 
@@ -344,11 +350,6 @@ class Board:
     Game board representation, consisting of waiting area, main board,
     and home base representation. The internal representation of the game
     board is implemented in Game.
-
-    The board state is represented by the main board and
-    home base, while the waiting area is used only to determine
-    allowable moves, e.g. if player A's waiting area has count 0,
-    then she may not move a new symbol onto the main board.
     """
     def __init__(self, section_length, player_symbols=('1', '2', '3', '4')):
         self.section_length = section_length
