@@ -330,9 +330,11 @@ class GameState:
 
 @attr.s
 class BoardSpace:
-    """Container for board spaces"""
-    # TODO Add validators, e.g. kind in ['waiting', 'main', 'home']
-    kind = attr.ib(type=str)
+    """Container for board spaces."""
+    kind = attr.ib(
+        type=str,
+        validator=attr.validators.in_(['waiting', 'main', 'home'])
+    )
     idx = attr.ib(type=int)
     occupied_by = attr.ib(type=str, default=EMPTY_SYMBOL)
     allowed_occupants = attr.ib(type=str, default='all')

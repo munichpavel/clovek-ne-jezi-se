@@ -102,3 +102,8 @@ class TestGameState:
     #                 idx=self.player_enter_main_indices[player_idx],
     #                 occupied_by=EMPTY_SYMBOL, allowed_occupants='all')
     #         )
+
+
+def test_board_space_errors():
+    with pytest.raises(ValueError):
+        BoardSpace('yadda', 0, 'red', 'all')
