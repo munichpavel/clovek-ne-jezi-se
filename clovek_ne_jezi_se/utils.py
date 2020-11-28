@@ -189,10 +189,20 @@ def get_node_filtered_subgraph_view(
     Return a subgraph view of input graph according to node values specified in
     the query_dict.
     """
-    def filter_node(node_name):
+    def filter_node_by_equality(node_name):
         res = graph.nodes[node_name].get(query_params.label) \
             == query_params.value
         return res
+
+    def filter_node_by_inclusion(node_name):
+        res = query_params.value in \
+            graph.nodes[node_name].get(query_params.label, [])
+        return res
+
+    if query_params.query_type == 'equality':
+        filter_node = filter_node_by_equality
+    elif query_params.query_type == 'inclusion':
+        filter_node = filter_node_by_inclusion
 
     return nx.subgraph_view(graph, filter_node=filter_node)
 

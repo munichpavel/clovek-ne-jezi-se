@@ -200,7 +200,6 @@ other_labeled_two_cycle_digraph[0][1]['strength'] = 3
 
 
 @pytest.mark.parametrize(
-    #'graph,other,graph_label_matcher,expected',
     'graph,other,query_param_argses,expected',
     [
         (
@@ -273,18 +272,23 @@ def test_is_label_isomorphic(
 
 
 # Fixtures for graph filtering tests
+# PC Note: All of my best friends from elementary school were Jewish; the
+# use of Yiddish examples below is from my continued fondness for the language.
+
 pre_filter_graph = nx.cycle_graph(4, create_using=nx.DiGraph)
+# For filtering by node value equalit
 pre_filter_graph.nodes[0]['descriptor'] = 'schlamazel'
 pre_filter_graph.nodes[1]['descriptor'] = 'yutz'
 pre_filter_graph.nodes[2]['descriptor'] = 'yutz'
 pre_filter_graph.nodes[3]['descriptor'] = 'yutz'
 
-expected_filtered = nx.DiGraph()
-expected_filtered.add_nodes_from([1, 2, 3], descriptor='yutz')
-expected_filtered.add_edge(1, 2)
-expected_filtered.add_edge(2, 3)
+# For filtering by node value inclusion
+pre_filter_graph.nodes[0]['allowed_noshes'] = ['knish']
+pre_filter_graph.nodes[1]['allowed_noshes'] = ['bagel']
+pre_filter_graph.nodes[2]['allowed_noshes'] = ['bagel', 'knish']
+pre_filter_graph.nodes[3]['allowed_noshes'] = ['bagel', 'knish']
 
-# For filtering by edge value equality
+# For filtering by numeric edge value equality
 pre_filter_graph[0][1]['trombone_count'] = 0
 pre_filter_graph[1][2]['trombone_count'] = 76
 pre_filter_graph[2][3]['trombone_count'] = 76
@@ -294,10 +298,18 @@ pre_filter_graph[0][1]['allowed_instruments'] = ['trumpet']
 pre_filter_graph[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
 pre_filter_graph[2][3]['allowed_instruments'] = ['trombone']
 
-# For filtering by edge value equality
+expected_filtered = nx.DiGraph()
+# Expected filter nodes
+expected_filtered.add_nodes_from([1, 2, 3], descriptor='yutz')
+expected_filtered.nodes[1]['allowed_noshes'] = ['bagel']
+expected_filtered.nodes[2]['allowed_noshes'] = ['bagel', 'knish']
+expected_filtered.nodes[3]['allowed_noshes'] = ['bagel', 'knish']
+
+# Expected filtered edges
+expected_filtered.add_edge(1, 2)
+expected_filtered.add_edge(2, 3)
 expected_filtered[1][2]['trombone_count'] = 76
 expected_filtered[2][3]['trombone_count'] = 76
-# For filtering by edge value inclusion
 expected_filtered[1][2]['allowed_instruments'] = ['trumpet', 'trombone']
 expected_filtered[2][3]['allowed_instruments'] = ['trombone']
 
@@ -330,6 +342,18 @@ expected_filtered[2][3]['allowed_instruments'] = ['trombone']
             [dict(graph_component='node', query_type='equality',
                   label='descriptor', value='yutz')],
             pre_filter_graph, False  # as pre and post filter graphs are same
+        ),
+        (
+            pre_filter_graph,
+            [dict(graph_component='node', query_type='inclusion',
+                  label='allowed_noshes', value='challah')],
+            nx.DiGraph(), True
+        ),
+        (
+            pre_filter_graph,
+            [dict(graph_component='node', query_type='inclusion',
+                  label='allowed_noshes', value='bagel')],
+            expected_filtered, True
         ),
         (
             pre_filter_graph,
@@ -368,7 +392,6 @@ def test_get_filtered_subgraph_view(
         query_paramses.append(query_params)
 
     res = get_filtered_subgraph_view(graph, query_paramses)
-
     assert is_label_isomorphic(res, match_candidate, query_paramses) \
         == expected
 
