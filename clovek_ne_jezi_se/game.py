@@ -219,6 +219,25 @@ class GameState:
         Get BoardSpace instance of given kind and index, with player_name
         required for waiting or home spaces.
         """
+        board_space_query_paramses = self._get_board_space_query_paramses(
+            kind, idx, player_name
+        )
+        space_subgraph = get_filtered_subgraph_view(
+            self._graph, board_space_query_paramses
+        )
+        # TODO throw error if not space_subgraph.number_of_nodes() == 1 ?
+        if space_subgraph.number_of_nodes() == 0:
+            return None
+
+        node_name = get_filtered_node_names(
+            self._graph, board_space_query_paramses
+        )[0]
+        node_data = space_subgraph.nodes[node_name]
+        return BoardSpace(**node_data)
+
+    def _get_board_space_query_paramses(
+        self, kind: str, idx: int, player_name: str
+    ):
         kind_query = GraphQueryParams(
             graph_component='node', query_type='equality',
             label='kind', value=kind
@@ -241,18 +260,7 @@ class GameState:
             allowed_occupants_query.set_value_type()
             query_paramses.append(allowed_occupants_query)
 
-        space_subgraph = get_filtered_subgraph_view(
-            self._graph, query_paramses
-        )
-        # TODO throw error if not space_subgraph.number_of_nodes() == 1 ?
-        if space_subgraph.number_of_nodes() == 0:
-            return None
-
-        node_name = get_filtered_node_names(
-            self._graph, query_paramses
-        )[0]
-        node_data = space_subgraph.nodes[node_name]
-        return BoardSpace(**node_data)
+        return query_paramses
 
     # Moves
     def move_factory(
