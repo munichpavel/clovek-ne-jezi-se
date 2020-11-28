@@ -11,6 +11,6 @@ jupyter
 pylint
 flake8 # TODO: Either pylint or flake8 or reason for both
 sphinx
-phinx-autodoc-typehints
+sphinx-autodoc-typehints
 
 -e .
