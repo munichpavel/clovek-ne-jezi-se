@@ -90,7 +90,6 @@ class TestGameState:
         from_space = self.game_state.get_board_space(
             kind='waiting', idx=0, player_name=player_name
         )
-
         assert self.game_state.move_factory(from_space, roll) \
             == MoveContainer(
                 from_space=BoardSpace(

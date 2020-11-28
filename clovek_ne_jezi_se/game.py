@@ -61,6 +61,7 @@ class GameState:
         for start_node, stop_node in main_board_graph.edges():
             main_board_graph[start_node][stop_node]['allowed_traversers'] \
                 = self.player_names
+            main_board_graph[start_node][stop_node]['weight'] = 1
 
         # Adjust annotation of main edges to ensure player enters home
         # after a circuit and does not loop around main board ad infinitum
@@ -189,8 +190,8 @@ class GameState:
                 self._graph.predecessors(enter_main_node_name)
             )
 
-            # First waiting space
-            query_first_waiting_space = [
+            # First home space
+            query_first_home_space = [
                 GraphQueryParams(
                     graph_component='node', query_type='equality',
                     label='idx', value=0
@@ -204,13 +205,13 @@ class GameState:
                     label='allowed_occupants', value=player_name
                 )
             ]
-            first_waiting_space_name = get_filtered_node_names(
-                self._graph, query_first_waiting_space
+            first_home_space_name = get_filtered_node_names(
+                self._graph, query_first_home_space
             )[0]
 
             edge_value_dict = dict(weight=1, allowed_traversers=[player_name])
             self._graph.add_edge(
-                prehome_node_name, first_waiting_space_name,
+                prehome_node_name, first_home_space_name,
                 **edge_value_dict
             )
 
@@ -270,6 +271,7 @@ class GameState:
         """
         Return MoveContainer for given BoardSpace start ('from') and roll.
         """
+
         to_space = self._get_to_space(from_space, roll)
         return MoveContainer(
             from_space=from_space,
@@ -289,10 +291,47 @@ class GameState:
         player_subgraph_view = get_filtered_subgraph_view(
             self._graph, [query_params]
         )
+
+        # From space node name queries
+        allowed_query_params = GraphQueryParams(
+            graph_component='node', query_type='inclusion',
+            label='allowed_occupants', value=from_space.occupied_by
+        )
+        idx_query_params = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='idx', value=from_space.idx
+        )
+        board_component_params = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='kind', value=from_space.kind
+        )
+        from_paramses = [
+            allowed_query_params, idx_query_params, board_component_params
+        ]
+
+        from_node_names = get_filtered_node_names(
+            player_subgraph_view, from_paramses
+        )
+        from_node_name = from_node_names[0]
+
+        advance_edges = list(nx.dfs_edges(
+            player_subgraph_view, source=from_node_name, depth_limit=roll+1
+        ))
+        advance_edge_weights = [
+            player_subgraph_view[out_node][in_node]['weight']
+            for out_node, in_node in advance_edges
+        ]
+        cumulative_edge_weights = np.cumsum(advance_edge_weights)
+        # Find node name roll ahead of from_node_name on player subgraph
+        # TODO write test for this???
+        idx_advance = np.argmax(cumulative_edge_weights < roll)
+        to_node_name = advance_edges[idx_advance][1]
+        to_node = player_subgraph_view.nodes[to_node_name]
         to_space = BoardSpace(
-            kind='main',
-            idx=self.get_player_enter_main_index(player_name),
-            occupied_by=EMPTY_SYMBOL, allowed_occupants=self.player_names
+            kind=to_node['kind'],
+            idx=to_node['idx'],
+            occupied_by=to_node['occupied_by'],
+            allowed_occupants=to_node['allowed_occupants']
         )
         return to_space
 
