@@ -237,7 +237,8 @@ class GameState:
 
     def _get_board_space_query_paramses(
         self, kind: str, idx: int, player_name: str
-    ):
+    ) -> Sequence['GraphQueryParams']:
+        """Return list of GraphQueryParams's for get_board_space method."""
         kind_query = GraphQueryParams(
             graph_component='node', query_type='equality',
             label='kind', value=kind
