@@ -51,7 +51,7 @@ class TestGameState:
         assert self.game_state.get_board_space(kind='main', idx=idx) \
             == BoardSpace(
                 kind='main', idx=idx, occupied_by=EMPTY_SYMBOL,
-                allowed_occupants='all'
+                allowed_occupants=self.player_names
             )
 
     @pytest.mark.parametrize(
@@ -65,43 +65,44 @@ class TestGameState:
     @pytest.mark.parametrize("idx", range(pieces_per_player))
     def test_get_waiting_space(self, player_name, idx):
         assert self.game_state.get_board_space(
-            kind='waiting', idx=idx, allowed_occupants=player_name
+            kind='waiting', idx=idx, player_name=player_name
             ) \
             == BoardSpace(
                 kind='waiting', idx=idx, occupied_by=player_name,
-                allowed_occupants=player_name
+                allowed_occupants=[player_name]
             )
 
     @pytest.mark.parametrize("player_name", player_names)
     @pytest.mark.parametrize("idx", range(pieces_per_player))
     def test_get_home_space(self, player_name, idx):
         assert self.game_state.get_board_space(
-            kind='home', idx=idx, allowed_occupants=player_name
+            kind='home', idx=idx, player_name=player_name
             ) \
             == BoardSpace(
                 kind='home', idx=idx, occupied_by=EMPTY_SYMBOL,
-                allowed_occupants=player_name
+                allowed_occupants=[player_name]
             )
 
-    # def test_move_factory(self):
-    #     player_idx = 0
-    #     player_name = self.player_names[player_idx]
-    #     roll = 6
-    #     from_space = self.game_state.get_board_space(
-    #         kind='waiting', idx=0, allowed_occupants=player_name
-    #     )
+    def test_move_factory(self):
+        player_idx = 0
+        player_name = self.player_names[player_idx]
+        roll = 6
+        from_space = self.game_state.get_board_space(
+            kind='waiting', idx=0, player_name=player_name
+        )
 
-    #     assert self.game_state.move_factory(from_space, roll) \
-    #         == MoveContainer(
-    #             from_space=BoardSpace(
-    #                 kind='waiting', idx=0,
-    #                 occupied_by=player_name, allowed_occupants=player_name
-    #             ),
-    #             to_space=BoardSpace(
-    #                 kind='main',
-    #                 idx=self.player_enter_main_indices[player_idx],
-    #                 occupied_by=EMPTY_SYMBOL, allowed_occupants='all')
-    #         )
+        assert self.game_state.move_factory(from_space, roll) \
+            == MoveContainer(
+                from_space=BoardSpace(
+                    kind='waiting', idx=0,
+                    occupied_by=player_name, allowed_occupants=[player_name]
+                ),
+                to_space=BoardSpace(
+                    kind='main',
+                    idx=self.player_enter_main_indices[player_idx],
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=self.player_names)
+            )
 
 
 def test_board_space_errors():

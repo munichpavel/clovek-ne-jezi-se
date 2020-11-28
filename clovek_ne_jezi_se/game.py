@@ -54,7 +54,8 @@ class GameState:
             main_board_graph.nodes[node_name]['idx'] = idx
             main_board_graph.nodes[node_name]['kind'] = 'main'
             main_board_graph.nodes[node_name]['occupied_by'] = EMPTY_SYMBOL
-            main_board_graph.nodes[node_name]['allowed_occupants'] = 'all'
+            main_board_graph.nodes[node_name]['allowed_occupants'] = \
+                self.player_names
 
         # Annotation of edges
         for start_node, stop_node in main_board_graph.edges():
@@ -117,7 +118,7 @@ class GameState:
                         f'w-{player_name}-{idx}',
                         dict(
                             kind='waiting', idx=idx, occupied_by=player_name,
-                            allowed_occupants=player_name
+                            allowed_occupants=[player_name]
                         )
                     )
                     for idx in range(self.pieces_per_player)
@@ -135,7 +136,7 @@ class GameState:
             )
             query_waitings.set_value_type()
             query_allowed_occupants = GraphQueryParams(
-                graph_component='node', query_type='equality',
+                graph_component='node', query_type='inclusion',
                 label='allowed_occupants', value=player_name
             )
             query_allowed_occupants.set_value_type()
@@ -174,7 +175,7 @@ class GameState:
                 player_home_graph.nodes[node_name]['occupied_by'] \
                     = EMPTY_SYMBOL
                 player_home_graph.nodes[node_name]['allowed_occupants'] \
-                    = player_name
+                    = [player_name]
 
             # Add to main graph
             self._graph.update(player_home_graph)
@@ -199,7 +200,7 @@ class GameState:
                     label='kind', value='home'
                 ),
                 GraphQueryParams(
-                    graph_component='node', query_type='equality',
+                    graph_component='node', query_type='inclusion',
                     label='allowed_occupants', value=player_name
                 )
             ]
@@ -213,10 +214,11 @@ class GameState:
                 **edge_value_dict
             )
 
-    def get_board_space(
-        self, kind: str, idx: int, allowed_occupants: str = 'all'
-    ) -> "BoardSpace":
-        """Get BoardSpace instance of given kind and index."""
+    def get_board_space(self, kind: str, idx: int, player_name=None):
+        """
+        Get BoardSpace instance of given kind and index, with player_name
+        required for waiting or home spaces.
+        """
         kind_query = GraphQueryParams(
             graph_component='node', query_type='equality',
             label='kind', value=kind
@@ -229,22 +231,25 @@ class GameState:
         )
         idx_query.set_value_type()
 
-        allowed_occupants_query = GraphQueryParams(
-            graph_component='node', query_type='equality',
-            label='allowed_occupants', value=allowed_occupants
-        )
-        allowed_occupants_query.set_value_type()
+        query_paramses = [kind_query, idx_query]
+
+        if player_name is not None:
+            allowed_occupants_query = GraphQueryParams(
+                graph_component='node', query_type='inclusion',
+                label='allowed_occupants', value=player_name
+            )
+            allowed_occupants_query.set_value_type()
+            query_paramses.append(allowed_occupants_query)
 
         space_subgraph = get_filtered_subgraph_view(
-            self._graph, [kind_query, idx_query, allowed_occupants_query]
-
+            self._graph, query_paramses
         )
         # TODO throw error if not space_subgraph.number_of_nodes() == 1 ?
         if space_subgraph.number_of_nodes() == 0:
             return None
 
         node_name = get_filtered_node_names(
-            self._graph, [kind_query, idx_query, allowed_occupants_query]
+            self._graph, query_paramses
         )[0]
         node_data = space_subgraph.nodes[node_name]
         return BoardSpace(**node_data)
@@ -256,16 +261,31 @@ class GameState:
         """
         Return MoveContainer for given BoardSpace start ('from') and roll.
         """
-        player_name = from_space.occupied_by
-        to_space = BoardSpace(
-            kind='main',
-            idx=self.get_player_enter_main_index(player_name),
-            occupied_by=EMPTY_SYMBOL, allowed_occupants='all'
-        )
+        to_space = self._get_to_space(from_space, roll)
         return MoveContainer(
             from_space=from_space,
             to_space=to_space
         )
+
+    def _get_to_space(self, from_space: 'BoardSpace', roll: int):
+        """
+        Get valid end position (to_space) given start (from_space) and roll.
+        """
+        player_name = from_space.occupied_by
+        query_params = GraphQueryParams(
+          graph_component='edge', query_type='inclusion',
+          label='allowed_traversers', value=player_name
+        )
+
+        player_subgraph_view = get_filtered_subgraph_view(
+            self._graph, [query_params]
+        )
+        to_space = BoardSpace(
+            kind='main',
+            idx=self.get_player_enter_main_index(player_name),
+            occupied_by=EMPTY_SYMBOL, allowed_occupants=self.player_names
+        )
+        return to_space
 
     # Visualization
     def draw(self, figsize=(12, 8)):
@@ -309,7 +329,7 @@ class GameState:
         for idx, player_name in enumerate(self.player_names):
 
             query_allowed_occupants = GraphQueryParams(
-                graph_component='node', query_type='equality',
+                graph_component='node', query_type='inclusion',
                 label='allowed_occupants', value=player_name
             )
             query_allowed_occupants.set_value_type()
@@ -370,6 +390,7 @@ def check_start(self, attribute, value):
             'Leave home moves may not have a start position'
         )
 
+
 @attr.s
 class BoardSpace:
     """Container for board spaces."""
@@ -379,7 +400,7 @@ class BoardSpace:
     )
     idx = attr.ib(type=int)
     occupied_by = attr.ib(type=str, default=EMPTY_SYMBOL)
-    allowed_occupants = attr.ib(type=str, default='all')
+    allowed_occupants = attr.ib(type=Sequence, default=[])
 
 
 @attr.s
