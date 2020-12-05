@@ -1,11 +1,3 @@
 # not-just-dev
 numpy
 attrs
-
-# dev
-pytest
-jupyter
-pylint
-flake8 # TODO: Either pylint or flake8 or reason for both
-
--e .
