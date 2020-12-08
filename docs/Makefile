@@ -20,6 +20,6 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 buildapi:
-	sphinx-apidoc -f ../clovek_ne_jezi_se -o source/api
+	sphinx-apidoc -f ../clovek_ne_jezi_se -o $(SOURCEDIR)/api
 	@echo "Auto-generation of API documentation finished. " \
-		"The generated files are in 'source/api/'"
+		"The generated files are in '$(SOURCEDIR)/api/'"
