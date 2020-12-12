@@ -1,7 +1,7 @@
 """Clovek ne jezi se game board and plays"""
 from math import floor, pi
 from random import randint
-from typing import Sequence
+from typing import Sequence, Union
 
 import attr
 
@@ -269,7 +269,8 @@ class GameState:
         self, from_space: 'BoardSpace', roll: int
     ) -> 'MoveContainer':
         """
-        Return MoveContainer for given BoardSpace start ('from') and roll.
+        Return either MoveContainer for given BoardSpace start ('from') and
+        roll. No validity check is made on the from_space.
         """
 
         to_space = self._get_to_space(from_space, roll)
@@ -278,9 +279,12 @@ class GameState:
             to_space=to_space
         )
 
-    def _get_to_space(self, from_space: 'BoardSpace', roll: int):
+    def _get_to_space(
+        self, from_space: 'BoardSpace', roll: int
+    ) -> Union['BoardSpace', None]:
         """
-        Get valid end position (to_space) given start (from_space) and roll.
+        For a given start (from_space) and roll, returns either a valid end
+        position (to_space) or None if the move is invalid
         """
         player_name = from_space.occupied_by
         query_params = GraphQueryParams(
@@ -327,12 +331,14 @@ class GameState:
         idx_advance = np.argmax(cumulative_edge_weights < roll)
         to_node_name = advance_edges[idx_advance][1]
         to_node = player_subgraph_view.nodes[to_node_name]
+
         to_space = BoardSpace(
             kind=to_node['kind'],
             idx=to_node['idx'],
             occupied_by=to_node['occupied_by'],
             allowed_occupants=to_node['allowed_occupants']
         )
+
         return to_space
 
     # Visualization
@@ -428,15 +434,6 @@ class GameState:
 
         pos = {**pos, **pos_players_waiting, **pos_main, **pos_players_home}
         return pos
-
-
-def check_start(self, attribute, value):
-    # TODO: Refactor as in exapmple
-    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
-    if value is not None and self.kind == 'leave_waiting':
-        raise ValueError(
-            'Leave home moves may not have a start position'
-        )
 
 
 @attr.s
@@ -555,6 +552,15 @@ class Board:
             raise NotImplementedError(
                 'Board representation only for 16 space main board'
             )
+
+
+def check_start(self, attribute, value):
+    # TODO: Refactor as in exapmple
+    # https://www.attrs.org/en/stable/api.html#attr.validators.in_
+    if value is not None and self.kind == 'leave_waiting':
+        raise ValueError(
+            'Leave home moves may not have a start position'
+        )
 
 
 @attr.s

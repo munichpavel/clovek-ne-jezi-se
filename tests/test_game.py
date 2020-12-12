@@ -8,12 +8,12 @@ import networkx as nx
 from clovek_ne_jezi_se.game import (
     GameState, BoardSpace, MoveContainer
 )
-
-from clovek_ne_jezi_se.utils import (
-    make_even_points_on_circle, make_dict_from_lists
-)
-
 from clovek_ne_jezi_se.consts import EMPTY_SYMBOL
+
+
+def test_board_space_errors():
+    with pytest.raises(ValueError):
+        BoardSpace('yadda', 0, 'red', 'all')
 
 
 class TestGameState:
@@ -83,27 +83,31 @@ class TestGameState:
                 allowed_occupants=[player_name]
             )
 
-    def test_move_factory(self):
-        player_idx = 0
+    @pytest.mark.parametrize(
+        "player_idx,from_kind,from_idx,roll,expected_to_space",
+        [
+      #      (0, 'waiting', 0, 8, None),
+            (
+                0, 'waiting', 0, 6,
+                BoardSpace(
+                    kind='main', idx=player_enter_main_indices[0],
+                    occupied_by=EMPTY_SYMBOL, allowed_occupants=player_names
+                )
+            ),
+        ]
+    )
+    def test_move_factory_initial_game_state(
+        self, player_idx, from_kind, from_idx, roll, expected_to_space
+    ):
         player_name = self.player_names[player_idx]
-        roll = 6
         from_space = self.game_state.get_board_space(
-            kind='waiting', idx=0, player_name=player_name
+            kind=from_kind, idx=from_idx, player_name=player_name
         )
-        assert self.game_state.move_factory(from_space, roll) \
-            == MoveContainer(
-                from_space=BoardSpace(
-                    kind='waiting', idx=0,
-                    occupied_by=player_name, allowed_occupants=[player_name]
-                ),
-                to_space=BoardSpace(
-                    kind='main',
-                    idx=self.player_enter_main_indices[player_idx],
-                    occupied_by=EMPTY_SYMBOL,
-                    allowed_occupants=self.player_names)
+
+        res = self.game_state.move_factory(from_space, roll)
+        if expected_to_space is None:
+            assert res.to_space is None
+        else:
+            assert res == MoveContainer(
+                from_space=from_space, to_space=expected_to_space
             )
-
-
-def test_board_space_errors():
-    with pytest.raises(ValueError):
-        BoardSpace('yadda', 0, 'red', 'all')
