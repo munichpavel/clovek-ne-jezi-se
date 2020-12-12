@@ -55,13 +55,12 @@ class GameState:
             main_board_graph.nodes[node_name]['kind'] = 'main'
             main_board_graph.nodes[node_name]['occupied_by'] = EMPTY_SYMBOL
             main_board_graph.nodes[node_name]['allowed_occupants'] = \
-                self.player_names
+                self.player_names + [EMPTY_SYMBOL]
 
         # Annotation of edges
         for start_node, stop_node in main_board_graph.edges():
             main_board_graph[start_node][stop_node]['allowed_traversers'] \
                 = self.player_names
-            main_board_graph[start_node][stop_node]['weight'] = 1
 
         # Adjust annotation of main edges to ensure player enters home
         # after a circuit and does not loop around main board ad infinitum
@@ -88,15 +87,13 @@ class GameState:
             graph_component='node', query_type='equality',
             label='kind', value='main'
         )
-        query_mains.set_value_type()
         for player_name in self.player_names:
-            enter_main_idx = self.get_player_enter_main_index(player_name)
 
+            enter_main_idx = self.get_player_enter_main_index(player_name)
             query_entry_idx = GraphQueryParams(
                 graph_component='node', query_type='equality',
                 label='idx', value=enter_main_idx
             )
-            query_entry_idx.set_value_type()
             enter_main_node_name = get_filtered_node_names(
                 main_board_graph, [query_mains, query_entry_idx]
             )[0]
@@ -119,7 +116,7 @@ class GameState:
                         f'w-{player_name}-{idx}',
                         dict(
                             kind='waiting', idx=idx, occupied_by=player_name,
-                            allowed_occupants=[player_name]
+                            allowed_occupants=[player_name, EMPTY_SYMBOL]
                         )
                     )
                     for idx in range(self.pieces_per_player)
@@ -135,24 +132,21 @@ class GameState:
                 graph_component='node', query_type='equality',
                 label='kind', value='waiting'
             )
-            query_waitings.set_value_type()
             query_allowed_occupants = GraphQueryParams(
                 graph_component='node', query_type='inclusion',
                 label='allowed_occupants', value=player_name
             )
-            query_allowed_occupants.set_value_type()
 
             waiting_node_names = get_filtered_node_names(
                 self._graph, [query_waitings, query_allowed_occupants]
             )
 
-            edge_value_dict = dict(weight=6, allowed_traversers=[player_name])
             self._graph.add_edges_from(
                 [
                     (node_name, self._enter_main_node_names[player_name])
                     for node_name in waiting_node_names
                 ],
-                **edge_value_dict
+                allowed_traversers=[player_name]
             )
 
     def _create_home_graphs(self):
@@ -176,7 +170,7 @@ class GameState:
                 player_home_graph.nodes[node_name]['occupied_by'] \
                     = EMPTY_SYMBOL
                 player_home_graph.nodes[node_name]['allowed_occupants'] \
-                    = [player_name]
+                    = [player_name, EMPTY_SYMBOL]
 
             # Add to main graph
             self._graph.update(player_home_graph)
@@ -190,29 +184,16 @@ class GameState:
                 self._graph.predecessors(enter_main_node_name)
             )
 
-            # First home space
-            query_first_home_space = [
-                GraphQueryParams(
-                    graph_component='node', query_type='equality',
-                    label='idx', value=0
-                ),
-                GraphQueryParams(
-                    graph_component='node', query_type='equality',
-                    label='kind', value='home'
-                ),
-                GraphQueryParams(
-                    graph_component='node', query_type='inclusion',
-                    label='allowed_occupants', value=player_name
-                )
-            ]
-            first_home_space_name = get_filtered_node_names(
-                self._graph, query_first_home_space
-            )[0]
+            first_home_space = self.get_board_space(
+                kind='home', idx=0, player_name=player_name
+            )
+            first_home_space_name = self._get_board_space_node_name(
+                first_home_space
+            )
 
-            edge_value_dict = dict(weight=1, allowed_traversers=[player_name])
             self._graph.add_edge(
                 prehome_node_name, first_home_space_name,
-                **edge_value_dict
+                allowed_traversers=[player_name]
             )
 
     def get_board_space(self, kind: str, idx: int, player_name=None):
@@ -264,6 +245,34 @@ class GameState:
 
         return query_paramses
 
+    def _get_board_space_node_name(self, board_space: 'BoardSpace') -> str:
+        """Returns node name of input board space"""
+        kind_query_params = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='kind', value=board_space.kind
+        )
+        player_name_query_params = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='allowed_occupants', value=board_space.allowed_occupants
+        )
+        idx_query_params = GraphQueryParams(
+            graph_component='node', query_type='equality',
+            label='idx', value=board_space.idx
+        )
+
+        node_names = get_filtered_node_names(
+            self._graph,
+            [kind_query_params, player_name_query_params, idx_query_params]
+        )
+
+        print(board_space, node_names)
+        if len(node_names) != 1:
+            raise ValueError(
+                f'Board space {board_space} node name not well-defined'
+            )
+        else:
+            return node_names[0]
+
     # Moves
     def move_factory(
         self, from_space: 'BoardSpace', roll: int
@@ -286,60 +295,58 @@ class GameState:
         For a given start (from_space) and roll, returns either a valid end
         position (to_space) or None if the move is invalid
         """
-        player_name = from_space.occupied_by
-        query_params = GraphQueryParams(
+        if from_space.kind == 'waiting':
+            to_node_name = self._enter_main_node_names[from_space.occupied_by]
+            to_node = self._graph.nodes[to_node_name]
+            if (
+                roll != NR_OF_DICE_FACES or
+                to_node['occupied_by'] == from_space.occupied_by
+            ):
+                return None
+            else:
+                return BoardSpace(
+                    kind=to_node['kind'],
+                    idx=to_node['idx'],
+                    occupied_by=to_node['occupied_by'],
+                    allowed_occupants=to_node['allowed_occupants']
+                )
+
+        # player_subgraph_query_paramses = \
+        #     self._get_player_subgraph_query_paramses(from_space.occupied_by)
+        # player_subgraph_view = get_filtered_subgraph_view(
+        #     self._graph, player_subgraph_query_paramses
+        # )
+
+        # from_node_name = self._get_board_space_node_name(from_space)
+
+        # advance_edges = list(nx.dfs_edges(
+        #     player_subgraph_view, source=from_node_name, depth_limit=roll+1
+        # ))
+
+        # to_space = BoardSpace(
+        #     kind=to_node['kind'],
+        #     idx=to_node['idx'],
+        #     occupied_by=to_node['occupied_by'],
+        #     allowed_occupants=to_node['allowed_occupants']
+        # )
+
+        # return to_space
+
+    def _get_player_subgraph_query_paramses(
+        self, player_name: str
+    ) -> Sequence['GraphQueryParams']:
+        """Return graph query paramter list"""
+        allowed_traversers_query_params = GraphQueryParams(
           graph_component='edge', query_type='inclusion',
           label='allowed_traversers', value=player_name
         )
-
-        player_subgraph_view = get_filtered_subgraph_view(
-            self._graph, [query_params]
-        )
-
-        # From space node name queries
-        allowed_query_params = GraphQueryParams(
+        allowed_occupants_query_params = GraphQueryParams(
             graph_component='node', query_type='inclusion',
-            label='allowed_occupants', value=from_space.occupied_by
+            label='allowed_occupants', value=player_name
         )
-        idx_query_params = GraphQueryParams(
-            graph_component='node', query_type='equality',
-            label='idx', value=from_space.idx
-        )
-        board_component_params = GraphQueryParams(
-            graph_component='node', query_type='equality',
-            label='kind', value=from_space.kind
-        )
-        from_paramses = [
-            allowed_query_params, idx_query_params, board_component_params
+        return [
+            allowed_traversers_query_params, allowed_occupants_query_params
         ]
-
-        from_node_names = get_filtered_node_names(
-            player_subgraph_view, from_paramses
-        )
-        from_node_name = from_node_names[0]
-
-        advance_edges = list(nx.dfs_edges(
-            player_subgraph_view, source=from_node_name, depth_limit=roll+1
-        ))
-        advance_edge_weights = [
-            player_subgraph_view[out_node][in_node]['weight']
-            for out_node, in_node in advance_edges
-        ]
-        cumulative_edge_weights = np.cumsum(advance_edge_weights)
-        # Find node name roll ahead of from_node_name on player subgraph
-        # TODO write test for this???
-        idx_advance = np.argmax(cumulative_edge_weights < roll)
-        to_node_name = advance_edges[idx_advance][1]
-        to_node = player_subgraph_view.nodes[to_node_name]
-
-        to_space = BoardSpace(
-            kind=to_node['kind'],
-            idx=to_node['idx'],
-            occupied_by=to_node['occupied_by'],
-            allowed_occupants=to_node['allowed_occupants']
-        )
-
-        return to_space
 
     # Visualization
     def draw(self, figsize=(12, 8)):

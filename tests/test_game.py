@@ -51,7 +51,7 @@ class TestGameState:
         assert self.game_state.get_board_space(kind='main', idx=idx) \
             == BoardSpace(
                 kind='main', idx=idx, occupied_by=EMPTY_SYMBOL,
-                allowed_occupants=self.player_names
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
             )
 
     @pytest.mark.parametrize(
@@ -69,7 +69,7 @@ class TestGameState:
             ) \
             == BoardSpace(
                 kind='waiting', idx=idx, occupied_by=player_name,
-                allowed_occupants=[player_name]
+                allowed_occupants=[player_name, EMPTY_SYMBOL]
             )
 
     @pytest.mark.parametrize("player_name", player_names)
@@ -80,18 +80,19 @@ class TestGameState:
             ) \
             == BoardSpace(
                 kind='home', idx=idx, occupied_by=EMPTY_SYMBOL,
-                allowed_occupants=[player_name]
+                allowed_occupants=[player_name, EMPTY_SYMBOL]
             )
 
     @pytest.mark.parametrize(
         "player_idx,from_kind,from_idx,roll,expected_to_space",
         [
-      #      (0, 'waiting', 0, 8, None),
+            (0, 'waiting', 0, 8, None),
             (
                 0, 'waiting', 0, 6,
                 BoardSpace(
                     kind='main', idx=player_enter_main_indices[0],
-                    occupied_by=EMPTY_SYMBOL, allowed_occupants=player_names
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
                 )
             ),
         ]
