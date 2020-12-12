@@ -80,36 +80,49 @@ class TestGameState:
             )
 
     @pytest.mark.parametrize(
-        "from_kind,roll,expected_to_space_kwargs",
+        "roll,from_space,expected_to_space_kwargs",
         [
-            ('waiting', 8, None),
             (
-                'waiting', 6,
+                5, BoardSpace(
+                    kind='waiting', idx=0, occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                None
+            ),
+            (
+                6, BoardSpace(
+                    kind='waiting', idx=0, occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
                 dict(
-                    kind='main', occupied_by=EMPTY_SYMBOL,
+                    kind='main', idx=player_enter_main_indices[0],
+                    occupied_by=EMPTY_SYMBOL,
                     allowed_occupants=player_names + [EMPTY_SYMBOL]
                 )
             ),
+            (
+                1, BoardSpace(
+                    kind='main', idx=0, occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+
+                ),
+                dict(
+                    kind='main', idx=1+0, occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                 )
+            )
         ]
     )
-    @pytest.mark.parametrize("from_idx", range(pieces_per_player))
-    @pytest.mark.parametrize("player_name", player_names)
     def test_move_factory_initial_game_state(
-        self, player_name, from_kind, from_idx, roll, expected_to_space_kwargs
+        self, roll, from_space, expected_to_space_kwargs
     ):
-        player_idx = self.player_names.index(player_name)
-        from_space = self.game_state.get_board_space(
-            kind=from_kind, idx=from_idx, player_name=player_name
-        )
         res = self.game_state.move_factory(from_space, roll)
 
         if expected_to_space_kwargs is None:
             assert res.to_space is None
         else:
-            expected_to_space_kwargs['idx'] = \
-                self.player_enter_main_indices[player_idx]
-            print(expected_to_space_kwargs)
             expected_to_space = BoardSpace(**expected_to_space_kwargs)
             assert res == MoveContainer(
                 from_space=from_space, to_space=expected_to_space
             )
+
