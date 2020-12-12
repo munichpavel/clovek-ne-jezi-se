@@ -265,7 +265,6 @@ class GameState:
             [kind_query_params, player_name_query_params, idx_query_params]
         )
 
-        print(board_space, node_names)
         if len(node_names) != 1:
             raise ValueError(
                 f'Board space {board_space} node name not well-defined'
@@ -311,43 +310,43 @@ class GameState:
                     allowed_occupants=to_node['allowed_occupants']
                 )
 
+        player_subgraph_query_paramses = \
+            self._get_player_subgraph_query_paramses(from_space.occupied_by)
 
-        # player_subgraph_query_paramses = \
-        #     self._get_player_subgraph_query_paramses(from_space.occupied_by)
-        # player_subgraph_view = get_filtered_subgraph_view(
-        #     self._graph, player_subgraph_query_paramses
-        # )
+        player_subgraph_view = get_filtered_subgraph_view(
+            self._graph, player_subgraph_query_paramses
+        )
+        from_node_name = self._get_board_space_node_name(from_space)
 
-        # from_node_name = self._get_board_space_node_name(from_space)
+        advance_edges = list(nx.dfs_edges(
+            player_subgraph_view, source=from_node_name, depth_limit=roll+1
+        ))
+        to_node_name = advance_edges[roll-1][1]
+        to_node = self._graph.nodes[to_node_name]
+        to_space = BoardSpace(
+            kind=to_node['kind'],
+            idx=to_node['idx'],
+            occupied_by=to_node['occupied_by'],
+            allowed_occupants=to_node['allowed_occupants']
+        )
 
-        # advance_edges = list(nx.dfs_edges(
-        #     player_subgraph_view, source=from_node_name, depth_limit=roll+1
-        # ))
+        return to_space
 
-        # to_space = BoardSpace(
-        #     kind=to_node['kind'],
-        #     idx=to_node['idx'],
-        #     occupied_by=to_node['occupied_by'],
-        #     allowed_occupants=to_node['allowed_occupants']
-        # )
-
-        # return to_space
-
-    # def _get_player_subgraph_query_paramses(
-    #     self, player_name: str
-    # ) -> Sequence['GraphQueryParams']:
-    #     """Return graph query paramter list"""
-    #     allowed_traversers_query_params = GraphQueryParams(
-    #       graph_component='edge', query_type='inclusion',
-    #       label='allowed_traversers', value=player_name
-    #     )
-    #     allowed_occupants_query_params = GraphQueryParams(
-    #         graph_component='node', query_type='inclusion',
-    #         label='allowed_occupants', value=player_name
-    #     )
-    #     return [
-    #         allowed_traversers_query_params, allowed_occupants_query_params
-    #     ]
+    def _get_player_subgraph_query_paramses(
+        self, player_name: str
+    ) -> Sequence['GraphQueryParams']:
+        """Return graph query paramter list"""
+        allowed_traversers_query_params = GraphQueryParams(
+          graph_component='edge', query_type='inclusion',
+          label='allowed_traversers', value=player_name
+        )
+        allowed_occupants_query_params = GraphQueryParams(
+            graph_component='node', query_type='inclusion',
+            label='allowed_occupants', value=player_name
+        )
+        return [
+            allowed_traversers_query_params, allowed_occupants_query_params
+        ]
 
     # Visualization
     def draw(self, figsize=(12, 8)):
