@@ -1,10 +1,6 @@
 """Tests for game classes"""
 import pytest
 
-import numpy as np
-
-import networkx as nx
-
 from clovek_ne_jezi_se.game import (
     GameState, BoardSpace, MoveContainer
 )
@@ -84,31 +80,36 @@ class TestGameState:
             )
 
     @pytest.mark.parametrize(
-        "player_idx,from_kind,from_idx,roll,expected_to_space",
+        "from_kind,roll,expected_to_space_kwargs",
         [
-            (0, 'waiting', 0, 8, None),
+            ('waiting', 8, None),
             (
-                0, 'waiting', 0, 6,
-                BoardSpace(
-                    kind='main', idx=player_enter_main_indices[0],
-                    occupied_by=EMPTY_SYMBOL,
+                'waiting', 6,
+                dict(
+                    kind='main', occupied_by=EMPTY_SYMBOL,
                     allowed_occupants=player_names + [EMPTY_SYMBOL]
                 )
             ),
         ]
     )
+    @pytest.mark.parametrize("from_idx", range(pieces_per_player))
+    @pytest.mark.parametrize("player_name", player_names)
     def test_move_factory_initial_game_state(
-        self, player_idx, from_kind, from_idx, roll, expected_to_space
+        self, player_name, from_kind, from_idx, roll, expected_to_space_kwargs
     ):
-        player_name = self.player_names[player_idx]
+        player_idx = self.player_names.index(player_name)
         from_space = self.game_state.get_board_space(
             kind=from_kind, idx=from_idx, player_name=player_name
         )
-
         res = self.game_state.move_factory(from_space, roll)
-        if expected_to_space is None:
+
+        if expected_to_space_kwargs is None:
             assert res.to_space is None
         else:
+            expected_to_space_kwargs['idx'] = \
+                self.player_enter_main_indices[player_idx]
+            print(expected_to_space_kwargs)
+            expected_to_space = BoardSpace(**expected_to_space_kwargs)
             assert res == MoveContainer(
                 from_space=from_space, to_space=expected_to_space
             )
