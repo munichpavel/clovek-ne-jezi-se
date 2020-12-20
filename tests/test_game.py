@@ -5,6 +5,11 @@ from clovek_ne_jezi_se.game import (
     GameState, BoardSpace, MoveContainer
 )
 from clovek_ne_jezi_se.consts import EMPTY_SYMBOL
+from clovek_ne_jezi_se.utils import (
+    GraphQueryParams,
+    get_filtered_subgraph_view,
+    get_filtered_node_names
+)
 
 
 def test_board_space_errors():
@@ -80,10 +85,41 @@ class TestGameState:
                 allowed_occupants=[player_name, EMPTY_SYMBOL]
             )
 
-    # For move tests from main to home
-    player_prehome_indices = []
+    # For move tests from main to player home
+    player_prehome_indices = {}
     for player_name in player_names:
-        pass
+        player_subgraph_paramses = [
+            GraphQueryParams(
+                graph_component='node', query_type='inclusion',
+                label='allowed_occupants', value=player_name
+            ),
+            GraphQueryParams(
+                graph_component='edge', query_type='inclusion',
+                label='allowed_traversers', value=player_name
+            )
+        ]
+
+        player_subgraph = get_filtered_subgraph_view(
+            game_state._graph, player_subgraph_paramses
+        )
+        prehome_query_paramses = [
+            GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='idx', value=0
+            ),
+            GraphQueryParams(
+                graph_component='node', query_type='equality',
+                label='kind', value='home'
+            ),
+        ]
+        first_home_node_name = get_filtered_node_names(
+            player_subgraph, prehome_query_paramses
+        )[0]
+        player_prehome_node_name = next(
+            player_subgraph.predecessors(first_home_node_name)
+        )
+        player_prehome_indices[player_name] = \
+            player_subgraph.nodes[player_prehome_node_name]['idx']
 
     @pytest.mark.parametrize(
         "roll,from_space,expected_to_space_kwargs",
@@ -117,6 +153,18 @@ class TestGameState:
                     allowed_occupants=player_names + [EMPTY_SYMBOL]
                  )
             ),
+            (
+                1, BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+
+                ),
+                dict(
+                    kind='home', idx=0, occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                 )
+            )
         ]
     )
     def test_move_factory_initial_game_state(
