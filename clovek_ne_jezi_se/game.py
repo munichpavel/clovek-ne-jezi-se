@@ -355,6 +355,23 @@ class GameState:
             allowed_traversers_query_params, allowed_occupants_query_params
         ]
 
+    def do(self, move_container: 'MoveContainer'):
+        '''
+        Update game state according to move_container; assumes move_container
+        is valid
+        '''
+        from_node_name = self._get_board_space_node_name(
+            move_container.from_space
+        )
+        from_node = self._graph.nodes[from_node_name]
+        from_node['occupied_by'] = EMPTY_SYMBOL
+
+        to_node_name = self._get_board_space_node_name(
+            move_container.to_space
+        )
+        to_node = self._graph.nodes[to_node_name]
+        to_node['occupied_by'] = move_container.from_space.occupied_by
+
     # Visualization
     def draw(self, figsize=(12, 8)):
         """Show game state graph with human-readable coordinates."""

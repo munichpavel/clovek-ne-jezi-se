@@ -219,3 +219,87 @@ class TestGameState:
     ):
         with pytest.raises(Error):
             self.game_state.move_factory(from_space, roll)
+
+    @pytest.mark.parametrize(
+        'roll,from_space,to_space,post_do_from_space,post_do_to_space',
+        [
+            (
+                6,
+                BoardSpace(
+                    kind='waiting', idx=0, occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=player_enter_main_indices['red'],
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='waiting', idx=0, occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=player_enter_main_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                )
+            ),
+            (
+                1,
+                BoardSpace(
+                    kind='main', idx=0, occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=1 + 0,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=0, occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=1 + 0,
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                )
+            ),
+            (
+                1,
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                )
+            ),
+        ]
+    )
+    def test_do_sans_send_opponent_to_waiting(
+        self, roll, from_space, to_space, post_do_from_space, post_do_to_space
+    ):
+        modified_game_state = deepcopy(self.game_state)
+        modified_game_state.do(MoveContainer(from_space, to_space))
+
+        assert modified_game_state.get_board_space(
+            kind=from_space.kind, idx=from_space.idx, player_name='red'
+        ) == post_do_from_space
+
+        assert modified_game_state.get_board_space(
+            kind=to_space.kind, idx=to_space.idx, player_name='red'
+        ) == post_do_to_space
