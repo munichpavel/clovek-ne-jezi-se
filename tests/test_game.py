@@ -290,7 +290,7 @@ class TestGameState:
             ),
         ]
     )
-    def test_do_sans_send_opponent_to_waiting(
+    def test_do(
         self, roll, from_space, to_space, post_do_from_space, post_do_to_space
     ):
         modified_game_state = deepcopy(self.game_state)
