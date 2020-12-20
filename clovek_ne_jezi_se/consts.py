@@ -6,10 +6,6 @@ EMPTY_SYMBOL = '-'
 MINIMUM_SECTION_LENGTH = 4
 
 # TODO: Deprecate me, as this should not be a package-wide constant
-PIECES_PER_PLAYER = 4
-
-
-# TODO: Deprecate me, as this should not be a package-wide constant
 NR_OF_DICE_FACES = 6
 
 MOVE_KINDS = (
