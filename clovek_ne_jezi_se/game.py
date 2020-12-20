@@ -161,15 +161,22 @@ class GameState:
                 for player_name in self.player_names
             }
 
+        # Annotate home graphs
         for player_name in self.player_names:
-            # Annotate
             player_home_graph = home_graphs[player_name]
+
+            # Annotate nodes
             for idx, node_name in enumerate(player_home_graph.nodes()):
                 player_home_graph.nodes[node_name]['idx'] = idx
                 player_home_graph.nodes[node_name]['kind'] = 'home'
                 player_home_graph.nodes[node_name]['occupied_by'] \
                     = EMPTY_SYMBOL
                 player_home_graph.nodes[node_name]['allowed_occupants'] \
+                    = [player_name, EMPTY_SYMBOL]
+
+            # Annotate edges
+            for edge in player_home_graph.edges:
+                player_home_graph[edge[0]][edge[1]]['allowed_traversers'] \
                     = [player_name, EMPTY_SYMBOL]
 
             # Add to main graph

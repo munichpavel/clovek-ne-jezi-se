@@ -164,7 +164,20 @@ class TestGameState:
                     kind='home', idx=0, occupied_by=EMPTY_SYMBOL,
                     allowed_occupants=['red', EMPTY_SYMBOL]
                  )
-            )
+            ),
+            (
+                1, BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+
+                ),
+                dict(
+                    kind='home', idx=1+0, occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                 )
+            ),
+
         ]
     )
     def test_move_factory_initial_game_state(
