@@ -303,3 +303,140 @@ class TestGameState:
         assert modified_game_state.get_board_space(
             kind=to_space.kind, idx=to_space.idx, player_name='red'
         ) == post_do_to_space
+
+    @pytest.mark.parametrize(
+        'player_name, roll, expected',
+        [
+            ('red', 1, []),
+            (
+                'red', 6,
+                [
+                    [MoveContainer(
+                        from_space=BoardSpace(
+                            kind='waiting', occupied_by='red', idx=0,
+                            allowed_occupants=['red', EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by=EMPTY_SYMBOL,
+                            idx=player_enter_main_indices['red'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        )
+                    )],
+                    [MoveContainer(
+                        from_space=BoardSpace(
+                            kind='waiting', occupied_by='red', idx=1,
+                            allowed_occupants=['red', EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by=EMPTY_SYMBOL,
+                            idx=player_enter_main_indices['red'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        )
+                    )],
+                    [MoveContainer(
+                        from_space=BoardSpace(
+                            kind='waiting', occupied_by='red', idx=2,
+                            allowed_occupants=['red', EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by=EMPTY_SYMBOL,
+                            idx=player_enter_main_indices['red'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        )
+                     )],
+                    [MoveContainer(
+                        from_space=BoardSpace(
+                            kind='waiting', occupied_by='red', idx=3,
+                            allowed_occupants=['red', EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by=EMPTY_SYMBOL,
+                            idx=player_enter_main_indices['red'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        )
+                    )]
+                ]
+
+            ),
+            (
+                'blue', 6,
+                [[
+                    MoveContainer(
+                        from_space=BoardSpace(
+                            kind='main', occupied_by='blue',
+                            idx=player_enter_main_indices['blue'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by=EMPTY_SYMBOL,
+                            idx=player_enter_main_indices['blue'] + 6,
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+
+                        )
+                    )
+                ]]
+            ),
+            (
+                'green', 1,
+                [[
+                    MoveContainer(
+                        from_space=BoardSpace(
+                            kind='main', occupied_by='green',
+                            idx=player_enter_main_indices['blue'] - 1,
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by='blue',
+                            idx=player_enter_main_indices['blue'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+
+                        )
+                    ),
+                    MoveContainer(
+                        from_space=BoardSpace(
+                            kind='main', occupied_by='blue',
+                            idx=player_enter_main_indices['blue'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='waiting', occupied_by=EMPTY_SYMBOL,
+                            idx=0, allowed_occupants=['blue', EMPTY_SYMBOL]
+                        )
+                    )
+
+                ]]
+            )
+        ]
+    )
+    def test_get_player_moves(self, player_name, roll, expected):
+        modified_game_state = deepcopy(self.game_state)
+        # Move one blue piece to main board from waiting
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0, occupied_by='blue',
+                allowed_occupants=['blue', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=self.player_enter_main_indices['blue'],
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+
+            )
+        ))
+        # Move one green piece to one before where blue enters main from
+        # waiting. Note: this is not a valid game move.
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0, occupied_by='green',
+                allowed_occupants=['green', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=self.player_enter_main_indices['blue'] - 1,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+            )
+        ))
+
+        player_moves = modified_game_state.get_player_moves(roll, player_name)
+
+        assert player_moves == expected
