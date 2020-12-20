@@ -1,4 +1,6 @@
 """Tests for game classes"""
+from copy import deepcopy
+
 import pytest
 
 from clovek_ne_jezi_se.game import (
@@ -41,12 +43,10 @@ class TestGameState:
             == expected
 
     # Set further variables for test cases
-    player_enter_main_indices = []
+    player_enter_main_indices = {}
     for player_name in player_names:
-        player_enter_main_indices.append(
-            game_state.get_player_enter_main_index(player_name)
-        )
-
+        player_enter_main_indices[player_name] \
+            = game_state.get_player_enter_main_index(player_name)
 
     @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
     def test_get_main_board_space(self, idx):
@@ -137,7 +137,7 @@ class TestGameState:
                     allowed_occupants=['red', EMPTY_SYMBOL]
                 ),
                 dict(
-                    kind='main', idx=player_enter_main_indices[0],
+                    kind='main', idx=player_enter_main_indices['red'],
                     occupied_by=EMPTY_SYMBOL,
                     allowed_occupants=player_names + [EMPTY_SYMBOL]
                 )
@@ -192,3 +192,30 @@ class TestGameState:
             assert res == MoveContainer(
                 from_space=from_space, to_space=expected_to_space
             )
+
+    @pytest.mark.parametrize(
+        'roll,from_space,Error',
+        [
+            (
+                1, BoardSpace(
+                    kind='home', idx=3, occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                IndexError
+            ),
+            (
+                5, BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                IndexError
+            ),
+
+        ]
+    )
+    def test_move_factory_initial_game_state_exceptions(
+        self, roll, from_space, Error
+    ):
+        with pytest.raises(Error):
+            self.game_state.move_factory(from_space, roll)
