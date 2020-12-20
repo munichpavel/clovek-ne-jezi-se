@@ -22,6 +22,19 @@ class TestGameState:
     )
     game_state.initialize()
 
+    @pytest.mark.parametrize(
+        'player_name,expected',
+        [
+            (player_names[0], 0),
+            (player_names[1], 4),
+            (player_names[2], 8),
+            (player_names[3], 12)
+        ]
+    )
+    def test_get_player_enter_main_index(self, player_name, expected):
+        assert self.game_state.get_player_enter_main_index(player_name) \
+            == expected
+
     # Set further variables for test cases
     player_enter_main_indices = []
     for player_name in player_names:
@@ -29,18 +42,6 @@ class TestGameState:
             game_state.get_player_enter_main_index(player_name)
         )
 
-    @pytest.mark.parametrize(
-        'player_name,expected',
-        [
-            (player_names[0], player_enter_main_indices[0]),
-            (player_names[1], player_enter_main_indices[1]),
-            (player_names[2], player_enter_main_indices[2]),
-            (player_names[3], player_enter_main_indices[3])
-        ]
-    )
-    def test_get_player_enter_main_index(self, player_name, expected):
-        assert self.game_state.get_player_enter_main_index(player_name) \
-            == expected
 
     @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
     def test_get_main_board_space(self, idx):
@@ -79,6 +80,11 @@ class TestGameState:
                 allowed_occupants=[player_name, EMPTY_SYMBOL]
             )
 
+    # For move tests from main to home
+    player_prehome_indices = []
+    for player_name in player_names:
+        pass
+
     @pytest.mark.parametrize(
         "roll,from_space,expected_to_space_kwargs",
         [
@@ -110,7 +116,7 @@ class TestGameState:
                     kind='main', idx=1+0, occupied_by=EMPTY_SYMBOL,
                     allowed_occupants=player_names + [EMPTY_SYMBOL]
                  )
-            )
+            ),
         ]
     )
     def test_move_factory_initial_game_state(
@@ -125,4 +131,3 @@ class TestGameState:
             assert res == MoveContainer(
                 from_space=from_space, to_space=expected_to_space
             )
-
