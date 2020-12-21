@@ -307,9 +307,9 @@ class TestGameState:
     @pytest.mark.parametrize(
         'player_name, roll, expected',
         [
-            ('red', 1, []),
+            ('red', 1, []),  # All players in waiting, need roll of 6 to move
             (
-                'blue', 6,
+                'blue', 6,  # Own piece blocks enter to main from waiting
                 [[
                     MoveContainer(
                         from_space=BoardSpace(
@@ -327,7 +327,7 @@ class TestGameState:
                 ]]
             ),
             (
-                'yellow', 1,
+                'yellow', 1,  # Enter home move
                 [[
                     MoveContainer(
                         from_space=BoardSpace(
@@ -344,7 +344,7 @@ class TestGameState:
                 ]]
             ),
             (
-                'red', 6,
+                'red', 6,  # Leave waiting
                 [
                     [MoveContainer(
                         from_space=BoardSpace(
@@ -394,7 +394,7 @@ class TestGameState:
 
             ),
             (
-                'green', 1,
+                'green', 1,  # Advance and send opponent back to waiting
                 [[
                     MoveContainer(
                         from_space=BoardSpace(
