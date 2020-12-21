@@ -309,6 +309,41 @@ class TestGameState:
         [
             ('red', 1, []),
             (
+                'blue', 6,
+                [[
+                    MoveContainer(
+                        from_space=BoardSpace(
+                            kind='main', occupied_by='blue',
+                            idx=player_enter_main_indices['blue'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='main', occupied_by=EMPTY_SYMBOL,
+                            idx=player_enter_main_indices['blue'] + 6,
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+
+                        )
+                    )
+                ]]
+            ),
+            (
+                'yellow', 1,
+                [[
+                    MoveContainer(
+                        from_space=BoardSpace(
+                            kind='main', occupied_by='yellow',
+                            idx=player_prehome_indices['yellow'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='home', occupied_by=EMPTY_SYMBOL,
+                            idx=0,
+                            allowed_occupants=['yellow', EMPTY_SYMBOL]
+                        )
+                    )
+                ]]
+            ),
+            (
                 'red', 6,
                 [
                     [MoveContainer(
@@ -357,24 +392,6 @@ class TestGameState:
                     )]
                 ]
 
-            ),
-            (
-                'blue', 6,
-                [[
-                    MoveContainer(
-                        from_space=BoardSpace(
-                            kind='main', occupied_by='blue',
-                            idx=player_enter_main_indices['blue'],
-                            allowed_occupants=player_names + [EMPTY_SYMBOL]
-                        ),
-                        to_space=BoardSpace(
-                            kind='main', occupied_by=EMPTY_SYMBOL,
-                            idx=player_enter_main_indices['blue'] + 6,
-                            allowed_occupants=player_names + [EMPTY_SYMBOL]
-
-                        )
-                    )
-                ]]
             ),
             (
                 'green', 1,
@@ -432,6 +449,18 @@ class TestGameState:
             ),
             to_space=BoardSpace(
                 kind='main', idx=self.player_enter_main_indices['blue'] - 1,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+            )
+        ))
+        # Move one yellow piece to one space before its home area
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0, occupied_by='yellow',
+                allowed_occupants=['yellow', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=self.player_prehome_indices['yellow'],
                 occupied_by=EMPTY_SYMBOL,
                 allowed_occupants=self.player_names + [EMPTY_SYMBOL]
             )
