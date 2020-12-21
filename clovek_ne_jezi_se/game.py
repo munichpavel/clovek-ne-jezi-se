@@ -286,7 +286,9 @@ class GameState:
         self, roll: int, player_name: str
     ) -> Sequence:
         """
-        TODO: Refactor me!!!
+        Generate a list of valid moves for all pieces of a given player name
+        and roll, potentially including secondary moves like sending an
+        opponent's piece back to its waiting area.
         """
         player_occupied_query_paramses = [GraphQueryParams(
             graph_component='node', query_type='equality', label='occupied_by',
@@ -295,53 +297,73 @@ class GameState:
         player_occupied_node_names = get_filtered_node_names(
             self._graph, player_occupied_query_paramses
         )
+        primary_moves = self._get_primary_moves(
+            roll, player_occupied_node_names
+        )
 
+        # Add any secondary moves triggered by primary moves
+        all_moves = []
+        for primary_move in primary_moves:
+            piece_moves = []
+            piece_moves.append(primary_move)
+            if primary_move.to_space.occupied_by != EMPTY_SYMBOL:
+                secondary_move = self._get_secondary_move(primary_move)
+                piece_moves.append(secondary_move)
+            all_moves.append(piece_moves)
+        return all_moves
+
+    def _get_primary_moves(
+        self, roll: int, node_names: Sequence[str]
+    ) -> Sequence['MoveContainer']:
+        """
+        Generate list of valid primary board moves, meaning only the move
+        from the input node_names and roll, excluding moves caused by the
+        primary one, like sending a piece back to its waiting area.
+        """
         primary_moves = []
-        for occupied_node_name in player_occupied_node_names:
-            occupied_node = self._graph.nodes[occupied_node_name]
-            occupied_board_space = self.get_board_space(
-                kind=occupied_node['kind'], idx=occupied_node['idx'],
-                player_name=player_name
+        for node_name in node_names:
+            node = self._graph.nodes[node_name]
+            board_space = self.get_board_space(
+                kind=node['kind'], idx=node['idx'],
+                player_name=node['occupied_by']
             )
             primary_move_candidate = self.move_factory(
-                from_space=occupied_board_space, roll=roll
+                from_space=board_space, roll=roll
             )
             if primary_move_candidate.to_space is not None:
                 primary_moves.append(primary_move_candidate)
 
-        all_moves = []
-        for primary_move in primary_moves:
-            piece_moves = []
-            primary_to_space = primary_move.to_space
-            if primary_to_space is not None:
-                to_space_occupier = primary_to_space.occupied_by
+        return primary_moves
 
-                if to_space_occupier != player_name:
-                    piece_moves.append(primary_move)
+    def _get_secondary_move(
+        self, primary_move: 'MoveContainer'
+    ) -> 'MoveContainer':
+        """Get secondary moved triggered by primary move"""
+        waiting_spaces = [
+            self.get_board_space(
+                'waiting', idx,
+                player_name=primary_move.to_space.occupied_by
+            ) for idx in range(self.pieces_per_player)
+        ]
+        empty_waiting_idxs = [
+            waiting_space.idx for waiting_space in waiting_spaces
+            if waiting_space.occupied_by == EMPTY_SYMBOL
+        ]
+        # Pick first empty waiting space
+        send_to_waiting_idx = empty_waiting_idxs[0]
+        secondary_move = MoveContainer(
+            from_space=primary_move.to_space,
+            to_space=BoardSpace(
+                kind='waiting', idx=send_to_waiting_idx,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=[
+                    primary_move.to_space.occupied_by,
+                    EMPTY_SYMBOL
+                ]
+            )
+        )
 
-                    if to_space_occupier != EMPTY_SYMBOL:
-                        waiting_idxs = [
-                            idx for idx in range(self.pieces_per_player)
-                            if self.get_board_space(
-                                'waiting', idx, player_name=to_space_occupier
-                            ) is not None
-                        ]
-                        sent_to_waiting_idx = waiting_idxs[0]
-                        secondary_move = MoveContainer(
-                            from_space=primary_move.to_space,
-                            to_space=BoardSpace(
-                                kind='waiting', idx=sent_to_waiting_idx,
-                                occupied_by=EMPTY_SYMBOL,
-                                allowed_occupants=[
-                                    primary_move.to_space.occupied_by,
-                                    EMPTY_SYMBOL
-                                ]
-                            )
-                        )
-                        piece_moves.append(secondary_move)
-
-                all_moves.append(piece_moves)
-        return all_moves
+        return secondary_move
 
     def move_factory(
         self, from_space: 'BoardSpace', roll: int
