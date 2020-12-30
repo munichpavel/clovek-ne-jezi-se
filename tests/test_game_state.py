@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import pytest
 
-from clovek_ne_jezi_se.game import (
+from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState, BoardSpace, MoveContainer
 )
 
