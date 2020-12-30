@@ -1,4 +1,4 @@
-"""Tests for game classes"""
+"""Tests for clovek_ne_jezi_se.GameState"""
 from copy import deepcopy
 
 import pytest
