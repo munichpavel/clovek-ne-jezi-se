@@ -1,6 +1,5 @@
 """Clovek ne jezi se game board and plays"""
-from math import floor, pi
-from random import randint
+from math import pi
 from typing import Sequence, Union
 
 import attr
@@ -9,17 +8,19 @@ import networkx as nx
 
 import matplotlib.pyplot as plt
 
-import numpy as np
-
-from .consts import (
-    EMPTY_SYMBOL, MINIMUM_SECTION_LENGTH, NR_OF_DICE_FACES,
-    MOVE_KINDS
-)
-
 from .utils import (
     make_even_points_on_circle, make_dict_from_lists,
     GraphQueryParams, get_filtered_subgraph_view, get_filtered_node_names
 )
+
+
+EMPTY_SYMBOL = '-'
+
+
+def nonpositive(instance, attribute, value):
+    """Validator for GameState"""
+    if value <= 0:
+        raise ValueError(f'"value" must be non-positive, got {value}')
 
 
 @attr.s
@@ -29,10 +30,20 @@ class GameState:
     areas: the waiting areas for each, the main board, and the home areas for
     each player.
     """
-    # TODOs: add validators, like positivity, player symbols must be strings
     player_names = attr.ib(type=Sequence)
-    pieces_per_player = attr.ib(type=int)
-    section_length = attr.ib(type=int)
+    pieces_per_player = attr.ib(type=int, default=4, validator=[
+        attr.validators.instance_of(int),
+        nonpositive
+    ])
+    section_length = attr.ib(type=int, default=10, validator=[
+        attr.validators.instance_of(int),
+        nonpositive
+    ])
+    number_of_dice_faces = attr.ib(type=int, default=6, validator=[
+        attr.validators.instance_of(int),
+        nonpositive
+    ])
+    empty_symbol = attr.ib(default=EMPTY_SYMBOL)
 
     def initialize(self):
         self._main_board_length = len(self.player_names) * self.section_length
@@ -407,7 +418,7 @@ class GameState:
             to_node_name = self._enter_main_node_names[from_space.occupied_by]
             to_node = self._graph.nodes[to_node_name]
             if (
-                roll != NR_OF_DICE_FACES or
+                roll != self.number_of_dice_faces or
                 to_node['occupied_by'] == from_space.occupied_by
             ):
                 return None

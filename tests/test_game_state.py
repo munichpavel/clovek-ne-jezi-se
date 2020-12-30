@@ -20,6 +20,60 @@ def test_board_space_errors():
 
 
 class TestGameState:
+
+    @pytest.mark.parametrize(
+        'init_args_dict,Error',
+        [
+            (
+                dict(
+                    player_names=['red', 'blue', 'green', 'yellow'],
+                    pieces_per_player=0
+                ),
+                ValueError
+            ),
+            (
+                dict(
+                    player_names=['red', 'blue', 'green', 'yellow'],
+                    pieces_per_player=0.5
+                ),
+                TypeError
+            ),
+            (
+                dict(
+                    player_names=['red', 'blue', 'green', 'yellow'],
+                    section_length=0
+                ),
+                ValueError
+            ),
+            (
+                dict(
+                    player_names=['red', 'blue', 'green', 'yellow'],
+                    section_length=0.5
+                ),
+                TypeError
+            ),
+            (
+                dict(
+                    player_names=['red', 'blue', 'green', 'yellow'],
+                    number_of_dice_faces=0
+                ),
+                ValueError
+            ),
+            (
+                dict(
+                    player_names=['red', 'blue', 'green', 'yellow'],
+                    number_of_dice_faces=0.5
+                ),
+                TypeError
+            ),
+        ]
+    )
+    def test_game_state_initialization_errors(self, init_args_dict, Error):
+        with pytest.raises(Error):
+            game_state = GameState(**init_args_dict)
+            game_state.initialize()
+
+    # Set attributes for repeated use below
     player_names = ['red', 'blue', 'green', 'yellow']
     pieces_per_player = 4
     section_length = 4
