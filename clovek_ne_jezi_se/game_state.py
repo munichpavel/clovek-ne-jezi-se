@@ -9,18 +9,12 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from .utils import (
-    make_even_points_on_circle, make_dict_from_lists,
+    is_positive, make_even_points_on_circle, make_dict_from_lists,
     GraphQueryParams, get_filtered_subgraph_view, get_filtered_node_names
 )
 
 
 EMPTY_SYMBOL = '-'
-
-
-def nonpositive(instance, attribute, value):
-    """Validator for GameState"""
-    if value <= 0:
-        raise ValueError(f'"value" must be non-positive, got {value}')
 
 
 @attr.s
@@ -33,15 +27,15 @@ class GameState:
     player_names = attr.ib(type=Sequence)
     pieces_per_player = attr.ib(type=int, default=4, validator=[
         attr.validators.instance_of(int),
-        nonpositive
+        is_positive
     ])
     section_length = attr.ib(type=int, default=10, validator=[
         attr.validators.instance_of(int),
-        nonpositive
+        is_positive
     ])
     number_of_dice_faces = attr.ib(type=int, default=6, validator=[
         attr.validators.instance_of(int),
-        nonpositive
+        is_positive
     ])
     empty_symbol = attr.ib(default=EMPTY_SYMBOL)
 
