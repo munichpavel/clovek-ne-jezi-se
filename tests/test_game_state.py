@@ -4,9 +4,9 @@ from copy import deepcopy
 import pytest
 
 from clovek_ne_jezi_se.game import (
-    GameState, BoardSpace, MoveContainer
+    EMPTY_SYMBOL, GameState, BoardSpace, MoveContainer
 )
-from clovek_ne_jezi_se.consts import EMPTY_SYMBOL
+
 from clovek_ne_jezi_se.utils import (
     GraphQueryParams,
     get_filtered_subgraph_view,
