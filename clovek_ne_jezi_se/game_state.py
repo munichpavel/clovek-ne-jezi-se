@@ -25,19 +25,21 @@ class GameState:
     each player.
     """
     player_names = attr.ib(type=Sequence)
-    pieces_per_player = attr.ib(type=int, default=4, validator=[
+    pieces_per_player = attr.ib(kw_only=True, type=int, default=4, validator=[
         attr.validators.instance_of(int),
         is_positive
     ])
-    section_length = attr.ib(type=int, default=10, validator=[
+    section_length = attr.ib(kw_only=True, type=int, default=10, validator=[
         attr.validators.instance_of(int),
         is_positive
     ])
-    number_of_dice_faces = attr.ib(type=int, default=6, validator=[
-        attr.validators.instance_of(int),
-        is_positive
-    ])
-    empty_symbol = attr.ib(default=EMPTY_SYMBOL)
+    number_of_dice_faces = attr.ib(
+        kw_only=True, type=int, default=6, validator=[
+            attr.validators.instance_of(int),
+            is_positive
+        ]
+    )
+    empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
 
     def initialize(self):
         self._main_board_length = len(self.player_names) * self.section_length
