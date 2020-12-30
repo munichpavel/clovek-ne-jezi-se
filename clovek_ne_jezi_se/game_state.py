@@ -9,12 +9,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from .utils import (
-    is_positive, make_even_points_on_circle, make_dict_from_lists,
+    make_even_points_on_circle, make_dict_from_lists,
     GraphQueryParams, get_filtered_subgraph_view, get_filtered_node_names
 )
 
 
 EMPTY_SYMBOL = '-'
+
+
+def is_positive(instance, attribute, value):
+    """attr validator for positivity"""
+    if value <= 0:
+        raise ValueError(f'"value" must be positive, got {value}')
 
 
 @attr.s

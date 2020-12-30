@@ -12,12 +12,6 @@ import networkx as nx
 import networkx.algorithms.isomorphism as iso
 
 
-def is_positive(instance, attribute, value):
-    """attr validator for positivity"""
-    if value <= 0:
-        raise ValueError(f'"value" must be positive, got {value}')
-
-
 def make_even_points_on_circle(
     center: Sequence, radius: float, n_points: int,
     start_radians: float = 0, clockwise: bool = True
