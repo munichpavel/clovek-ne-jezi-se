@@ -48,6 +48,7 @@ class TestGameState:
         player_enter_main_indices[player_name] \
             = game_state.get_player_enter_main_index(player_name)
 
+    # GameState setup tests
     @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
     def test_get_main_board_space(self, idx):
         assert self.game_state.get_board_space(kind='main', idx=idx) \
@@ -220,6 +221,7 @@ class TestGameState:
         with pytest.raises(Error):
             self.game_state.move_factory(from_space, roll)
 
+    # Move tests
     @pytest.mark.parametrize(
         'roll,from_space,to_space,post_do_from_space,post_do_to_space',
         [
