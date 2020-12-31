@@ -5,7 +5,7 @@ from copy import deepcopy
 import pytest
 
 from clovek_ne_jezi_se.client import Client
-from clovek_ne_jezi_se.agent import HumanPlayer
+from clovek_ne_jezi_se.agents import HumanPlayer
 from clovek_ne_jezi_se.game_state import (
     GameState, MoveContainer, BoardSpace,
     EMPTY_SYMBOL
