@@ -92,15 +92,15 @@ class TestGameState:
             (player_names[3], 12)
         ]
     )
-    def test_get_player_enter_main_index(self, player_name, expected):
-        assert self.game_state.get_player_enter_main_index(player_name) \
+    def test_get_main_entry_index(self, player_name, expected):
+        assert self.game_state.get_main_entry_index(player_name) \
             == expected
 
     # Set further variables for test cases
     player_enter_main_indices = {}
     for player_name in player_names:
         player_enter_main_indices[player_name] \
-            = game_state.get_player_enter_main_index(player_name)
+            = game_state.get_main_entry_index(player_name)
 
     # GameState setup tests
     @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
@@ -140,7 +140,7 @@ class TestGameState:
                 allowed_occupants=[player_name, EMPTY_SYMBOL]
             )
 
-    # For move tests from main to player home
+    # For tests of moves from main to player home
     player_prehome_indices = {}
     for player_name in player_names:
         player_subgraph_paramses = [
@@ -235,7 +235,7 @@ class TestGameState:
 
         ]
     )
-    def test_move_factory_initial_game_state(
+    def test_move_factory(
         self, roll, from_space, expected_to_space_kwargs
     ):
         res = self.game_state.move_factory(from_space, roll)
@@ -269,7 +269,7 @@ class TestGameState:
 
         ]
     )
-    def test_move_factory_initial_game_state_exceptions(
+    def test_move_factory_exceptions(
         self, roll, from_space, Error
     ):
         with pytest.raises(Error):
