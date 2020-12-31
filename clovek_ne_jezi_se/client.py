@@ -6,7 +6,9 @@ from random import randint
 import attr
 
 from clovek_ne_jezi_se.agent import Player
-from clovek_ne_jezi_se.game_state import EMPTY_SYMBOL, GameState
+from clovek_ne_jezi_se.game_state import (
+    EMPTY_SYMBOL, GameState, MoveContainer, BoardSpace
+)
 
 
 @attr.s
@@ -24,14 +26,15 @@ class Client:
 
     def initialize(self):
         self._player_cycle = cycle(self.players)
-        player_names = [player.name for player in self.players]
+        self._player_names = [player.name for player in self.players]
         self._game_state = GameState(
-            player_names,
+            self._player_names,
             pieces_per_player=self.pieces_per_player,
             section_length=self.main_board_section_length,
             number_of_dice_faces=self.number_of_dice_faces,
             empty_symbol=self.empty_symbol
         )
+        self._game_state.initialize()
 
     def get_game_state(self):
         return self._game_state
@@ -41,3 +44,19 @@ class Client:
 
     def roll(self):
         return randint(1, self.number_of_dice_faces)
+
+    def play(self):
+
+        current_player = self.next_player()
+        roll_value = self.roll()
+
+        moves = self._game_state.get_player_moves(
+            roll_value, current_player.name
+        )
+
+        selected_move = current_player.choose_move(
+            self._game_state, moves
+        )
+
+        for move_component in selected_move:
+            self._game_state.do(move_component)

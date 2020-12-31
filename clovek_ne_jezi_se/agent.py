@@ -1,71 +1,32 @@
+"""Player classes"""
+import abc
+from typing import Sequence
 
 import attr
 
-from .consts import EMPTY_SYMBOL
+from clovek_ne_jezi_se.game_state import GameState, MoveContainer
 
 
 @attr.s
 class Player:
-    symbol = attr.ib(validator=attr.validators.instance_of(str))
-    number_of_players = attr.ib(validator=attr.validators.instance_of(int))
+    name = attr.ib(validator=attr.validators.instance_of(str))
 
-    def initialize_home(self):
-        self.home = self.number_of_players * (EMPTY_SYMBOL)
-
-    def _set_symbol(self, symbol):
-        if not isinstance(symbol, str):
-            raise ValueError("Player symbol must be a string")
-
-        return symbol
-
-    def set_order(self, order):
-        self.order = order
-
-    def set_leave_waiting_position(self, order, section_length):
-        self._start = order * section_length
-
-    def get_leave_waiting_position(self):
-        return self._start
-
-    def set_prehome_position(self, order, section_length):
-        res = (
-            (order * section_length - 1)
-            % (section_length * self.number_of_players)
-        )
-        self._prehome_position = res
-
-    def get_prehome_position(self):
-        return self._prehome_position
+    @abc.abstractmethod
+    def choose_move(
+        self, game_state: 'GameState',
+        allowed_moves: Sequence['MoveContainer']
+    ):
+        return
 
 
-class FurthestAlongAgent(Player):
-    """Agent who always moves the game piece furthest along"""
+class HumanPlayer(Player):
+    # TODO: Are type hints inherited in Sphinx from base method???
+    def choose_move(self, game_state, allowed_moves):
+        print('Allowed moves with index:\n')
+        for move_idx, move in enumerate(allowed_moves):
+            print(f'Index: {move_idx}, move: {move}')
 
-    def take_action(self, board):
-        roll_value = self.roll()
-
-        if self.symbol in board.homes[self.symbol] and \
-            self.action_is_valid(
-                board.homes[self.symbol],
-                self._find_furthest_along_position(board.homes[self.symbol])
-                + roll_value
-                ):
-            ix = self._find_furthest_along_position(board.homes[self.symbol])
-            return {'home': (ix, ix + roll_value)}
-
-        elif self.symbol in board.spaces and \
-            self.action_is_valid(
-                board.spaces,
-                self._find_furthest_along_position(board.spaces) + roll_value
-                ):
-            ix = self._find_furthest_along_position(board.spaces)
-            return {'main': (ix, ix + roll_value)}
-
-        else:
-            return {}
-
-    def _find_furthest_along_position(self, board_component):
-        return (
-            len(board_component)
-            - board_component[::-1].index(self.symbol) - 1
-        )
+        chosen_move_idx = int(input('Enter chosen move index: '))
+        res = allowed_moves[chosen_move_idx]
+        print(f'You selected move {res}')
+        return res
