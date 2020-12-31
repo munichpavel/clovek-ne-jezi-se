@@ -102,7 +102,6 @@ class TestGameState:
         player_enter_main_indices[player_name] \
             = game_state.get_main_entry_index(player_name)
 
-    # GameState setup tests
     @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
     def test_get_main_board_space(self, idx):
         assert self.game_state.get_board_space(kind='main', idx=idx) \

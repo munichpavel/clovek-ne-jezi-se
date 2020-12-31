@@ -26,9 +26,9 @@ def is_positive(instance, attribute, value):
 @attr.s
 class GameState:
     """
-    Game state including board and player pieces. The board consists of three
-    areas: the waiting areas for each, the main board, and the home areas for
-    each player.
+    Game state including board, player pieces and query methods. The board
+    consists of three areas: the waiting areas for each, the shared main board,
+    and the home areas for each player.
     """
     player_names = attr.ib(type=Sequence)
     pieces_per_player = attr.ib(kw_only=True, type=int, default=4, validator=[
@@ -48,6 +48,7 @@ class GameState:
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
 
     def initialize(self):
+        """Create internal game-state representation"""
         self._main_board_length = len(self.player_names) * self.section_length
         self._graph = nx.DiGraph()
         self._create_main_graph()
@@ -102,7 +103,7 @@ class GameState:
         )
         for player_name in self.player_names:
 
-            enter_main_idx = self.get_player_enter_main_index(player_name)
+            enter_main_idx = self.get_main_entry_index(player_name)
             query_entry_idx = GraphQueryParams(
                 graph_component='node', query_type='equality',
                 label='idx', value=enter_main_idx
@@ -114,7 +115,7 @@ class GameState:
 
         self._enter_main_node_names = res
 
-    def get_player_enter_main_index(self, player_name):
+    def get_main_entry_index(self, player_name):
         """Get main board index where player enters from waiting."""
         player_order = self.player_names.index(player_name)
         return player_order * self.section_length
@@ -216,6 +217,7 @@ class GameState:
                 allowed_traversers=[player_name]
             )
 
+    # Query methods
     def get_board_space(
         self, kind: str, idx: int, player_name=None
     ) -> Union[None, 'BoardSpace']:
