@@ -63,3 +63,16 @@ class Client:
                 self._game_state.do(move_component)
         else:
             print('No moves possible.')
+
+        print(
+            '\nUpdated waiting area: '
+            f'{current_player.get_waiting_area_representation(self._game_state)}'
+        )
+        print(
+            '\nUpdated main spaces: '
+            f'{current_player.get_main_spaces_representation(self._game_state)}'
+        )
+        print(
+            '\nUpdated home area: '
+            f'{current_player.get_home_area_representation(self._game_state)}'
+        )
