@@ -53,10 +53,13 @@ class Client:
         moves = self._game_state.get_player_moves(
             roll_value, current_player.name
         )
+        print(f'Player {current_player.name} rolls a {roll_value}')
+        if len(moves) > 0:
+            selected_move = current_player.choose_move(
+                self._game_state, moves
+            )
 
-        selected_move = current_player.choose_move(
-            self._game_state, moves
-        )
-
-        for move_component in selected_move:
-            self._game_state.do(move_component)
+            for move_component in selected_move:
+                self._game_state.do(move_component)
+        else:
+            print('No moves possible.')
