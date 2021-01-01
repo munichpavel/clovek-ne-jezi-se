@@ -28,7 +28,7 @@ class HumanPlayer(Player):
 
         chosen_move_idx = int(input('Enter chosen move index: '))
         res = allowed_moves[chosen_move_idx]
-        print(f'You selected move {res}')
+        print(f'\nYou selected move {res}')
         return res
 
     def get_main_spaces_representation(self, game_state: 'GameState') -> list:

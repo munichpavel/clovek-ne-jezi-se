@@ -14,7 +14,8 @@ from clovek_ne_jezi_se.utils import (
     GraphQueryParams,
     is_label_isomorphic,
     get_filtered_subgraph_view,
-    get_filtered_node_names
+    get_filtered_node_names,
+    get_node_attribute_mapped_list
 )
 
 
@@ -424,3 +425,23 @@ def test_get_filtered_node_names(graph, query_param_argses, expected):
         query_params.set_value_type()
         query_paramses.append(query_params)
     assert get_filtered_node_names(graph, query_paramses) == expected
+
+
+def test_get_node_attribute_mapped_list():
+    graph = nx.complete_graph(6)
+    attribute = 'player_name'
+    values = ['red', 'blue', 'green', 'yellow', '-', 'red']
+    for node_name, value in zip(graph.nodes, values):
+        graph.nodes[node_name][attribute] = value
+    color_map = dict(
+        red='#FF0000',
+        blue='#0000FF',
+        green='#00FF00',
+        yellow='#FFFF00'
+    )
+    color_map['-'] = '#808080'
+
+    res = get_node_attribute_mapped_list(graph, attribute, color_map)
+    assert res == [
+        '#FF0000', '#0000FF', '#00FF00', '#FFFF00', '#808080', '#FF0000'
+    ]

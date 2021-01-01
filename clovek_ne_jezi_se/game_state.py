@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 
 from .utils import (
     make_even_points_on_circle, make_dict_from_lists,
-    GraphQueryParams, get_filtered_subgraph_view, get_filtered_node_names
+    GraphQueryParams, get_filtered_subgraph_view, get_filtered_node_names,
+    get_node_attribute_mapped_list
 )
 
 
@@ -473,12 +474,18 @@ class GameState:
         ]
 
     # Visualization
-    def draw(self, figsize=(12, 8)):
+    def draw(self, figsize=(12, 8), with_labels=False, color_map=None):
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
+        if color_map is not None:
+            node_color = self._get_node_color(color_map)
+        else:
+            node_color = None
 
         plt.figure(figsize=figsize)
-        nx.draw(self._graph, pos, with_labels=True)
+        nx.draw(
+            self._graph, pos, with_labels=with_labels, node_color=node_color
+        )
 
     def _get_graph_positions(self):
         start_radians = -pi/2 - 2 * pi / self._main_board_length
@@ -565,6 +572,11 @@ class GameState:
 
         pos = {**pos, **pos_players_waiting, **pos_main, **pos_players_home}
         return pos
+
+    def _get_node_color(self, color_map):
+        return get_node_attribute_mapped_list(
+            self._graph, 'occupied_by', color_map
+        )
 
 
 @attr.s

@@ -250,3 +250,18 @@ def get_filtered_node_names(
     subgraph = get_filtered_subgraph_view(graph, query_paramses)
     res = list(subgraph.nodes)
     return res
+
+
+def get_node_attribute_mapped_list(
+    graph: nx.Graph, attribute, map: dict
+) -> list:
+    """
+    Create list of mapped node attributes, e.g. for creating plots of graphs
+    with colored nodes.
+    """
+    res = []
+    for node_name in graph.nodes:
+        attribute_value = graph.nodes[node_name][attribute]
+        res.append(map[attribute_value])
+
+    return res
