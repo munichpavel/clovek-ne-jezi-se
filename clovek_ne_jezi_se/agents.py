@@ -9,19 +9,42 @@ from clovek_ne_jezi_se.game_state import GameState, MoveContainer
 
 @attr.s
 class Player:
+    """Base class for all player agents"""
     name = attr.ib(validator=attr.validators.instance_of(str))
 
     @abc.abstractmethod
     def choose_move(
         self, game_state: 'GameState',
         allowed_moves: Sequence['MoveContainer']
-    ):
+    ) -> 'MoveContainer':
+        """Choose among moves."""
+        return
+
+    @abc.abstractclassmethod
+    def get_waiting_area_representation(
+        self, game_state: 'GameState'
+    ) -> dict:
+        """Representation the state of the waiting areas."""
+        return
+
+    @abc.abstractclassmethod
+    def get_main_spaces_representation(self, game_state: 'GameState') -> list:
+        """Representation the state of the main board."""
+        return
+
+    @abc.abstractclassmethod
+    def get_home_area_representation(
+        self, game_state: 'GameState'
+    ) -> dict:
+        """Representation the state of the home areas."""
         return
 
 
 class HumanPlayer(Player):
-    # TODO: Are type hints inherited in Sphinx from base method???
-    def choose_move(self, game_state, allowed_moves):
+    def choose_move(
+        self, game_state: 'GameState',
+        allowed_moves: Sequence['MoveContainer']
+    ) -> 'MoveContainer':
         print('Allowed moves with index:\n')
         for move_idx, move in enumerate(allowed_moves):
             print(f'Index: {move_idx}, move: {move}')
