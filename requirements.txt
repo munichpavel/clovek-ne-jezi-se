@@ -1,3 +1,6 @@
 # not-just-dev
 numpy
+scipy
 attrs
+networkx
+matplotlib

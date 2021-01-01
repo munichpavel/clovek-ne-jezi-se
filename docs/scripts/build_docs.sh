@@ -1,7 +1,7 @@
 # Note: script must be run from docs directory
 
 if [[ "$(basename $PWD)"  = "docs" ]]; then
-    make buildapi
+    make clean-buildapi
     make html
 
     # Open local index.html in browser

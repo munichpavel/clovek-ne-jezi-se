@@ -1,0 +1,4 @@
+# documentation
+sphinx
+sphinx-autodoc-typehints
+sphinx-rtd-theme
