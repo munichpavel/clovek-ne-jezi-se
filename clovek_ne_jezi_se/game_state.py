@@ -486,16 +486,19 @@ class GameState:
         advance_edges = list(nx.dfs_edges(
             player_subgraph_view, source=from_node_name, depth_limit=roll+1
         ))
-        to_node_name = advance_edges[roll-1][1]
-        to_node = self._graph.nodes[to_node_name]
-        to_space = BoardSpace(
-            kind=to_node['kind'],
-            idx=to_node['idx'],
-            occupied_by=to_node['occupied_by'],
-            allowed_occupants=to_node['allowed_occupants']
-        )
+        if roll > len(advance_edges):
+            return None
+        else:
+            to_node_name = advance_edges[roll-1][1]
+            to_node = self._graph.nodes[to_node_name]
+            to_space = BoardSpace(
+                kind=to_node['kind'],
+                idx=to_node['idx'],
+                occupied_by=to_node['occupied_by'],
+                allowed_occupants=to_node['allowed_occupants']
+            )
 
-        return to_space
+            return to_space
 
     def _get_player_subgraph_query_paramses(
         self, player_name: str
