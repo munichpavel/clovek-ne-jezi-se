@@ -139,6 +139,30 @@ class TestGameState:
                 allowed_occupants=[player_name, EMPTY_SYMBOL]
             )
 
+    def test_waiting_areas_to_dict(self):
+        res = self.game_state.waiting_areas_to_dict()
+        expected = {
+            player_name: self.game_state.pieces_per_player * [player_name]
+            for player_name in self.player_names
+        }
+        assert res == expected
+
+    def test_home_areas_to_dict(self):
+        res = self.game_state.home_areas_to_dict()
+        expected = {
+            player_name: self.game_state.pieces_per_player * [EMPTY_SYMBOL]
+            for player_name in self.player_names
+        }
+        assert res == expected
+
+    def test_main_spaces_to_list(self):
+        res = self.game_state.main_spaces_to_list()
+        expected = self.game_state.section_length \
+            * len(self.game_state.player_names) \
+            * [EMPTY_SYMBOL]
+
+        assert res == expected
+
     # For tests of moves from main to player home
     player_prehome_indices = {}
     for player_name in player_names:

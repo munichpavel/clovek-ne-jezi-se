@@ -219,6 +219,33 @@ class GameState:
             )
 
     # Query methods
+    def waiting_areas_to_dict(self) -> dict:
+        """Represent GameState waiting areas as dictionary of counts"""
+        return self._get_game_state_occupants('waiting')
+
+    def home_areas_to_dict(self) -> dict:
+        """Represent GameState waiting areas as dictionary of counts"""
+        return self._get_game_state_occupants('home')
+
+    def _get_game_state_occupants(self, kind: str) -> dict:
+        """
+        Parameters
+        ----------
+        kind :
+            One of 'waiting' or 'home'
+        """
+        res = {}
+        for player_name in self.player_names:
+            occupants = []
+            for idx in range(self.pieces_per_player):
+                space_dict = dict(
+                    kind=kind, idx=idx, player_name=player_name
+                )
+                space = self.get_board_space(**space_dict)
+                occupants.append(space.occupied_by)
+            res[player_name] = occupants
+        return res
+
     def get_board_space(
         self, kind: str, idx: int, player_name=None
     ) -> Union[None, 'BoardSpace']:
@@ -296,6 +323,19 @@ class GameState:
             )
         else:
             return node_names[0]
+
+    def main_spaces_to_list(self) -> list:
+        """Get representation of main board space as list with occupants"""
+        res = []
+        for idx in range(
+            self.section_length * len(self.player_names)
+        ):
+            main_space_dict = dict(
+                kind='main', idx=idx
+            )
+            main_space = self.get_board_space(**main_space_dict)
+            res.append(main_space.occupied_by)
+        return res
 
     # Moves
     def do(self, move_container: 'MoveContainer'):
