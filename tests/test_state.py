@@ -199,6 +199,7 @@ class TestGameState:
         player_prehome_indices[player_name] = \
             player_subgraph.nodes[player_prehome_node_name]['idx']
 
+    # Move tests
     @pytest.mark.parametrize(
         "roll,from_space,expected_to_space_kwargs",
         [
@@ -206,6 +207,21 @@ class TestGameState:
                 5, BoardSpace(
                     kind='waiting', idx=0, occupied_by='red',
                     allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                None
+            ),
+            (
+                1, BoardSpace(
+                    kind='home', idx=3, occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                None
+            ),
+            (
+                5, BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
                 ),
                 None
             ),
@@ -271,34 +287,6 @@ class TestGameState:
                 from_space=from_space, to_space=expected_to_space
             )
 
-    @pytest.mark.parametrize(
-        'roll,from_space,Error',
-        [
-            (
-                1, BoardSpace(
-                    kind='home', idx=3, occupied_by='red',
-                    allowed_occupants=['red', EMPTY_SYMBOL]
-                ),
-                IndexError
-            ),
-            (
-                5, BoardSpace(
-                    kind='main', idx=player_prehome_indices['red'],
-                    occupied_by='red',
-                    allowed_occupants=player_names + [EMPTY_SYMBOL]
-                ),
-                IndexError
-            ),
-
-        ]
-    )
-    def test_move_factory_exceptions(
-        self, roll, from_space, Error
-    ):
-        with pytest.raises(Error):
-            self.game_state.move_factory(from_space, roll)
-
-    # Move tests
     @pytest.mark.parametrize(
         'roll,from_space,to_space,post_do_from_space,post_do_to_space',
         [
