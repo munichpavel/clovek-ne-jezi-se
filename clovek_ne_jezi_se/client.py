@@ -36,16 +36,8 @@ class Client:
         )
         self._game_state.initialize()
 
-    def get_game_state(self):
-        return self._game_state
-
-    def next_player(self):
-        return next(self._player_cycle)
-
-    def roll(self):
-        return randint(1, self.number_of_dice_faces)
-
-    def play(self):
+    def take_turn(self):
+        """Take a single player turn"""
 
         current_player = self.next_player()
         roll_value = self.roll()
@@ -63,3 +55,9 @@ class Client:
                 self._game_state.do(move_component)
         else:
             print('No moves possible.')
+
+    def next_player(self):
+        return next(self._player_cycle)
+
+    def roll(self):
+        return randint(1, self.number_of_dice_faces)
