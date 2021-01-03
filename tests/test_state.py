@@ -548,3 +548,32 @@ class TestGameState:
         player_moves = modified_game_state.get_player_moves(roll, player_name)
 
         assert player_moves == expected
+
+    @pytest.mark.parametrize(
+        'player_name,expected',
+        [
+            (player_names[0], False),
+            (player_names[1], False),
+            (player_names[2], False),
+            (player_names[3], True),
+        ]
+    )
+    def test_is_winner(self, player_name, expected):
+        modified_game_state = deepcopy(self.game_state)
+
+        winner_name = modified_game_state.player_names[3]
+        for idx in range(self.pieces_per_player):
+            modified_game_state.do(MoveContainer(
+                from_space=BoardSpace(
+                    kind='waiting', idx=idx,
+                    occupied_by=winner_name,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                ),
+                to_space=BoardSpace(
+                    kind='home', idx=idx,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                )
+            ))
+
+        assert modified_game_state.is_winner(player_name) == expected

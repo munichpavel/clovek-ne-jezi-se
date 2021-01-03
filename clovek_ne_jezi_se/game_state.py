@@ -3,6 +3,7 @@ from math import pi
 from typing import Sequence, Union
 
 import attr
+import numpy as np
 
 import networkx as nx
 
@@ -512,6 +513,15 @@ class GameState:
         return [
             allowed_traversers_query_params, allowed_occupants_query_params
         ]
+
+    def is_winner(self, player_name: str) -> bool:
+        """Returns boolean for whether player name is current winner"""
+        home_dict = self.home_areas_to_dict()
+        player_home_spaces = home_dict[player_name]
+        home_count = np.sum(
+            [home_space == player_name for home_space in player_home_spaces]
+        )
+        return home_count == self.pieces_per_player
 
     # Visualization
     def draw(self, figsize=(12, 8), with_labels=False, color_map=None):
