@@ -1,4 +1,8 @@
 """Client module for controlling game progression"""
+import logging
+import os
+from pathlib import Path
+
 from typing import Sequence
 from itertools import cycle
 from random import randint
@@ -23,6 +27,7 @@ class Client:
         kw_only=True, type=int, default=6
     )
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
+    verbose = attr.ib(default=False)
 
     def initialize(self):
         self._player_cycle = cycle(self.players)
@@ -35,29 +40,63 @@ class Client:
             empty_symbol=self.empty_symbol
         )
         self._game_state.initialize()
+        self._winner = None
+        if self.verbose:
+            logging.basicConfig(
+                filename=Path(os.environ['LOG_DIR']) / 'play.log',
+                level=logging.DEBUG
+            )
+
+    def play(self):
+        """Play until a player wins wins"""
+
+        while(self._winner is None):
+            self.take_turn()
 
     def take_turn(self):
         """Take a single player turn"""
-
         current_player = self.next_player()
         roll_value = self.roll()
 
         moves = self._game_state.get_player_moves(
             roll_value, current_player.name
         )
-        print(f'Player {current_player.name} rolls a {roll_value}')
+        if self.verbose:
+            print(f'Player {current_player.name} rolls a {roll_value}')
+            logging.info(
+                f'Player {current_player.name} rolls a {roll_value}'
+            )
         if len(moves) > 0:
+
             selected_move = current_player.choose_move(
                 self._game_state, moves
             )
 
             for move_component in selected_move:
                 self._game_state.do(move_component)
-        else:
+
+            if self.verbose:
+                logging.debug(f'Available moves: {moves}')
+                logging.info(f'Selected move: {selected_move}')
+                logging.debug(
+                    'Game state post-move.'
+                    f'Waiting areas: {self._game_state.waiting_areas_to_dict()}'
+                    f'Main spaces: {self._game_state.main_spaces_to_list()}'
+                    f'Home areas: {self._game_state.home_areas_to_dict()}'
+                )
+
+        elif self.verbose:
             print('No moves possible.')
+            logging.info('No moves possible')
+
+        if self._game_state.is_winner(current_player.name):
+            self._winner = current_player.name
 
     def next_player(self):
         return next(self._player_cycle)
 
     def roll(self):
         return randint(1, self.number_of_dice_faces)
+
+    def get_game_state(self):
+        return self._game_state
