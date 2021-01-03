@@ -70,24 +70,17 @@ class TestClient:
                 )
             ))
 
-        player_idx = 0  # All players are Human
-        played_waiting = played_client.players[player_idx]\
-            .get_waiting_area_representation(played_game_state)
-        expected_waiting = expected_client.players[player_idx]\
-            .get_waiting_area_representation(expected_game_state)
+        played_waiting = played_game_state.waiting_areas_to_dict()
+        expected_waiting = expected_game_state.waiting_areas_to_dict()
 
         assert played_waiting == expected_waiting
 
-        played_main_spaces = played_client.players[player_idx]\
-            .get_main_spaces_representation(played_game_state)
-        expected_main_spaces = expected_client.players[player_idx]\
-            .get_main_spaces_representation(expected_game_state)
+        played_main_spaces = played_game_state.main_spaces_to_list()
+        expected_main_spaces = expected_game_state.main_spaces_to_list()
 
         assert played_main_spaces == expected_main_spaces
 
-        played_home = played_client.players[player_idx]\
-            .get_home_area_representation(played_game_state)
-        expected_home = played_client.players[player_idx]\
-            .get_home_area_representation(expected_game_state)
+        played_home = played_game_state.home_areas_to_dict()
+        expected_home = expected_game_state.home_areas_to_dict()
 
         assert played_home == expected_home
