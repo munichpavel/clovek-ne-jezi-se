@@ -66,6 +66,8 @@ class Client:
             logging.info(
                 f'Player {current_player.name} rolls a {roll_value}'
             )
+            logging.debug(f'Available moves: {moves}')
+
         if len(moves) > 0:
 
             selected_move = current_player.choose_move(
@@ -74,23 +76,57 @@ class Client:
 
             for move_component in selected_move:
                 self._game_state.do(move_component)
+                if self.verbose:
+                    logging.debug(f'\nDo move {move_component}')
 
             if self.verbose:
-                logging.debug(f'Available moves: {moves}')
-                logging.info(f'Selected move: {selected_move}')
                 logging.debug(
                     'Game state post-move.'
-                    f'Waiting areas: {self._game_state.waiting_areas_to_dict()}'
-                    f'Main spaces: {self._game_state.main_spaces_to_list()}'
-                    f'Home areas: {self._game_state.home_areas_to_dict()}'
+                    f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
+                    f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
+                    f'\nHome areas: {self._game_state.home_areas_to_dict()}'
                 )
 
         elif self.verbose:
             print('No moves possible.')
             logging.info('No moves possible')
 
+        if self.verbose:
+            counts = self._get_game_state_counts()
+            logging.debug(f'\nBoard counts: {counts}')
+
         if self._game_state.is_winner(current_player.name):
             self._winner = current_player.name
+
+    def _get_game_state_counts(self):
+        """Convenience function for debugging.
+        TODO refactor if really used by agents.
+        """
+        counts = {}
+        waiting_list_list = list(
+            self._game_state.waiting_areas_to_dict().values()
+        )
+        main_list = self._game_state.main_spaces_to_list()
+        home_list_list = list(self._game_state.home_areas_to_dict().values())
+
+        waiting_list = []
+        home_list = []
+        for sublist in waiting_list_list:
+            for elt in sublist:
+                waiting_list.append(elt)
+        for sublist in home_list_list:
+            for elt in sublist:
+                home_list.append(elt)
+
+        for player_name in self._player_names:
+            piece_count = 0
+            for space_list in [waiting_list, main_list, home_list]:
+                for occupier in space_list:
+                    if occupier == player_name:
+                        piece_count += 1
+            counts[player_name] = piece_count
+
+        return counts
 
     def next_player(self):
         return next(self._player_cycle)
