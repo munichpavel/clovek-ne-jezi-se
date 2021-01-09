@@ -538,6 +538,17 @@ class TestGameState:
                 [[
                     MoveContainer(
                         from_space=BoardSpace(
+                            kind='main', occupied_by='blue',
+                            idx=player_enter_main_indices['blue'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='waiting', occupied_by=EMPTY_SYMBOL,
+                            idx=0, allowed_occupants=['blue', EMPTY_SYMBOL]
+                        )
+                    ),
+                    MoveContainer(
+                        from_space=BoardSpace(
                             kind='main', occupied_by='green',
                             idx=player_enter_main_indices['blue'] - 1,
                             allowed_occupants=player_names + [EMPTY_SYMBOL]
@@ -548,19 +559,7 @@ class TestGameState:
                             allowed_occupants=player_names + [EMPTY_SYMBOL]
 
                         )
-                    ),
-                    MoveContainer(
-                        from_space=BoardSpace(
-                            kind='main', occupied_by='blue',
-                            idx=player_enter_main_indices['blue'],
-                            allowed_occupants=player_names + [EMPTY_SYMBOL]
-                        ),
-                        to_space=BoardSpace(
-                            kind='waiting', occupied_by=EMPTY_SYMBOL,
-                            idx=0, allowed_occupants=['blue', EMPTY_SYMBOL]
-                        )
                     )
-
                 ]]
             )
         ]

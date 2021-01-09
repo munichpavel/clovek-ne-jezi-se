@@ -365,6 +365,10 @@ class GameState:
         Generate a list of valid moves for all pieces of a given player name
         and roll, potentially including secondary moves like sending an
         opponent's piece back to its waiting area.
+
+        The ordering of the list matters: if a token is sent home by an
+        opponent, then the send to waiting move must come before the advance
+        move, otherwise the board is updated incorrectly.
         """
         player_occupied_query_paramses = [GraphQueryParams(
             graph_component='node', query_type='equality', label='occupied_by',
@@ -381,10 +385,10 @@ class GameState:
         all_moves = []
         for primary_move in primary_moves:
             piece_moves = []
-            piece_moves.append(primary_move)
             if primary_move.to_space.occupied_by != EMPTY_SYMBOL:
                 secondary_move = self._get_secondary_move(primary_move)
                 piece_moves.append(secondary_move)
+            piece_moves.append(primary_move)
             all_moves.append(piece_moves)
         return all_moves
 
