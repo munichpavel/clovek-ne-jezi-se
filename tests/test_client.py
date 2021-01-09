@@ -16,7 +16,9 @@ def monkey_roll(roll_value):
 
 class TestClient:
     player_names = ['red', 'blue', 'green', 'yellow']
-    players = [HumanPlayer(name=name) for name in player_names]
+    players = [
+        HumanPlayer(name=name, print_to_screen=False) for name in player_names
+    ]
 
     client = Client(players=players)
     client.initialize()

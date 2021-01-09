@@ -9,10 +9,12 @@ from random import randint
 
 import attr
 
-from clovek_ne_jezi_se.agents import Player
+from clovek_ne_jezi_se.agents import Player, HumanPlayer
 from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState
 )
+
+import matplotlib.pyplot as plt
 
 
 @attr.s
@@ -61,12 +63,13 @@ class Client:
         moves = self._game_state.get_player_moves(
             roll_value, current_player.name
         )
-        if self.verbose:
+        #if self.verbose:
+        if current_player.print_to_screen:
             print(f'Player {current_player.name} rolls a {roll_value}')
-            logging.info(
-                f'Player {current_player.name} rolls a {roll_value}'
-            )
-            logging.debug(f'Available moves: {moves}')
+        logging.info(
+            f'Player {current_player.name} rolls a {roll_value}'
+        )
+        logging.debug(f'Available moves: {moves}')
 
         if len(moves) > 0:
 
@@ -79,24 +82,40 @@ class Client:
                 if self.verbose:
                     logging.debug(f'\nDo move {move_component}')
 
-            if self.verbose:
-                logging.debug(
-                    'Game state post-move.'
-                    f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
-                    f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
-                    f'\nHome areas: {self._game_state.home_areas_to_dict()}'
+#            if self.verbose:
+            logging.debug(
+                'Game state post-move.'
+                f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
+                f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
+                f'\nHome areas: {self._game_state.home_areas_to_dict()}'
+            )
+            if (
+                getattr(current_player, 'draw', None) is not None
+                and current_player.print_to_screen
+            ):
+                # FIXME: Color map should not be hard-coded here
+                color_map = dict(
+                    red='#FF0000',
+                    blue='#0000FF',
+                    green='#00FF00',
+                    yellow='#FFFF00'
                 )
+                color_map[EMPTY_SYMBOL] = '#808080'
+                current_player.draw(self._game_state, color_map=color_map)
 
-        elif self.verbose:
-            print('No moves possible.')
+#        elif self.verbose:
+        else:
+            if current_player.print_to_screen:
+                print('No moves possible.\n')
             logging.info('No moves possible')
 
-        if self.verbose:
-            counts = self._get_game_state_counts()
-            logging.debug(f'\nBoard counts: {counts}')
+        #if self.verbose:
+        counts = self._get_game_state_counts()
+        logging.debug(f'\nBoard counts: {counts}')
 
         if self._game_state.is_winner(current_player.name):
             self._winner = current_player.name
+            logging.info(f'Winner is {self._winner}')
 
     def _get_game_state_counts(self):
         """Convenience function for debugging.

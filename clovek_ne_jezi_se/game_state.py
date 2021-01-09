@@ -356,8 +356,6 @@ class GameState:
         to_node = self._graph.nodes[to_node_name]
         to_node['occupied_by'] = move_container.from_space.occupied_by
 
-        print(f'Do debug, from_node: {from_node}, to_node: {to_node}')
-
     def get_player_moves(
         self, roll: int, player_name: str
     ) -> Sequence:
@@ -552,7 +550,7 @@ class GameState:
         return home_count == self.pieces_per_player
 
     # Visualization
-    def draw(self, figsize=(12, 8), with_labels=False, color_map=None):
+    def draw(self, figsize=(8, 6), with_labels=False, color_map=None):
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
         if color_map is not None:
