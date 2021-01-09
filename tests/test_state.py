@@ -274,7 +274,7 @@ class TestGameState:
 
         ]
     )
-    def test_move_factory(
+    def test_move_factory_initial_board(
         self, roll, from_space, expected_to_space_kwargs
     ):
         res = self.game_state.move_factory(from_space, roll)
@@ -355,12 +355,49 @@ class TestGameState:
                     allowed_occupants=['red', EMPTY_SYMBOL]
                 )
             ),
+            (
+                1,
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                )
+            ),
         ]
     )
     def test_do(
         self, roll, from_space, to_space, post_do_from_space, post_do_to_space
     ):
         modified_game_state = deepcopy(self.game_state)
+        # Put a blue piece on the main board to be sent back to waiting
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=3,
+                occupied_by='yellow',
+                allowed_occupants=['yellow', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=0,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+            )
+        ))
+
         modified_game_state.do(MoveContainer(from_space, to_space))
 
         assert modified_game_state.get_board_space(
@@ -370,6 +407,42 @@ class TestGameState:
         assert modified_game_state.get_board_space(
             kind=to_space.kind, idx=to_space.idx, player_name='red'
         ) == post_do_to_space
+
+
+    @pytest.mark.parametrize(
+        "roll,from_space",
+        [
+            (
+                1, BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                )
+            ),
+        ]
+    )
+    def test_move_factory_blocked_by_own_piece(
+        self, roll, from_space
+    ):
+        """These tests use GameState.do, hence appear after the do tests"""
+        modified_game_state = deepcopy(self.game_state)
+
+        # Move red from its waiting area to its first home space
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=3,
+                occupied_by='red',
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='home', idx=0,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            )
+        ))
+
+        res = modified_game_state.move_factory(from_space, roll)
+        assert res.to_space is None
 
     @pytest.mark.parametrize(
         'player_name, roll, expected',

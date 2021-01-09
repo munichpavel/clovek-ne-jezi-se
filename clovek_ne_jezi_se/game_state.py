@@ -356,6 +356,8 @@ class GameState:
         to_node = self._graph.nodes[to_node_name]
         to_node['occupied_by'] = move_container.from_space.occupied_by
 
+        print(f'Do debug, from_node: {from_node}, to_node: {to_node}')
+
     def get_player_moves(
         self, roll: int, player_name: str
     ) -> Sequence:
@@ -461,21 +463,38 @@ class GameState:
         position (to_space) or None if the move is invalid
         """
         if from_space.kind == 'waiting':
-            to_node_name = self._enter_main_node_names[from_space.occupied_by]
-            to_node = self._graph.nodes[to_node_name]
-            if (
-                roll != self.number_of_dice_faces or
-                to_node['occupied_by'] == from_space.occupied_by
-            ):
-                return None
-            else:
-                return BoardSpace(
-                    kind=to_node['kind'],
-                    idx=to_node['idx'],
-                    occupied_by=to_node['occupied_by'],
-                    allowed_occupants=to_node['allowed_occupants']
-                )
+            to_space = self._get_to_space_from_waiting(from_space, roll)
+        else:
+            to_space = self._get_to_space_from_main_home(from_space, roll)
+        return to_space
 
+    def _get_to_space_from_waiting(
+        self, from_space: 'BoardSpace', roll: int
+    ) -> Union['BoardSpace', None]:
+        """Return to_space of move if from_space is in a waiting area"""
+        to_node_name = self._enter_main_node_names[from_space.occupied_by]
+        to_node = self._graph.nodes[to_node_name]
+        if (
+            roll != self.number_of_dice_faces or
+            to_node['occupied_by'] == from_space.occupied_by
+        ):
+            to_space = None
+        else:
+            to_space = BoardSpace(
+                kind=to_node['kind'],
+                idx=to_node['idx'],
+                occupied_by=to_node['occupied_by'],
+                allowed_occupants=to_node['allowed_occupants']
+            )
+        return to_space
+
+    def _get_to_space_from_main_home(
+        self, from_space: 'BoardSpace', roll: int
+    ) -> Union['BoardSpace', None]:
+        """
+        Return to_space of move if from_space is in on the main board or a
+        home area
+        """
         player_subgraph_query_paramses = \
             self._get_player_subgraph_query_paramses(from_space.occupied_by)
 
@@ -488,18 +507,20 @@ class GameState:
             player_subgraph_view, source=from_node_name, depth_limit=roll+1
         ))
         if roll > len(advance_edges):
-            return None
+            to_space = None
         else:
             to_node_name = advance_edges[roll-1][1]
             to_node = self._graph.nodes[to_node_name]
-            to_space = BoardSpace(
-                kind=to_node['kind'],
-                idx=to_node['idx'],
-                occupied_by=to_node['occupied_by'],
-                allowed_occupants=to_node['allowed_occupants']
-            )
-
-            return to_space
+            if to_node['occupied_by'] == from_space.occupied_by:
+                to_space = None
+            else:
+                to_space = BoardSpace(
+                    kind=to_node['kind'],
+                    idx=to_node['idx'],
+                    occupied_by=to_node['occupied_by'],
+                    allowed_occupants=to_node['allowed_occupants']
+                )
+        return to_space
 
     def _get_player_subgraph_query_paramses(
         self, player_name: str
