@@ -1,8 +1,13 @@
 """Clovek ne jezi se game board and plays"""
 from math import pi
 from typing import Sequence, Union
+import warnings
 
 import attr
+import numpy as np
+
+import matplotlib.colors as colors
+from matplotlib import cm
 
 import networkx as nx
 
@@ -31,7 +36,10 @@ class GameState:
     consists of three areas: the waiting areas for each, the shared main board,
     and the home areas for each player.
     """
-    player_names = attr.ib(type=Sequence)
+    player_names = attr.ib(
+        type=Sequence,
+        default=['red', 'blue', 'green', 'yellow']
+    )
     pieces_per_player = attr.ib(kw_only=True, type=int, default=4, validator=[
         attr.validators.instance_of(int),
         is_positive
@@ -362,6 +370,10 @@ class GameState:
         Generate a list of valid moves for all pieces of a given player name
         and roll, potentially including secondary moves like sending an
         opponent's piece back to its waiting area.
+
+        The ordering of the list matters: if a token is sent home by an
+        opponent, then the send to waiting move must come before the advance
+        move, otherwise the board is updated incorrectly.
         """
         player_occupied_query_paramses = [GraphQueryParams(
             graph_component='node', query_type='equality', label='occupied_by',
@@ -378,10 +390,10 @@ class GameState:
         all_moves = []
         for primary_move in primary_moves:
             piece_moves = []
-            piece_moves.append(primary_move)
             if primary_move.to_space.occupied_by != EMPTY_SYMBOL:
                 secondary_move = self._get_secondary_move(primary_move)
                 piece_moves.append(secondary_move)
+            piece_moves.append(primary_move)
             all_moves.append(piece_moves)
         return all_moves
 
@@ -460,21 +472,38 @@ class GameState:
         position (to_space) or None if the move is invalid
         """
         if from_space.kind == 'waiting':
-            to_node_name = self._enter_main_node_names[from_space.occupied_by]
-            to_node = self._graph.nodes[to_node_name]
-            if (
-                roll != self.number_of_dice_faces or
-                to_node['occupied_by'] == from_space.occupied_by
-            ):
-                return None
-            else:
-                return BoardSpace(
-                    kind=to_node['kind'],
-                    idx=to_node['idx'],
-                    occupied_by=to_node['occupied_by'],
-                    allowed_occupants=to_node['allowed_occupants']
-                )
+            to_space = self._get_to_space_from_waiting(from_space, roll)
+        else:
+            to_space = self._get_to_space_from_main_home(from_space, roll)
+        return to_space
 
+    def _get_to_space_from_waiting(
+        self, from_space: 'BoardSpace', roll: int
+    ) -> Union['BoardSpace', None]:
+        """Return to_space of move if from_space is in a waiting area"""
+        to_node_name = self._enter_main_node_names[from_space.occupied_by]
+        to_node = self._graph.nodes[to_node_name]
+        if (
+            roll != self.number_of_dice_faces or
+            to_node['occupied_by'] == from_space.occupied_by
+        ):
+            to_space = None
+        else:
+            to_space = BoardSpace(
+                kind=to_node['kind'],
+                idx=to_node['idx'],
+                occupied_by=to_node['occupied_by'],
+                allowed_occupants=to_node['allowed_occupants']
+            )
+        return to_space
+
+    def _get_to_space_from_main_home(
+        self, from_space: 'BoardSpace', roll: int
+    ) -> Union['BoardSpace', None]:
+        """
+        Return to_space of move if from_space is in on the main board or a
+        home area
+        """
         player_subgraph_query_paramses = \
             self._get_player_subgraph_query_paramses(from_space.occupied_by)
 
@@ -487,18 +516,20 @@ class GameState:
             player_subgraph_view, source=from_node_name, depth_limit=roll+1
         ))
         if roll > len(advance_edges):
-            return None
+            to_space = None
         else:
             to_node_name = advance_edges[roll-1][1]
             to_node = self._graph.nodes[to_node_name]
-            to_space = BoardSpace(
-                kind=to_node['kind'],
-                idx=to_node['idx'],
-                occupied_by=to_node['occupied_by'],
-                allowed_occupants=to_node['allowed_occupants']
-            )
-
-            return to_space
+            if to_node['occupied_by'] == from_space.occupied_by:
+                to_space = None
+            else:
+                to_space = BoardSpace(
+                    kind=to_node['kind'],
+                    idx=to_node['idx'],
+                    occupied_by=to_node['occupied_by'],
+                    allowed_occupants=to_node['allowed_occupants']
+                )
+        return to_space
 
     def _get_player_subgraph_query_paramses(
         self, player_name: str
@@ -516,19 +547,54 @@ class GameState:
             allowed_traversers_query_params, allowed_occupants_query_params
         ]
 
+    def is_winner(self, player_name: str) -> bool:
+        """Returns boolean for whether player name is current winner"""
+        home_dict = self.home_areas_to_dict()
+        player_home_spaces = home_dict[player_name]
+        home_count = np.sum(
+            [home_space == player_name for home_space in player_home_spaces]
+        )
+        return home_count == self.pieces_per_player
+
     # Visualization
-    def draw(self, figsize=(12, 8), with_labels=False, color_map=None):
+    def draw(
+        self, figsize=(8, 6), with_labels=False,
+    ):
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
-        if color_map is not None:
-            node_color = self._get_node_color(color_map)
+
+        plt_color_name_dict = colors.cnames
+
+        if set(self.player_names).issubset(plt_color_name_dict.keys()):
+            plt_color_name_dict[self.empty_symbol] = '#808080'
         else:
-            node_color = None
+            warnings.warn(
+                'Player names are not elements of matplotlib named colors. '
+                'Using shades of blue instead for player colors.'
+            )
+            plt_color_name_dict = self._get_shades_of_blue_color_dict()
+        node_color = self._get_node_color(plt_color_name_dict)
 
         plt.figure(figsize=figsize)
         nx.draw(
             self._graph, pos, with_labels=with_labels, node_color=node_color
         )
+
+    def _get_shades_of_blue_color_dict(self):
+        """
+        Create color name dict for player names that aren't standard colors
+        """
+        plt_color_name_dict = {}
+        plt_color_name_dict[self.empty_symbol] = '#808080'
+        blues = cm.get_cmap('Blues')
+        shades_of_blue = blues(
+            np.linspace(0.25, 0.85, len(self.player_names))
+        )
+        for idx, player_name in enumerate(self.player_names):
+            plt_color_name_dict[player_name] = colors.to_hex(
+                shades_of_blue[idx]
+            )
+        return plt_color_name_dict
 
     def _get_graph_positions(self):
         start_radians = -pi/2 - 2 * pi / self._main_board_length

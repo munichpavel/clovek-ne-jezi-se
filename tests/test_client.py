@@ -16,7 +16,9 @@ def monkey_roll(roll_value):
 
 class TestClient:
     player_names = ['red', 'blue', 'green', 'yellow']
-    players = [HumanPlayer(name=name) for name in player_names]
+    players = [
+        HumanPlayer(name=name, print_to_screen=False) for name in player_names
+    ]
 
     client = Client(players=players)
     client.initialize()
@@ -33,7 +35,7 @@ class TestClient:
         monkeypatch.setattr(self.client, 'roll', lambda: monkey_roll(value))
         assert self.client.roll() == value
 
-    def test_integration(self, monkeypatch):
+    def test_one_round_of_play(self, monkeypatch):
 
         played_client = deepcopy(self.client)
         expected_client = deepcopy(self.client)
@@ -46,7 +48,7 @@ class TestClient:
 
         # Play one round with fixed (monkeypatched) dice and move choice
         for _ in range(len(played_client.players)):
-            played_client.play()
+            played_client.take_turn()
 
         played_game_state = played_client.get_game_state()
 
@@ -69,6 +71,77 @@ class TestClient:
 
                 )
             ))
+
+        played_waiting = played_game_state.waiting_areas_to_dict()
+        expected_waiting = expected_game_state.waiting_areas_to_dict()
+
+        assert played_waiting == expected_waiting
+
+        played_main_spaces = played_game_state.main_spaces_to_list()
+        expected_main_spaces = expected_game_state.main_spaces_to_list()
+
+        assert played_main_spaces == expected_main_spaces
+
+        played_home = played_game_state.home_areas_to_dict()
+        expected_home = expected_game_state.home_areas_to_dict()
+
+        assert played_home == expected_home
+
+    def test_send_player_home(self, monkeypatch):
+        played_client = deepcopy(self.client)
+        expected_client = deepcopy(self.client)
+
+        # Move red player to main 0, yellow to main 1
+        played_game_state = played_client.get_game_state()
+        played_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0,
+                occupied_by='red',
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=0,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+            )
+        ))
+        played_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0,
+                occupied_by='yellow',
+                allowed_occupants=['yellow', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=1,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+            )
+        ))
+
+        # Set roll value to 1
+        monkeypatch.setattr(played_client, 'roll', lambda: monkey_roll(1))
+        # For HumanAgent choose_move input, always select 0th
+        idx_move_input = 0
+        monkeypatch.setattr(builtins, 'input', lambda x: idx_move_input)
+
+        # Play once (red) with fixed (monkeypatched) dice and move choice
+        played_client.take_turn()
+
+        expected_game_state = expected_client.get_game_state()
+
+        # Expect red to be at main index 1, all yellow back in waiting
+        expected_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0, occupied_by='red',
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=1,
+                occupied_by='red',
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+
+            )
+        ))
 
         played_waiting = played_game_state.waiting_areas_to_dict()
         expected_waiting = expected_game_state.waiting_areas_to_dict()

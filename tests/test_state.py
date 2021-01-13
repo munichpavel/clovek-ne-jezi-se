@@ -274,7 +274,7 @@ class TestGameState:
 
         ]
     )
-    def test_move_factory(
+    def test_move_factory_initial_board(
         self, roll, from_space, expected_to_space_kwargs
     ):
         res = self.game_state.move_factory(from_space, roll)
@@ -355,12 +355,49 @@ class TestGameState:
                     allowed_occupants=['red', EMPTY_SYMBOL]
                 )
             ),
+            (
+                1,
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ),
+                BoardSpace(
+                    kind='home', idx=0,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                )
+            ),
         ]
     )
     def test_do(
         self, roll, from_space, to_space, post_do_from_space, post_do_to_space
     ):
         modified_game_state = deepcopy(self.game_state)
+        # Put a blue piece on the main board to be sent back to waiting
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=3,
+                occupied_by='yellow',
+                allowed_occupants=['yellow', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=0,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+            )
+        ))
+
         modified_game_state.do(MoveContainer(from_space, to_space))
 
         assert modified_game_state.get_board_space(
@@ -370,6 +407,42 @@ class TestGameState:
         assert modified_game_state.get_board_space(
             kind=to_space.kind, idx=to_space.idx, player_name='red'
         ) == post_do_to_space
+
+
+    @pytest.mark.parametrize(
+        "roll,from_space",
+        [
+            (
+                1, BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                )
+            ),
+        ]
+    )
+    def test_move_factory_blocked_by_own_piece(
+        self, roll, from_space
+    ):
+        """These tests use GameState.do, hence appear after the do tests"""
+        modified_game_state = deepcopy(self.game_state)
+
+        # Move red from its waiting area to its first home space
+        modified_game_state.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=3,
+                occupied_by='red',
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='home', idx=0,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            )
+        ))
+
+        res = modified_game_state.move_factory(from_space, roll)
+        assert res.to_space is None
 
     @pytest.mark.parametrize(
         'player_name, roll, expected',
@@ -465,6 +538,17 @@ class TestGameState:
                 [[
                     MoveContainer(
                         from_space=BoardSpace(
+                            kind='main', occupied_by='blue',
+                            idx=player_enter_main_indices['blue'],
+                            allowed_occupants=player_names + [EMPTY_SYMBOL]
+                        ),
+                        to_space=BoardSpace(
+                            kind='waiting', occupied_by=EMPTY_SYMBOL,
+                            idx=0, allowed_occupants=['blue', EMPTY_SYMBOL]
+                        )
+                    ),
+                    MoveContainer(
+                        from_space=BoardSpace(
                             kind='main', occupied_by='green',
                             idx=player_enter_main_indices['blue'] - 1,
                             allowed_occupants=player_names + [EMPTY_SYMBOL]
@@ -475,19 +559,7 @@ class TestGameState:
                             allowed_occupants=player_names + [EMPTY_SYMBOL]
 
                         )
-                    ),
-                    MoveContainer(
-                        from_space=BoardSpace(
-                            kind='main', occupied_by='blue',
-                            idx=player_enter_main_indices['blue'],
-                            allowed_occupants=player_names + [EMPTY_SYMBOL]
-                        ),
-                        to_space=BoardSpace(
-                            kind='waiting', occupied_by=EMPTY_SYMBOL,
-                            idx=0, allowed_occupants=['blue', EMPTY_SYMBOL]
-                        )
                     )
-
                 ]]
             )
         ]
@@ -536,3 +608,32 @@ class TestGameState:
         player_moves = modified_game_state.get_player_moves(roll, player_name)
 
         assert player_moves == expected
+
+    @pytest.mark.parametrize(
+        'player_name,expected',
+        [
+            (player_names[0], False),
+            (player_names[1], False),
+            (player_names[2], False),
+            (player_names[3], True),
+        ]
+    )
+    def test_is_winner(self, player_name, expected):
+        modified_game_state = deepcopy(self.game_state)
+
+        winner_name = modified_game_state.player_names[3]
+        for idx in range(self.pieces_per_player):
+            modified_game_state.do(MoveContainer(
+                from_space=BoardSpace(
+                    kind='waiting', idx=idx,
+                    occupied_by=winner_name,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                ),
+                to_space=BoardSpace(
+                    kind='home', idx=idx,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                )
+            ))
+
+        assert modified_game_state.is_winner(player_name) == expected
