@@ -42,7 +42,7 @@ class HumanPlayer(Player):
 
         return res
 
-    def draw(self, game_state: 'GameState', figsize=(8, 6), color_map=None):
+    def draw(self, game_state: 'GameState', figsize=(8, 6)):
         """Delegate to GameState.draw() for interactive play"""
-        game_state.draw(figsize=figsize, color_map=color_map)
+        game_state.draw(figsize=figsize)
         plt.show()

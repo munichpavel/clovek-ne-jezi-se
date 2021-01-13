@@ -6,6 +6,9 @@ import warnings
 import attr
 import numpy as np
 
+import matplotlib.colors as colors
+from matplotlib import cm
+
 import networkx as nx
 
 import matplotlib.pyplot as plt
@@ -559,35 +562,39 @@ class GameState:
     ):
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
-        color_map = self._create_color_map()
-        node_color = self._get_node_color(color_map)
+
+        plt_color_name_dict = colors.cnames
+
+        if set(self.player_names).issubset(plt_color_name_dict.keys()):
+            plt_color_name_dict[self.empty_symbol] = '#808080'
+        else:
+            warnings.warn(
+                'Player names are not elements of matplotlib named colors. '
+                'Using shades of blue instead for player colors.'
+            )
+            plt_color_name_dict = self._get_shades_of_blue_color_dict()
+        node_color = self._get_node_color(plt_color_name_dict)
 
         plt.figure(figsize=figsize)
         nx.draw(
             self._graph, pos, with_labels=with_labels, node_color=node_color
         )
 
-    def _create_color_map(self):
+    def _get_shades_of_blue_color_dict(self):
         """
-
+        Create color name dict for player names that aren't standard colors
         """
-        standard_colors = {'red', 'blue', 'green', 'yellow'}
-        if set(self.player_names) == standard_colors:
-            res = {
-                'red': '#FF0000',
-                'blue': '#0000FF',
-                'green': '#00FF00',
-                'yellow': '#FFFF00',
-                self.empty_symbol: '#808080'
-            }
-        else:
-            warnings.warn(
-                f'Player names are not the standard colors {standard_colors}'
-                'Shades of blue will be used'
+        plt_color_name_dict = {}
+        plt_color_name_dict[self.empty_symbol] = '#808080'
+        blues = cm.get_cmap('Blues')
+        shades_of_blue = blues(
+            np.linspace(0.25, 0.85, len(self.player_names))
+        )
+        for idx, player_name in enumerate(self.player_names):
+            plt_color_name_dict[player_name] = colors.to_hex(
+                shades_of_blue[idx]
             )
-            res = None
-
-        return res
+        return plt_color_name_dict
 
     def _get_graph_positions(self):
         start_radians = -pi/2 - 2 * pi / self._main_board_length
