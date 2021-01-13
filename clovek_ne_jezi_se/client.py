@@ -9,6 +9,7 @@ from random import randint
 
 import attr
 
+from clovek_ne_jezi_se.agents import Player
 from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState
 )
