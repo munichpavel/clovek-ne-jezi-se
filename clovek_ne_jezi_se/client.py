@@ -9,12 +9,9 @@ from random import randint
 
 import attr
 
-from clovek_ne_jezi_se.agents import Player, HumanPlayer
 from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState
 )
-
-import matplotlib.pyplot as plt
 
 
 @attr.s
