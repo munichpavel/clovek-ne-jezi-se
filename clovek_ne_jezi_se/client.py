@@ -93,15 +93,8 @@ class Client:
                 getattr(current_player, 'draw', None) is not None
                 and current_player.print_to_screen
             ):
-                # FIXME: Color map should not be hard-coded here
-                color_map = dict(
-                    red='#FF0000',
-                    blue='#0000FF',
-                    green='#00FF00',
-                    yellow='#FFFF00'
-                )
-                color_map[EMPTY_SYMBOL] = '#808080'
-                current_player.draw(self._game_state, color_map=color_map)
+
+                current_player.draw(self._game_state)
 
 #        elif self.verbose:
         else:

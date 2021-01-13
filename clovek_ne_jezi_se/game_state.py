@@ -1,6 +1,7 @@
 """Clovek ne jezi se game board and plays"""
 from math import pi
 from typing import Sequence, Union
+import warnings
 
 import attr
 import numpy as np
@@ -32,7 +33,10 @@ class GameState:
     consists of three areas: the waiting areas for each, the shared main board,
     and the home areas for each player.
     """
-    player_names = attr.ib(type=Sequence)
+    player_names = attr.ib(
+        type=Sequence,
+        default=['red', 'blue', 'green', 'yellow']
+    )
     pieces_per_player = attr.ib(kw_only=True, type=int, default=4, validator=[
         attr.validators.instance_of(int),
         is_positive
@@ -550,18 +554,40 @@ class GameState:
         return home_count == self.pieces_per_player
 
     # Visualization
-    def draw(self, figsize=(8, 6), with_labels=False, color_map=None):
+    def draw(
+        self, figsize=(8, 6), with_labels=False,
+    ):
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
-        if color_map is not None:
-            node_color = self._get_node_color(color_map)
-        else:
-            node_color = None
+        color_map = self._create_color_map()
+        node_color = self._get_node_color(color_map)
 
         plt.figure(figsize=figsize)
         nx.draw(
             self._graph, pos, with_labels=with_labels, node_color=node_color
         )
+
+    def _create_color_map(self):
+        """
+
+        """
+        standard_colors = {'red', 'blue', 'green', 'yellow'}
+        if set(self.player_names) == standard_colors:
+            res = {
+                'red': '#FF0000',
+                'blue': '#0000FF',
+                'green': '#00FF00',
+                'yellow': '#FFFF00',
+                self.empty_symbol: '#808080'
+            }
+        else:
+            warnings.warn(
+                f'Player names are not the standard colors {standard_colors}'
+                'Shades of blue will be used'
+            )
+            res = None
+
+        return res
 
     def _get_graph_positions(self):
         start_radians = -pi/2 - 2 * pi / self._main_board_length
