@@ -41,7 +41,7 @@ class Client:
         self._game_state.initialize()
         self._winner = None
         logging.basicConfig(
-            filename=Path(os.environ['LOG_DIR']) / 'play.log',
+            filename=Path(os.getenv('LOG_DIR')) / 'play.log',
             level=logging.DEBUG
         )
 
