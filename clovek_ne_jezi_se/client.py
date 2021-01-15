@@ -27,7 +27,6 @@ class Client:
         kw_only=True, type=int, default=6
     )
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
-    verbose = attr.ib(default=False)
 
     def initialize(self):
         self._player_cycle = cycle(self.players)
@@ -41,11 +40,10 @@ class Client:
         )
         self._game_state.initialize()
         self._winner = None
-        if self.verbose:
-            logging.basicConfig(
-                filename=Path(os.environ['LOG_DIR']) / 'play.log',
-                level=logging.DEBUG
-            )
+        logging.basicConfig(
+            filename=Path(os.environ['LOG_DIR']) / 'play.log',
+            level=logging.DEBUG
+        )
 
     def play(self):
         """Play until a player wins wins"""
@@ -61,7 +59,6 @@ class Client:
         moves = self._game_state.get_player_moves(
             roll_value, current_player.name
         )
-        #if self.verbose:
         if current_player.print_to_screen:
             print(f'Player {current_player.name} rolls a {roll_value}')
         logging.info(
@@ -77,10 +74,8 @@ class Client:
 
             for move_component in selected_move:
                 self._game_state.do(move_component)
-                if self.verbose:
-                    logging.debug(f'\nDo move {move_component}')
+                logging.debug(f'\nDo move {move_component}')
 
-#            if self.verbose:
             logging.debug(
                 'Game state post-move.'
                 f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
@@ -94,13 +89,11 @@ class Client:
 
                 current_player.draw(self._game_state)
 
-#        elif self.verbose:
         else:
             if current_player.print_to_screen:
                 print('No moves possible.\n')
             logging.info('No moves possible')
 
-        #if self.verbose:
         counts = self._get_game_state_counts()
         logging.debug(f'\nBoard counts: {counts}')
 
