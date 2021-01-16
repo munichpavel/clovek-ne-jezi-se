@@ -7,6 +7,7 @@ import attr
 import matplotlib.pyplot as plt
 
 from clovek_ne_jezi_se.game_state import GameState, MoveContainer
+from clovek_ne_jezi_se.logger import logger
 
 
 @attr.s
@@ -33,12 +34,15 @@ class HumanPlayer(Player):
         self, game_state: 'GameState',
         allowed_moves: Sequence['MoveContainer']
     ) -> 'MoveContainer':
-        print('Allowed moves with index:\n')
-        for move_idx, move in enumerate(allowed_moves):
-            print(f'Index: {move_idx}, move: {move}')
+        log_msg = 'Player ' + self.name + ' allowed moves with index:\n'
 
+        for move_idx, move in enumerate(allowed_moves):
+            log_msg += f'Index: {move_idx}, move: {move}\n'
+
+        logger.info(log_msg)
         chosen_move_idx = int(input('Enter chosen move index: '))
         res = allowed_moves[chosen_move_idx]
+        logger.info('Player ' + self.name + f' chose {res}')
 
         return res
 
