@@ -1,8 +1,5 @@
 """Client module for controlling game progression"""
 import logging
-import os
-from pathlib import Path
-
 from typing import Sequence
 from itertools import cycle
 from random import randint
@@ -10,9 +7,13 @@ from random import randint
 import attr
 
 from clovek_ne_jezi_se.agents import Player
+from clovek_ne_jezi_se.log_handler import handler
 from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState
 )
+
+logger = logging.getLogger(__name__)
+logger.addHandler(handler)
 
 
 @attr.s
@@ -40,10 +41,6 @@ class Client:
         )
         self._game_state.initialize()
         self._winner = None
-        logging.basicConfig(
-            filename=Path(os.environ['LOG_DIR']) / 'play.log',
-            level=logging.DEBUG
-        )
 
     def play(self):
         """Play until a player wins wins"""
@@ -54,29 +51,43 @@ class Client:
     def take_turn(self):
         """Take a single player turn"""
         current_player = self.next_player()
-        roll_value = self.roll()
 
+        players_turn_continues = True
+        while players_turn_continues:
+            roll_value = self.roll()
+            logger.info(
+                f'Player {current_player.name} rolls a {roll_value}'
+            )
+
+            self._choose_and_do_move(current_player, roll_value)
+
+            counts = self._get_game_state_counts()
+            logger.debug(f'\nBoard counts: {counts}')
+
+            if self._game_state.is_winner(current_player.name):
+                self._winner = current_player.name
+                logger.info(f'Winner is {self._winner}')
+
+            players_turn_continues = (
+                roll_value == self._game_state.number_of_dice_faces
+            )
+
+    def _choose_and_do_move(self, current_player, roll_value):
         moves = self._game_state.get_player_moves(
-            roll_value, current_player.name
-        )
-        if current_player.print_to_screen:
-            print(f'Player {current_player.name} rolls a {roll_value}')
-        logging.info(
-            f'Player {current_player.name} rolls a {roll_value}'
-        )
-        logging.debug(f'Available moves: {moves}')
+                roll_value, current_player.name
+            )
+        logger.debug(f'Available moves: {moves}')
 
         if len(moves) > 0:
-
             selected_move = current_player.choose_move(
                 self._game_state, moves
             )
 
             for move_component in selected_move:
                 self._game_state.do(move_component)
-                logging.debug(f'\nDo move {move_component}')
+                logger.debug(f'\nDo move {move_component}')
 
-            logging.debug(
+            logger.debug(
                 'Game state post-move.'
                 f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
                 f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
@@ -84,22 +95,11 @@ class Client:
             )
             if (
                 getattr(current_player, 'draw', None) is not None
-                and current_player.print_to_screen
+                and current_player.print_game_state
             ):
-
                 current_player.draw(self._game_state)
-
         else:
-            if current_player.print_to_screen:
-                print('No moves possible.\n')
-            logging.info('No moves possible')
-
-        counts = self._get_game_state_counts()
-        logging.debug(f'\nBoard counts: {counts}')
-
-        if self._game_state.is_winner(current_player.name):
-            self._winner = current_player.name
-            logging.info(f'Winner is {self._winner}')
+            logger.info('No moves possible')
 
     def _get_game_state_counts(self):
         """Convenience function for debugging.

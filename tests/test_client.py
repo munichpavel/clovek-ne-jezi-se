@@ -9,15 +9,10 @@ from clovek_ne_jezi_se.game_state import (
 )
 
 
-def monkey_roll(roll_value):
-    """Monkeypatch for dice roll"""
-    return roll_value
-
-
 class TestClient:
     player_names = ['red', 'blue', 'green', 'yellow']
     players = [
-        HumanPlayer(name=name, print_to_screen=False) for name in player_names
+        HumanPlayer(name=name, print_game_state=False) for name in player_names
     ]
 
     client = Client(players=players)
@@ -30,18 +25,14 @@ class TestClient:
 
         assert player_round == self.players
 
-    def test_dice_roll_monkeypatch(self, monkeypatch):
-        value = 1
-        monkeypatch.setattr(self.client, 'roll', lambda: monkey_roll(value))
-        assert self.client.roll() == value
-
-    def test_one_round_of_play(self, monkeypatch):
-
+    def test_one_round_of_play(self, mocker, monkeypatch):
         played_client = deepcopy(self.client)
         expected_client = deepcopy(self.client)
 
-        # Set roll value to 6
-        monkeypatch.setattr(played_client, 'roll', lambda: monkey_roll(6))
+        # Set roll values to 6 then 1 for each player turn
+        mocker.patch.object(
+            played_client, 'roll', side_effect=4 * [6, 1]
+        )
         # For HumanAgent choose_move input, always select 0th
         idx_move_input = 0
         monkeypatch.setattr(builtins, 'input', lambda x: idx_move_input)
@@ -51,7 +42,6 @@ class TestClient:
             played_client.take_turn()
 
         played_game_state = played_client.get_game_state()
-
 
         # Move 0th piece to main board from waiting for each player
         expected_game_state = expected_client.get_game_state()
@@ -65,7 +55,7 @@ class TestClient:
                     kind='main',
                     idx=expected_game_state.get_main_entry_index(
                         player_name
-                    ),
+                    ) + 1,
                     occupied_by=EMPTY_SYMBOL,
                     allowed_occupants=self.player_names + [EMPTY_SYMBOL]
 
@@ -119,7 +109,7 @@ class TestClient:
         ))
 
         # Set roll value to 1
-        monkeypatch.setattr(played_client, 'roll', lambda: monkey_roll(1))
+        monkeypatch.setattr(played_client, 'roll', lambda: 1)
         # For HumanAgent choose_move input, always select 0th
         idx_move_input = 0
         monkeypatch.setattr(builtins, 'input', lambda x: idx_move_input)
