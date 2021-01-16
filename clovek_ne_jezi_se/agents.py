@@ -14,11 +14,24 @@ from clovek_ne_jezi_se.log_handler import handler
 logger = logging.getLogger(__name__)
 logger.addHandler(handler)
 
+
 @attr.s
 class Player:
-    """Base class for all player agents"""
-    name = attr.ib(validator=attr.validators.instance_of(str))
-    print_to_screen = attr.ib(default=False)
+    """
+    Base class for all player agents
+
+    Parameters
+    ----------
+    name :
+        Player name, must be a string
+    print_game_state :
+        Whether or not to display graphical representation of game state.
+        Use cases: set to False for unit tests, True for interactive play.
+
+
+    """
+    name = attr.ib(type=str, validator=attr.validators.instance_of(str))
+    print_game_state = attr.ib(type=bool, default=False)
 
     @abc.abstractmethod
     def choose_move(
@@ -32,7 +45,7 @@ class Player:
 @attr.s
 class HumanPlayer(Player):
     """Interactive human player"""
-    print_to_screen = attr.ib(default=True)
+    print_game_state = attr.ib(default=True)
 
     def choose_move(
         self, game_state: 'GameState',

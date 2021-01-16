@@ -95,7 +95,7 @@ class Client:
             )
             if (
                 getattr(current_player, 'draw', None) is not None
-                and current_player.print_to_screen
+                and current_player.print_game_state
             ):
                 current_player.draw(self._game_state)
         else:
