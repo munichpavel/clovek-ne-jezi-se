@@ -1,14 +1,18 @@
 """Player classes"""
 import abc
 from typing import Sequence
+import logging
 
 import attr
 
 import matplotlib.pyplot as plt
 
 from clovek_ne_jezi_se.game_state import GameState, MoveContainer
-from clovek_ne_jezi_se.logger import logger
+from clovek_ne_jezi_se.log_handler import handler
 
+
+logger = logging.getLogger(__name__)
+logger.addHandler(handler)
 
 @attr.s
 class Player:

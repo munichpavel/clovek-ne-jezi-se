@@ -1,4 +1,5 @@
 """Client module for controlling game progression"""
+import logging
 from typing import Sequence
 from itertools import cycle
 from random import randint
@@ -6,10 +7,13 @@ from random import randint
 import attr
 
 from clovek_ne_jezi_se.agents import Player
-from clovek_ne_jezi_se.logger import logger
+from clovek_ne_jezi_se.log_handler import handler
 from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState
 )
+
+logger = logging.getLogger(__name__)
+logger.addHandler(handler)
 
 
 @attr.s
