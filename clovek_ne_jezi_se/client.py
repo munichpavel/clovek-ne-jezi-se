@@ -55,12 +55,7 @@ class Client:
         players_turn_continues = True
         while players_turn_continues:
             roll_value = self.roll()
-            # logger.info(
-            #     f'Player {current_player.name} rolls a {roll_value}'
-            # )
-            # logger.info(
-            #     f'{current_player} rolls a {roll_value}'
-            # )
+
             self.log(current_player, f'Rolls a {roll_value}')
 
             self._choose_and_do_move(current_player, roll_value)
@@ -93,6 +88,11 @@ class Client:
         logger.debug(f'Available moves: {moves}')
 
         if len(moves) > 0:
+            if (
+                getattr(current_player, 'draw', None) is not None
+                and current_player.print_game_state
+            ):
+                current_player.draw(self._game_state)
             selected_move = current_player.choose_move(
                 self._game_state, moves
             )
@@ -107,11 +107,6 @@ class Client:
                 f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
                 f'\nHome areas: {self._game_state.home_areas_to_dict()}'
             )
-            if (
-                getattr(current_player, 'draw', None) is not None
-                and current_player.print_game_state
-            ):
-                current_player.draw(self._game_state)
         else:
             self.log(current_player, 'No moves possible')
 
