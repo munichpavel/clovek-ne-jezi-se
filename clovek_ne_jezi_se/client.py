@@ -55,9 +55,13 @@ class Client:
         players_turn_continues = True
         while players_turn_continues:
             roll_value = self.roll()
-            logger.info(
-                f'Player {current_player.name} rolls a {roll_value}'
-            )
+            # logger.info(
+            #     f'Player {current_player.name} rolls a {roll_value}'
+            # )
+            # logger.info(
+            #     f'{current_player} rolls a {roll_value}'
+            # )
+            self.log(current_player, f'Rolls a {roll_value}')
 
             self._choose_and_do_move(current_player, roll_value)
 
@@ -65,12 +69,22 @@ class Client:
             logger.debug(f'\nBoard counts: {counts}')
 
             if self._game_state.is_winner(current_player.name):
-                self._winner = current_player.name
-                logger.info(f'Winner is {self._winner}')
+                self._winner = current_player
+                self.log(current_player, 'wins')
 
             players_turn_continues = (
                 roll_value == self._game_state.number_of_dice_faces
             )
+
+    def next_player(self):
+        return next(self._player_cycle)
+
+    def roll(self):
+        return randint(1, self.number_of_dice_faces)
+
+    def log(self, player, message):
+        message = f'{player}:' + message
+        logger.info(message)
 
     def _choose_and_do_move(self, current_player, roll_value):
         moves = self._game_state.get_player_moves(
@@ -99,7 +113,7 @@ class Client:
             ):
                 current_player.draw(self._game_state)
         else:
-            logger.info('No moves possible')
+            self.log(current_player, 'No moves possible')
 
     def _get_game_state_counts(self):
         """Convenience function for debugging.
@@ -130,12 +144,6 @@ class Client:
             counts[player_name] = piece_count
 
         return counts
-
-    def next_player(self):
-        return next(self._player_cycle)
-
-    def roll(self):
-        return randint(1, self.number_of_dice_faces)
 
     def get_game_state(self):
         return self._game_state

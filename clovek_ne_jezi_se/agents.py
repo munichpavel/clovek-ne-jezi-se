@@ -39,15 +39,16 @@ class Player:
         allowed_moves: Sequence['MoveContainer']
     ) -> 'MoveContainer':
         """Choose among moves."""
-        log_msg = 'Player ' + self.name + ' allowed moves with index:\n'
+        msg = 'Allowed moves with index:\n'
 
         for move_idx, move in enumerate(allowed_moves):
-            log_msg += f'Index: {move_idx}, move: {move}\n'
+            msg += f'Index: {move_idx}, move: {move}\n'
 
-        logger.info(log_msg)
+        self.log(msg)
         chosen_move_idx = self.choose_move_idx(game_state, allowed_moves)
         res = allowed_moves[chosen_move_idx]
-        logger.info('Player ' + self.name + f' chose {res}')
+        self.log(f'Chose {res}')
+        #logger.info('Player ' + self.name + f' chose {res}')
 
         return res
 
@@ -57,6 +58,10 @@ class Player:
         allowed_moves: Sequence['MoveContainer']
     ) -> int:
         return
+
+    def log(self, message):
+        res = ':'.join([self.__repr__(), message])
+        logger.info(res)
 
 
 @attr.s
