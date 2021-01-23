@@ -2,6 +2,7 @@
 import abc
 from typing import Sequence
 import logging
+from random import randint
 
 import attr
 
@@ -33,12 +34,28 @@ class Player:
     name = attr.ib(type=str, validator=attr.validators.instance_of(str))
     print_game_state = attr.ib(type=bool, default=False)
 
-    @abc.abstractmethod
     def choose_move(
         self, game_state: 'GameState',
         allowed_moves: Sequence['MoveContainer']
     ) -> 'MoveContainer':
         """Choose among moves."""
+        log_msg = 'Player ' + self.name + ' allowed moves with index:\n'
+
+        for move_idx, move in enumerate(allowed_moves):
+            log_msg += f'Index: {move_idx}, move: {move}\n'
+
+        logger.info(log_msg)
+        chosen_move_idx = self.choose_move_idx(game_state, allowed_moves)
+        res = allowed_moves[chosen_move_idx]
+        logger.info('Player ' + self.name + f' chose {res}')
+
+        return res
+
+    @abc.abstractmethod
+    def choose_move_idx(
+        self, game_state: 'GameState',
+        allowed_moves: Sequence['MoveContainer']
+    ) -> int:
         return
 
 
@@ -47,20 +64,11 @@ class HumanPlayer(Player):
     """Interactive human player"""
     print_game_state = attr.ib(default=True)
 
-    def choose_move(
+    def choose_move_idx(
         self, game_state: 'GameState',
         allowed_moves: Sequence['MoveContainer']
-    ) -> 'MoveContainer':
-        log_msg = 'Player ' + self.name + ' allowed moves with index:\n'
-
-        for move_idx, move in enumerate(allowed_moves):
-            log_msg += f'Index: {move_idx}, move: {move}\n'
-
-        logger.info(log_msg)
-        chosen_move_idx = int(input('Enter chosen move index: '))
-        res = allowed_moves[chosen_move_idx]
-        logger.info('Player ' + self.name + f' chose {res}')
-
+    ) -> int:
+        res = int(input('Enter chosen move index: '))
         return res
 
     def draw(self, game_state: 'GameState', figsize=(8, 6)):
