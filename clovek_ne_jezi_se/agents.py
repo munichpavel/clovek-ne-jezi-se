@@ -48,7 +48,6 @@ class Player:
         chosen_move_idx = self.choose_move_idx(game_state, allowed_moves)
         res = allowed_moves[chosen_move_idx]
         self.log(f'Chose {res}')
-        #logger.info('Player ' + self.name + f' chose {res}')
 
         return res
 
@@ -80,3 +79,15 @@ class HumanPlayer(Player):
         """Delegate to GameState.draw() for interactive play"""
         game_state.draw(figsize=figsize)
         plt.show()
+
+
+@attr.s
+class RandomPlayer(Player):
+    """Player that selects uniformly randomly from allowed moves"""
+    def choose_move_idx(
+        self, game_state: 'GameState',
+        allowed_moves: Sequence['MoveContainer']
+    ) -> int:
+        """TODO: Test???"""
+        idx = randint(0, len(allowed_moves)-1)
+        return idx
