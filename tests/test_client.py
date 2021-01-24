@@ -147,3 +147,51 @@ class TestClient:
         expected_home = expected_game_state.home_areas_to_dict()
 
         assert played_home == expected_home
+
+    def test_play_finished(self, monkeypatch):
+
+        played_client = deepcopy(self.client)
+        played_game_state = played_client.get_game_state()
+
+        idx_winner = 0
+        winner_name = played_game_state.player_names[idx_winner]
+
+        # move all pieces but first to home
+        for idx in range(1, played_game_state.pieces_per_player):
+            played_game_state.do(MoveContainer(
+                from_space=BoardSpace(
+                    kind='waiting', idx=idx,
+                    occupied_by=winner_name,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                ),
+                to_space=BoardSpace(
+                    kind='home', idx=idx,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                )
+            ))
+
+        # Move first piece to one before home
+        winner_enter_main_idx = played_game_state.get_main_entry_index(winner_name)
+        winner_prehome_idx = (winner_enter_main_idx - 1) % \
+            played_client.main_board_section_length * len(played_client.players)
+
+        print(winner_prehome_idx)
+        played_game_state.do(MoveContainer(
+                from_space=BoardSpace(
+                    kind='waiting', idx=0,
+                    occupied_by=winner_name,
+                    allowed_occupants=[winner_name, EMPTY_SYMBOL]
+                ),
+                to_space=BoardSpace(
+                    kind='main', idx=winner_prehome_idx,
+                    occupied_by=EMPTY_SYMBOL,
+                    allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+                )
+            ))
+
+        monkeypatch.setattr(played_client, 'roll', lambda: 1)
+        # Only one move possible, advance 1 to last open home spot
+        monkeypatch.setattr(builtins, 'input', lambda x: 0)
+
+        assert played_client.play() == played_client.players[idx_winner]

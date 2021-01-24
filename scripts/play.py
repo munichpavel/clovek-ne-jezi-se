@@ -24,4 +24,4 @@ client = Client(
 client.initialize()
 logging.info(client)
 
-client.play()
+winner = client.play()

@@ -40,13 +40,15 @@ class Client:
             empty_symbol=self.empty_symbol
         )
         self._game_state.initialize()
-        self._winner = None
+        self.winner = None
 
-    def play(self):
+    def play(self) -> 'Player':
         """Play until a player wins wins"""
 
-        while(self._winner is None):
+        while(self.winner is None):
             self.take_turn()
+
+        return self.winner
 
     def take_turn(self):
         """Take a single player turn"""
@@ -64,7 +66,7 @@ class Client:
             logger.debug(f'\nBoard counts: {counts}')
 
             if self._game_state.is_winner(current_player.name):
-                self._winner = current_player
+                self.winner = current_player
                 self.log(current_player, 'wins')
 
             players_turn_continues = (
