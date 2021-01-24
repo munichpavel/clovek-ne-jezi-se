@@ -172,9 +172,11 @@ class TestClient:
             ))
 
         # Move first piece to one before home
-        winner_enter_main_idx = played_game_state.get_main_entry_index(winner_name)
+        winner_enter_main_idx = played_game_state\
+            .get_main_entry_index(winner_name)
+        n_players = len(played_client.players)
         winner_prehome_idx = (winner_enter_main_idx - 1) % \
-            played_client.main_board_section_length * len(played_client.players)
+            played_client.main_board_section_length * n_players
 
         print(winner_prehome_idx)
         played_game_state.do(MoveContainer(
