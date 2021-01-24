@@ -82,6 +82,7 @@ class TestGameState:
         section_length=section_length
     )
     game_state.initialize()
+    main_board_length = section_length * len(player_names)
 
     @pytest.mark.parametrize(
         'player_name,expected',
@@ -102,7 +103,7 @@ class TestGameState:
         player_enter_main_indices[player_name] \
             = game_state.get_main_entry_index(player_name)
 
-    @pytest.mark.parametrize("idx", range(len(player_names) * section_length))
+    @pytest.mark.parametrize("idx", range(main_board_length))
     def test_get_main_board_space(self, idx):
         assert self.game_state.get_board_space(kind='main', idx=idx) \
             == BoardSpace(
@@ -157,47 +158,17 @@ class TestGameState:
 
     def test_main_spaces_to_list(self):
         res = self.game_state.main_spaces_to_list()
-        expected = self.game_state.section_length \
-            * len(self.game_state.player_names) \
-            * [EMPTY_SYMBOL]
+        expected = self.main_board_length * [EMPTY_SYMBOL]
 
         assert res == expected
 
     # For tests of moves from main to player home
     player_prehome_indices = {}
     for player_name in player_names:
-        player_subgraph_paramses = [
-            GraphQueryParams(
-                graph_component='node', query_type='inclusion',
-                label='allowed_occupants', value=player_name
-            ),
-            GraphQueryParams(
-                graph_component='edge', query_type='inclusion',
-                label='allowed_traversers', value=player_name
-            )
-        ]
-
-        player_subgraph = get_filtered_subgraph_view(
-            game_state._graph, player_subgraph_paramses
+        prehome_idx = (
+            (player_enter_main_indices[player_name] - 1) % main_board_length
         )
-        prehome_query_paramses = [
-            GraphQueryParams(
-                graph_component='node', query_type='equality',
-                label='idx', value=0
-            ),
-            GraphQueryParams(
-                graph_component='node', query_type='equality',
-                label='kind', value='home'
-            ),
-        ]
-        first_home_node_name = get_filtered_node_names(
-            player_subgraph, prehome_query_paramses
-        )[0]
-        player_prehome_node_name = next(
-            player_subgraph.predecessors(first_home_node_name)
-        )
-        player_prehome_indices[player_name] = \
-            player_subgraph.nodes[player_prehome_node_name]['idx']
+        player_prehome_indices[player_name] = prehome_idx
 
     # Move tests
     @pytest.mark.parametrize(
