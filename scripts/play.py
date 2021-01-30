@@ -1,32 +1,45 @@
-import logging
-import os
-from datetime import datetime
-from pathlib import Path
-
+import mlflow
 
 from clovek_ne_jezi_se.client import Client
 from clovek_ne_jezi_se.agents import HumanPlayer, RandomPlayer
 
-log_dir = Path(os.environ['LOG_DIR'])
-file_name = datetime.now().strftime('experiment-%Y-%m-%d-%H:%M.%S.log')
-logging.basicConfig(filename=log_dir / file_name, level=logging.INFO)
 
-
-player_names = ['red', 'blue']#, 'green', 'yellow']
+player_names = ['red', 'blue', 'green', 'yellow']
 
 random_players = [
     RandomPlayer(name=name, print_game_state=False) for name in player_names
 ]
 
-n_experiments = 10
-for _ in range(n_experiments):
-    client = Client(
-        players=random_players,
-        main_board_section_length=1
-    )
-    client.initialize()
-    logging.info(client)
+players = random_players
 
-    winner, n_plays = client.play()
-    logging.info(f'Winner: {winner}')
-    logging.info(f'Number of turns: {n_plays}')
+n_runs = 100
+main_board_section_length = 1
+pieces_per_player = 4
+number_of_dice_faces = 6
+
+run_dict = dict(
+    players=players,
+    main_board_section_length=main_board_section_length,
+    pieces_per_player=pieces_per_player,
+    number_of_dice_faces=number_of_dice_faces
+)
+
+
+for _ in range(n_runs):
+    with mlflow.start_run():
+        mlflow.log_params(run_dict)
+
+        client = Client(
+            players=players,
+            main_board_section_length=main_board_section_length,
+            pieces_per_player=pieces_per_player,
+            number_of_dice_faces=number_of_dice_faces
+        )
+        client.initialize()
+
+        winner, n_plays = client.play()
+
+        winner_idx = players.index(winner)
+        print(f'Winner of round is {winner}')
+        mlflow.log_metric('winner_idx', winner_idx)
+        mlflow.log_metric('n_plays', n_plays)
