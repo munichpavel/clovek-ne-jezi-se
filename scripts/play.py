@@ -1,8 +1,9 @@
 import mlflow
+from mlflow.tracking import MlflowClient
+
 
 from clovek_ne_jezi_se.client import Client
 from clovek_ne_jezi_se.agents import HumanPlayer, RandomPlayer
-
 
 player_names = ['red', 'blue', 'green', 'yellow']
 
@@ -12,13 +13,15 @@ random_players = [
 
 players = random_players
 
-n_runs = 100
+
+n_runs = 99
 main_board_section_length = 1
 pieces_per_player = 4
 number_of_dice_faces = 6
+agents = [player.__class__.__name__ for player in players]
 
 run_dict = dict(
-    players=players,
+    agents=str(agents),
     main_board_section_length=main_board_section_length,
     pieces_per_player=pieces_per_player,
     number_of_dice_faces=number_of_dice_faces
