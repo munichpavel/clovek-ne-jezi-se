@@ -1,6 +1,6 @@
 """Client module for controlling game progression"""
 import logging
-from typing import Sequence
+from typing import Sequence, Tuple
 from itertools import cycle
 from random import randint
 
@@ -41,14 +41,16 @@ class Client:
         )
         self._game_state.initialize()
         self.winner = None
+        self.play_count = 0
 
-    def play(self) -> 'Player':
+    def play(self) -> Tuple['Player', int]:
         """Play until a player wins wins"""
 
         while(self.winner is None):
             self.take_turn()
+            self.play_count += 1
 
-        return self.winner
+        return self.winner, self.play_count
 
     def take_turn(self):
         """Take a single player turn"""
@@ -63,7 +65,7 @@ class Client:
             self._choose_and_do_move(current_player, roll_value)
 
             counts = self._get_game_state_counts()
-            logger.debug(f'\nBoard counts: {counts}')
+            self.log(current_player, f'Board counts: {counts}')
 
             if self._game_state.is_winner(current_player.name):
                 self.winner = current_player
@@ -81,13 +83,13 @@ class Client:
 
     def log(self, player, message):
         message = f'{player}:' + message
-        logger.info(message)
+        logger.debug(message)
 
     def _choose_and_do_move(self, current_player, roll_value):
         moves = self._game_state.get_player_moves(
                 roll_value, current_player.name
             )
-        logger.debug(f'Available moves: {moves}')
+        self.log(current_player, f'Available moves: {moves}')
 
         if len(moves) > 0:
             if (
@@ -101,9 +103,10 @@ class Client:
 
             for move_component in selected_move:
                 self._game_state.do(move_component)
-                logger.debug(f'\nDo move {move_component}')
+                self.log(current_player, f'Do move {move_component}')
 
-            logger.debug(
+            self.log(
+                current_player,
                 'Game state post-move.'
                 f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
                 f'\nMain spaces: {self._game_state.main_spaces_to_list()}'

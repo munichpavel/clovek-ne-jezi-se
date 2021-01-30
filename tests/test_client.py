@@ -196,4 +196,5 @@ class TestClient:
         # Only one move possible, advance 1 to last open home spot
         monkeypatch.setattr(builtins, 'input', lambda x: 0)
 
-        assert played_client.play() == played_client.players[idx_winner]
+        winner, _ = played_client.play()
+        assert winner == played_client.players[idx_winner]

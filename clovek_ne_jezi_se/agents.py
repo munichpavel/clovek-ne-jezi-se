@@ -60,7 +60,7 @@ class Player:
 
     def log(self, message):
         res = ':'.join([self.__repr__(), message])
-        logger.info(res)
+        logger.debug(res)
 
 
 @attr.s
