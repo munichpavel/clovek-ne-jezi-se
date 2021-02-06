@@ -602,12 +602,33 @@ class TestGameState:
 
         assert modified_game_state.is_winner(player_name) == expected
 
-    def test_distance_to_end(self):
-        board_space = BoardSpace(
-            kind='main', idx=self.player_prehome_indices['red'],
-            occupied_by='red',
-            allowed_occupants=self.player_names + [EMPTY_SYMBOL]
-        )
+    @pytest.mark.parametrize(
+        'board_space,expected',
+        [
+            (
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ), 4
+            ),
+            (
+                BoardSpace(
+                    kind='home', idx=pieces_per_player-1,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ), 0
+            ),
+            (
+                BoardSpace(
+                    kind='waiting', idx=0,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ), pieces_per_player * (section_length + 1)
+            )
+        ]
 
+    )
+    def test_distance_to_end(self, board_space, expected):
         assert self.game_state.distance_to_end(board_space) \
-            == self.pieces_per_player
+            == expected
