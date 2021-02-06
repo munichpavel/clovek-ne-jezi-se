@@ -7,6 +7,7 @@ from random import randint
 import attr
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from clovek_ne_jezi_se.game_state import GameState, MoveContainer
 from clovek_ne_jezi_se.log_handler import handler
@@ -54,7 +55,7 @@ class Player:
     @abc.abstractmethod
     def choose_move_idx(
         self, game_state: 'GameState',
-        allowed_moves: Sequence['MoveContainer']
+        allowed_moves: Sequence[Sequence['MoveContainer']]
     ) -> int:
         return
 
@@ -86,8 +87,36 @@ class RandomPlayer(Player):
     """Player that selects uniformly randomly from allowed moves"""
     def choose_move_idx(
         self, game_state: 'GameState',
-        allowed_moves: Sequence['MoveContainer']
+        allowed_moves: Sequence[Sequence['MoveContainer']]
     ) -> int:
-        """TODO: Test???"""
+        """TODO: Test me???"""
         idx = randint(0, len(allowed_moves)-1)
         return idx
+
+
+@attr.s
+class FurthestAlongPlayer(Player):
+    def choose_move_idx(
+        self, game_state: 'GameState',
+        allowed_moves: Sequence[Sequence['MoveContainer']]
+    ) -> int:
+        """
+        Return index for move that is closes to the player's last home space
+        """
+        print(allowed_moves)
+        player_from_moves = []
+        for move_components in allowed_moves:
+            for move_component in move_components:
+                if move_component.from_space.occupied_by == self.name:
+                    player_from_moves.append(move_component)
+
+        player_from_spaces = [move.from_space for move in player_from_moves]
+
+        distances_to_end = [
+            game_state.distance_to_end(space) for space in player_from_spaces
+        ]
+        print(distances_to_end)
+        idx_furthest_along = np.argmin(distances_to_end)
+        print(idx_furthest_along)
+
+        return idx_furthest_along
