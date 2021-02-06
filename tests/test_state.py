@@ -8,7 +8,6 @@ from clovek_ne_jezi_se.game_state import (
 )
 
 from clovek_ne_jezi_se.utils import (
-    GraphQueryParams,
     get_filtered_subgraph_view,
     get_filtered_node_names
 )
