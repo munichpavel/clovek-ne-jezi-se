@@ -601,3 +601,13 @@ class TestGameState:
             ))
 
         assert modified_game_state.is_winner(player_name) == expected
+
+    def test_distance_to_end(self):
+        board_space = BoardSpace(
+            kind='main', idx=self.player_prehome_indices['red'],
+            occupied_by='red',
+            allowed_occupants=self.player_names + [EMPTY_SYMBOL]
+        )
+
+        assert self.game_state.distance_to_end(board_space) \
+            == self.pieces_per_player

@@ -556,6 +556,23 @@ class GameState:
         )
         return home_count == self.pieces_per_player
 
+    def distance_to_end(self, board_space: 'BoardSpace') -> int:
+
+        # Get player subgraph
+        player_subgraph_query_paramses = \
+            self._get_player_subgraph_query_paramses(board_space.occupied_by)
+
+        player_subgraph_view = get_filtered_subgraph_view(
+            self._graph, player_subgraph_query_paramses
+        )
+        space_node_name = self._get_board_space_node_name(board_space)
+
+        successor_nodes = nx.dfs_successors(
+            player_subgraph_view, source=space_node_name
+        )
+
+        return len(successor_nodes)
+
     # Visualization
     def draw(
         self, figsize=(8, 6), with_labels=False,
