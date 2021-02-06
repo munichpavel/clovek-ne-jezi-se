@@ -1,11 +1,63 @@
 """Tests for agents, if not already tested in test_client."""
 from copy import deepcopy
 
+import pytest
+
 from clovek_ne_jezi_se.client import Client
 from clovek_ne_jezi_se.game_state import (
-    MoveContainer, BoardSpace, EMPTY_SYMBOL
+    GameState, MoveContainer, BoardSpace, EMPTY_SYMBOL
 )
 from clovek_ne_jezi_se.agents import FurthestAlongPlayer
+
+
+def assert_game_states_equal(
+    game_state: 'GameState', other: 'GameState'
+) -> bool:
+    waiting = game_state.waiting_areas_to_dict()
+    other_waiting = other.waiting_areas_to_dict()
+
+    assert waiting == other_waiting
+
+    main = game_state.main_spaces_to_list()
+    other_main = other.main_spaces_to_list()
+
+    assert main == other_main
+
+    home = game_state.home_areas_to_dict()
+    other_home = other.home_areas_to_dict()
+
+    assert home == other_home
+
+
+def test_assert_game_states_equal():
+    # Set attributes for repeated use below
+    player_names = ['red', 'blue', 'green', 'yellow']
+    pieces_per_player = 4
+    section_length = 4
+    game_state = GameState(
+        player_names=player_names, pieces_per_player=pieces_per_player,
+        section_length=section_length
+    )
+    game_state.initialize()
+
+    assert_game_states_equal(game_state, game_state)
+
+    other = deepcopy(game_state)
+    other.do(MoveContainer(
+            from_space=BoardSpace(
+                kind='waiting', idx=0,
+                occupied_by='red',
+                allowed_occupants=['red', EMPTY_SYMBOL]
+            ),
+            to_space=BoardSpace(
+                kind='main', idx=0,
+                occupied_by=EMPTY_SYMBOL,
+                allowed_occupants=player_names + [EMPTY_SYMBOL]
+            )
+        ))
+
+    with pytest.raises(AssertionError):
+        assert_game_states_equal(game_state, other)
 
 
 class TestAgents:
@@ -109,20 +161,7 @@ class TestAgents:
             )
         ))
 
-        played_waiting = played_game_state.waiting_areas_to_dict()
-        expected_waiting = expected_game_state.waiting_areas_to_dict()
-
-        assert played_waiting == expected_waiting
-
-        played_main_spaces = played_game_state.main_spaces_to_list()
-        expected_main_spaces = expected_game_state.main_spaces_to_list()
-
-        assert played_main_spaces == expected_main_spaces
-
-        played_home = played_game_state.home_areas_to_dict()
-        expected_home = expected_game_state.home_areas_to_dict()
-
-        assert played_home == expected_home
+        assert_game_states_equal(played_game_state, expected_game_state)
 
         # Play again red with fixed (monkeypatched) dice
         played_client.take_turn()
@@ -140,17 +179,4 @@ class TestAgents:
             )
         ))
 
-        played_waiting = played_game_state.waiting_areas_to_dict()
-        expected_waiting = expected_game_state.waiting_areas_to_dict()
-
-        assert played_waiting == expected_waiting
-
-        played_main_spaces = played_game_state.main_spaces_to_list()
-        expected_main_spaces = expected_game_state.main_spaces_to_list()
-
-        assert played_main_spaces == expected_main_spaces
-
-        played_home = played_game_state.home_areas_to_dict()
-        expected_home = expected_game_state.home_areas_to_dict()
-
-        assert played_home == expected_home
+        assert_game_states_equal(played_game_state, expected_game_state)
