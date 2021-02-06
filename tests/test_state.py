@@ -7,11 +7,6 @@ from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState, BoardSpace, MoveContainer
 )
 
-from clovek_ne_jezi_se.utils import (
-    get_filtered_subgraph_view,
-    get_filtered_node_names
-)
-
 
 def test_board_space_errors():
     with pytest.raises(ValueError):
@@ -377,7 +372,6 @@ class TestGameState:
         assert modified_game_state.get_board_space(
             kind=to_space.kind, idx=to_space.idx, player_name='red'
         ) == post_do_to_space
-
 
     @pytest.mark.parametrize(
         "roll,from_space",
