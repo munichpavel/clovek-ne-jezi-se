@@ -103,7 +103,6 @@ class FurthestAlongPlayer(Player):
         """
         Return index for move that is closes to the player's last home space
         """
-        print(allowed_moves)
         player_from_moves = []
         for move_components in allowed_moves:
             for move_component in move_components:
@@ -115,8 +114,6 @@ class FurthestAlongPlayer(Player):
         distances_to_end = [
             game_state.distance_to_end(space) for space in player_from_spaces
         ]
-        print(distances_to_end)
         idx_furthest_along = np.argmin(distances_to_end)
-        print(idx_furthest_along)
 
         return idx_furthest_along
