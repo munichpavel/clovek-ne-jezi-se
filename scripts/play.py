@@ -1,19 +1,19 @@
 import mlflow
-from mlflow.tracking import MlflowClient
-
 
 from clovek_ne_jezi_se.client import Client
-from clovek_ne_jezi_se.agents import HumanPlayer, RandomPlayer
+from clovek_ne_jezi_se.agents import RandomPlayer, FurthestAlongPlayer
 
-# TODO put in config file (json)
-player_names = ['red', 'blue', 'green', 'yellow']
 
+furthest_along_player = FurthestAlongPlayer(name='red')
+
+random_player_names = ['blue', 'green', 'yellow']
 random_players = [
-    RandomPlayer(name=name, print_game_state=False) for name in player_names
+    RandomPlayer(name=name, print_game_state=False)
+    for name in random_player_names
 ]
-players = random_players
+players = [furthest_along_player] + random_players
 
-n_runs = 96
+n_runs = 100
 main_board_section_length = 1
 pieces_per_player = 4
 number_of_dice_faces = 6
