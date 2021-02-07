@@ -7,12 +7,6 @@ from clovek_ne_jezi_se.game_state import (
     EMPTY_SYMBOL, GameState, BoardSpace, MoveContainer
 )
 
-from clovek_ne_jezi_se.utils import (
-    GraphQueryParams,
-    get_filtered_subgraph_view,
-    get_filtered_node_names
-)
-
 
 def test_board_space_errors():
     with pytest.raises(ValueError):
@@ -379,7 +373,6 @@ class TestGameState:
             kind=to_space.kind, idx=to_space.idx, player_name='red'
         ) == post_do_to_space
 
-
     @pytest.mark.parametrize(
         "roll,from_space",
         [
@@ -608,3 +601,34 @@ class TestGameState:
             ))
 
         assert modified_game_state.is_winner(player_name) == expected
+
+    @pytest.mark.parametrize(
+        'board_space,expected',
+        [
+            (
+                BoardSpace(
+                    kind='main', idx=player_prehome_indices['red'],
+                    occupied_by='red',
+                    allowed_occupants=player_names + [EMPTY_SYMBOL]
+                ), 4
+            ),
+            (
+                BoardSpace(
+                    kind='home', idx=pieces_per_player-1,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ), 0
+            ),
+            (
+                BoardSpace(
+                    kind='waiting', idx=0,
+                    occupied_by='red',
+                    allowed_occupants=['red', EMPTY_SYMBOL]
+                ), pieces_per_player * (section_length + 1)
+            )
+        ]
+
+    )
+    def test_distance_to_end(self, board_space, expected):
+        assert self.game_state.distance_to_end(board_space) \
+            == expected
