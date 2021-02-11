@@ -10,6 +10,6 @@ repos:
     -   id: coverage
         name: coverage
         language: system
-        entry: coverage run -m pytest
+        entry: coverage run --omit */site-packages/* -m pytest
         types: [python]
         pass_filenames: false
