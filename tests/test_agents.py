@@ -12,7 +12,7 @@ from clovek_ne_jezi_se.agents import FurthestAlongPlayer
 
 def assert_game_states_equal(
     game_state: 'GameState', other: 'GameState'
-) -> bool:
+):
     waiting = game_state.waiting_areas_to_dict()
     other_waiting = other.waiting_areas_to_dict()
 
