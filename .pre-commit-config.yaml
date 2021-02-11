@@ -6,12 +6,6 @@ repos:
         language: system
         entry: flake8
         types: [python]
-    -   id: wily
-        name: wily
-        entry: wily diff
-        verbose: true
-        language: python
-        additional_dependencies: [wily]
     -   id: coverage
         name: coverage
         language: system
