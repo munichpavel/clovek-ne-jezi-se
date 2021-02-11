@@ -43,14 +43,14 @@ class Client:
         self.winner = None
         self.play_count = 0
 
-    # def play(self) -> Tuple['Player', int]:
-    #     """Play until a player wins wins"""
+    def play(self) -> Tuple['Player', int]:
+        """Play until a player wins wins"""
 
-    #     while(self.winner is None):
-    #         self.take_turn()
-    #         self.play_count += 1
+        while(self.winner is None):
+            self.take_turn()
+            self.play_count += 1
 
-    #     return self.winner, self.play_count
+        return self.winner, self.play_count
 
     # def take_turn(self):
     #     """Take a single player turn"""
