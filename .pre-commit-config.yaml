@@ -13,9 +13,3 @@ repos:
         entry: coverage run -m pytest
         types: [python]
         pass_filenames: false
-    # -   id: pytest
-    #     name: pytest
-    #     language: system
-    #     entry: pytest
-    #     types: [python]
-    #     pass_filenames: false
