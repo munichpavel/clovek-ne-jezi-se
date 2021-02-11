@@ -52,98 +52,98 @@ class Client:
 
         return self.winner, self.play_count
 
-    # def take_turn(self):
-    #     """Take a single player turn"""
-    #     current_player = self.next_player()
+    def take_turn(self):
+        """Take a single player turn"""
+        current_player = self.next_player()
 
-    #     players_turn_continues = True
-    #     while players_turn_continues:
-    #         roll_value = self.roll()
+        players_turn_continues = True
+        while players_turn_continues:
+            roll_value = self.roll()
 
-    #         self.log(current_player, f'Rolls a {roll_value}')
+            self.log(current_player, f'Rolls a {roll_value}')
 
-    #         self._choose_and_do_move(current_player, roll_value)
+            self._choose_and_do_move(current_player, roll_value)
 
-    #         counts = self._get_game_state_counts()
-    #         self.log(current_player, f'Board counts: {counts}')
+            counts = self._get_game_state_counts()
+            self.log(current_player, f'Board counts: {counts}')
 
-    #         if self._game_state.is_winner(current_player.name):
-    #             self.winner = current_player
-    #             self.log(current_player, 'wins')
+            if self._game_state.is_winner(current_player.name):
+                self.winner = current_player
+                self.log(current_player, 'wins')
 
-    #         players_turn_continues = (
-    #             roll_value == self._game_state.number_of_dice_faces
-    #         )
+            players_turn_continues = (
+                roll_value == self._game_state.number_of_dice_faces
+            )
 
-    # def next_player(self):
-    #     return next(self._player_cycle)
+    def next_player(self):
+        return next(self._player_cycle)
 
-    # def roll(self):
-    #     return randint(1, self.number_of_dice_faces)
+    def roll(self):
+        return randint(1, self.number_of_dice_faces)
 
-    # def log(self, player, message):
-    #     message = f'{player}:' + message
-    #     logger.debug(message)
+    def log(self, player, message):
+        message = f'{player}:' + message
+        logger.debug(message)
 
-    # def _choose_and_do_move(self, current_player, roll_value):
-    #     moves = self._game_state.get_player_moves(
-    #             roll_value, current_player.name
-    #         )
-    #     self.log(current_player, f'Available moves: {moves}')
+    def _choose_and_do_move(self, current_player, roll_value):
+        moves = self._game_state.get_player_moves(
+                roll_value, current_player.name
+            )
+        self.log(current_player, f'Available moves: {moves}')
 
-    #     if len(moves) > 0:
-    #         if (
-    #             getattr(current_player, 'draw', None) is not None
-    #             and current_player.print_game_state
-    #         ):
-    #             current_player.draw(self._game_state)
-    #         selected_move = current_player.choose_move(
-    #             self._game_state, moves
-    #         )
+        if len(moves) > 0:
+            if (
+                getattr(current_player, 'draw', None) is not None
+                and current_player.print_game_state
+            ):
+                current_player.draw(self._game_state)
+            selected_move = current_player.choose_move(
+                self._game_state, moves
+            )
 
-    #         for move_component in selected_move:
-    #             self._game_state.do(move_component)
-    #             self.log(current_player, f'Do move {move_component}')
+            for move_component in selected_move:
+                self._game_state.do(move_component)
+                self.log(current_player, f'Do move {move_component}')
 
-    #         self.log(
-    #             current_player,
-    #             'Game state post-move.'
-    #             f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
-    #             f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
-    #             f'\nHome areas: {self._game_state.home_areas_to_dict()}'
-    #         )
-    #     else:
-    #         self.log(current_player, 'No moves possible')
+            self.log(
+                current_player,
+                'Game state post-move.'
+                f'\nWaiting areas: {self._game_state.waiting_areas_to_dict()}'
+                f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
+                f'\nHome areas: {self._game_state.home_areas_to_dict()}'
+            )
+        else:
+            self.log(current_player, 'No moves possible')
 
-    # def _get_game_state_counts(self):
-    #     """Convenience function for debugging.
-    #     TODO refactor if really used by agents.
-    #     """
-    #     counts = {}
-    #     waiting_list_list = list(
-    #         self._game_state.waiting_areas_to_dict().values()
-    #     )
-    #     main_list = self._game_state.main_spaces_to_list()
-    #     home_list_list = list(self._game_state.home_areas_to_dict().values())
+    def _get_game_state_counts(self):
+        """Convenience function for debugging.
+        TODO refactor if really used by agents.
+        """
+        counts = {}
+        waiting_list_list = list(
+            self._game_state.waiting_areas_to_dict().values()
+        )
+        main_list = self._game_state.main_spaces_to_list()
+        home_list_list = list(self._game_state.home_areas_to_dict().values())
 
-    #     waiting_list = []
-    #     home_list = []
-    #     for sublist in waiting_list_list:
-    #         for elt in sublist:
-    #             waiting_list.append(elt)
-    #     for sublist in home_list_list:
-    #         for elt in sublist:
-    #             home_list.append(elt)
+        waiting_list = []
+        home_list = []
+        for sublist in waiting_list_list:
+            for elt in sublist:
+                waiting_list.append(elt)
+        for sublist in home_list_list:
+            for elt in sublist:
+                home_list.append(elt)
 
-    #     for player_name in self._player_names:
-    #         piece_count = 0
-    #         for space_list in [waiting_list, main_list, home_list]:
-    #             for occupier in space_list:
-    #                 if occupier == player_name:
-    #                     piece_count += 1
-    #         counts[player_name] = piece_count
+        for player_name in self._player_names:
+            piece_count = 0
+            for space_list in [waiting_list, main_list, home_list]:
+                for occupier in space_list:
+                    if occupier == player_name:
+                        piece_count += 1
+            counts[player_name] = piece_count
 
-    #     return counts
+        return counts
 
-    # def get_game_state(self):
-    #     return self._game_state
+    def get_game_state(self):
+        return self._game_state
