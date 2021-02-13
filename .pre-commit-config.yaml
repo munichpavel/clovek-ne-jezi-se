@@ -14,3 +14,10 @@ repos:
         types: [python]
         pass_filenames: false
         stages: [commit]
+    -   id: coverage-report
+        name: coverage-report
+        language: system
+        entry: coverage report clovek_ne_jezi_se/*.py
+        types: [python]
+        pass_filenames: false
+        stages: [push, merge-commit]
