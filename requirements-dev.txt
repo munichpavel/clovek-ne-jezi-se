@@ -4,6 +4,7 @@ pytest-mock
 jupyter
 pylint
 flake8 # TODO: Either pylint or flake8 or reason for both
+coverage
 pre-commit
 
 -e .
