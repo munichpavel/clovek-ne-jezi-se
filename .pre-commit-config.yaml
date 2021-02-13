@@ -1,16 +1,10 @@
 repos:
 -   repo: local
     hooks:
-    -   id: flake8
-        name: flake8
+    -   id: pytest
+        name: pytest
+        files: tests
         language: system
-        entry: flake8
-        types: [python]
-        stages: [push, merge-commit]
-    -   id: coverage
-        name: coverage
-        language: system
-        entry: coverage run --omit */site-packages/* -m pytest
+        entry: pytest
         types: [python]
         pass_filenames: false
-        stages: [commit]
