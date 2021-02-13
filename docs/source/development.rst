@@ -27,11 +27,6 @@ Continuous Integration
 
 We use `GitHub Actions`_ to run checks. See ``.github/workflows/ci.yaml``.
 
-Pre-commit hooks
-----------------
-
-`pre-commit`_ hooks are defined in ``.pre-commit-config.yaml``
-
 .. URLS
 
 .. _`venv`: https://docs.python.org/3/library/venv.html
