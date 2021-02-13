@@ -11,9 +11,8 @@ random_players = [
     RandomPlayer(name=name, print_game_state=False)
     for name in random_player_names
 ]
-#players = [furthest_along_player] + random_players
-players = random_players  + [furthest_along_player]
 
+players = random_players + [furthest_along_player]
 
 n_runs = 100
 main_board_section_length = 10

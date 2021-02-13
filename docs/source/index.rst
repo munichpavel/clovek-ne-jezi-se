@@ -10,8 +10,8 @@ Welcome to clovek-ne-jezi-se's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   INSTALL
-   EXPERIMENTS
+   development
+   experiments
    api
 
 
