@@ -1,10 +1,15 @@
 # dev
+jupyter
+
+# tests
 pytest
 pytest-mock
-jupyter
+
+# other code checks
+pre-commit
 pylint
 flake8 # TODO: Either pylint or flake8 or reason for both
 coverage
-pre-commit
+radon
 
 -e .
