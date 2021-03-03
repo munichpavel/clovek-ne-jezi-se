@@ -60,14 +60,27 @@ def test_assert_game_states_equal():
         assert_game_states_equal(game_state, other)
 
 
+
 class TestAgents:
-    player_names = ['red']
+
+    experiment_config = dict(
+        players=[
+            dict(name='red', agent='FurthestAlongPlayer', kwargs=dict()),
+        ],
+        board=dict(
+            main_board_section_length=10,
+            pieces_per_player=4,
+            number_of_dice_faces=6
+        )
+    )
+
+    player_names = [player['name'] for player in experiment_config['players']]
     players = [
-        FurthestAlongPlayer(name=name, print_game_state=False)
-        for name in player_names
+        eval(player['agent'])(name=player['name'], **player['kwargs'])
+        for player in experiment_config['players']
     ]
 
-    client = Client(players=players)
+    client = Client(players=players, **experiment_config['board'])
     client.initialize()
 
     def test_furthest_along_choose_move(self, monkeypatch):
