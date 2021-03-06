@@ -1,5 +1,6 @@
 from typing import Sequence
 import json
+from copy import deepcopy
 
 from pathlib import Path
 
@@ -22,19 +23,21 @@ def run_experiments(config_dir):
     mlflow.set_experiment(experiment_group_name)
     click.echo(f'Running experiments {experiment_group_name}')
     for experiment_variables in experiment_group_variables:
-        client = experiment_variables['client']
-        agent_names = [player.__class__.__name__ for player in client.players]
-        run_dict = dict(
-            agents=','.join(agent_names),
-            main_board_section_length=client.main_board_section_length,
-            pieces_per_player=client.pieces_per_player,
-            number_of_dice_faces=client.number_of_dice_faces,
-            experiment_group_name=experiment_group_name
-        )
+
         n_runs = experiment_variables['n_runs']
         for idx in range(n_runs):
             click.echo(f'Running experiment {idx} of {n_runs}')
             with mlflow.start_run():
+                client = deepcopy(experiment_variables['client'])
+                #client = experiment_variables['client']
+                agent_names = [player.__class__.__name__ for player in client.players]
+                run_dict = dict(
+                    agents=','.join(agent_names),
+                    main_board_section_length=client.main_board_section_length,
+                    pieces_per_player=client.pieces_per_player,
+                    number_of_dice_faces=client.number_of_dice_faces,
+                    experiment_group_name=experiment_group_name
+                )
 
                 mlflow.log_params(run_dict)
 
