@@ -19,5 +19,17 @@ def parse_config_file(config_path: Path) -> dict:
         config = json.load(fp)
     return config
 
+
+def initialize_client(config: dict) -> 'Client':
+
+    players = [
+        eval(player['agent'])(name=player['name'], **player['kwargs'])
+        for player in config['players']
+    ]
+
+    client = Client(players=players, **config['board'])
+    client.initialize()
+    return client
+
 if __name__ == '__main__':
     run_experiments()

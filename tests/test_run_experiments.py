@@ -2,7 +2,7 @@
 import json
 import pytest
 
-from clovek_ne_jezi_se.run_experiments import parse_config_file
+from clovek_ne_jezi_se.run_experiments import parse_config_file, initialize_client
 
 def test_parse_config_file(tmpdir):
     config = '''{
@@ -11,7 +11,7 @@ def test_parse_config_file(tmpdir):
       "name": "red",
       "agent": "FurthestAlongPlayer",
       "kwargs": {
-        "print_to_screen": false
+        "print_game_state": false
       }
     }
   ],
@@ -28,7 +28,7 @@ def test_parse_config_file(tmpdir):
         players=[
             dict(
                 name='red', agent='FurthestAlongPlayer',
-                kwargs=dict(print_to_screen=False)
+                kwargs=dict(print_game_state=False)
             )
         ],
         board=dict(
@@ -43,5 +43,30 @@ def test_parse_config_file(tmpdir):
         fp.write(config)
 
     res = parse_config_file(tmp_file)
-    print(type(res))
     assert res == expected
+
+
+@pytest.mark.parametrize(
+    'config,is_valid,Error',
+    [
+        (dict(players=[
+            dict(name='red', agent='FurthestAlongPlayer',
+                 kwargs=dict(print_game_state=False))
+            ],
+            board=dict(main_board_section_length=4, pieces_per_player=4,
+                       number_of_dice_faces=6),
+            n_runs=1
+        ), True, None),
+        (dict(
+            board=dict(main_board_section_length=4, pieces_per_player=4,
+                       number_of_dice_faces=6),
+            n_runs=1
+        ), False, KeyError)
+    ]
+)
+def test_initialize_client(config, is_valid, Error):
+    if is_valid:
+        initialize_client(config)
+    else:
+        with pytest.raises(Error):
+            initialize_client(config)
