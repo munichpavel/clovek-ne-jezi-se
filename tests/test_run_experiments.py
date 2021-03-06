@@ -61,7 +61,14 @@ def test_parse_config_file(tmpdir):
             board=dict(main_board_section_length=4, pieces_per_player=4,
                        number_of_dice_faces=6),
             n_runs=1
-        ), False, KeyError)
+        ), False, KeyError),
+        (dict(players=[
+            dict(name='red', agent='FurthestAlongPlayer',
+                 kwargs=dict(print_game_state=False))
+            ],
+            board=dict(),  # All board values must be given
+            n_runs=1
+        ), False, TypeError),
     ]
 )
 def test_initialize_client(config, is_valid, Error):

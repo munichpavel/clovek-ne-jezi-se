@@ -40,16 +40,16 @@ class GameState:
         type=Sequence,
         default=['red', 'blue', 'green', 'yellow']
     )
-    pieces_per_player = attr.ib(kw_only=True, type=int, default=4, validator=[
+    pieces_per_player = attr.ib(kw_only=True, type=int, validator=[
         attr.validators.instance_of(int),
         is_positive
     ])
-    section_length = attr.ib(kw_only=True, type=int, default=10, validator=[
+    section_length = attr.ib(kw_only=True, type=int, validator=[
         attr.validators.instance_of(int),
         is_positive
     ])
     number_of_dice_faces = attr.ib(
-        kw_only=True, type=int, default=6, validator=[
+        kw_only=True, type=int, validator=[
             attr.validators.instance_of(int),
             is_positive
         ]

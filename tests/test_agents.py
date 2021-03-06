@@ -34,9 +34,10 @@ def test_assert_game_states_equal():
     player_names = ['red', 'blue', 'green', 'yellow']
     pieces_per_player = 4
     section_length = 4
+    number_of_dice_faces = 6
     game_state = GameState(
         player_names=player_names, pieces_per_player=pieces_per_player,
-        section_length=section_length
+        section_length=section_length, number_of_dice_faces=number_of_dice_faces
     )
     game_state.initialize()
 
