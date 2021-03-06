@@ -2,7 +2,9 @@
 import json
 import pytest
 
-from clovek_ne_jezi_se.run_experiments import parse_config_file, initialize_client
+from clovek_ne_jezi_se.run_experiments import (
+    parse_config_file, initialize_client, get_experiment_variables_from_config_dir
+)
 
 def test_parse_config_file(tmpdir):
     config = '''{
@@ -38,11 +40,11 @@ def test_parse_config_file(tmpdir):
         ),
         n_runs=1
     )
-    tmp_file = tmpdir / 'config.json'
-    with open(tmp_file, 'w') as fp:
+    tmp_path = tmpdir / 'config.json'
+    with open(tmp_path, 'w') as fp:
         fp.write(config)
 
-    res = parse_config_file(tmp_file)
+    res = parse_config_file(tmp_path)
     assert res == expected
 
 
@@ -77,3 +79,68 @@ def test_initialize_client(config, is_valid, Error):
     else:
         with pytest.raises(Error):
             initialize_client(config)
+
+
+valid_config = '''{
+  "players": [
+    {
+      "name": "red",
+      "agent": "FurthestAlongPlayer",
+      "kwargs": {
+        "print_game_state": false
+      }
+    }
+  ],
+  "board": {
+    "main_board_section_length": 4,
+    "pieces_per_player": 4,
+    "number_of_dice_faces": 6
+  },
+  "n_runs": 1
+}
+'''
+invalid_game_config = '''{
+  "players": [
+    {
+      "name": "red",
+      "agent": "FurthestAlongPlayer",
+      "kwargs": {
+        "print_game_state": false
+      }
+    }
+  ],
+  "n_runs": 1
+}
+'''
+invalid_n_runs_config = '''{
+  "players": [
+    {
+      "name": "red",
+      "agent": "FurthestAlongPlayer",
+      "kwargs": {
+        "print_game_state": false
+      }
+    }
+  ]
+}
+'''
+
+@pytest.mark.parametrize(
+    'configs,is_valid,Error',
+    [
+        ([valid_config, valid_config], True, None),
+        ([valid_config, invalid_game_config], False, KeyError),
+        ([valid_config, invalid_n_runs_config], False, KeyError)
+    ]
+)
+def test_get_clients_from_configs_validation(tmpdir, configs, is_valid, Error):
+    for idx, config in enumerate(configs):
+        tmp_path = tmpdir / (str(idx) + '.json')
+        with open(tmp_path, 'w') as fp:
+            fp.write(config)
+
+    if is_valid:
+        get_experiment_variables_from_config_dir(tmpdir)
+    else:
+        with pytest.raises(Error):
+            get_experiment_variables_from_config_dir(tmpdir)
