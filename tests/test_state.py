@@ -21,42 +21,48 @@ class TestGameState:
             (
                 dict(
                     player_names=['red', 'blue', 'green', 'yellow'],
-                    pieces_per_player=0
+                    pieces_per_player=0,  # invalid
+                    section_length=4, number_of_dice_faces=6
                 ),
                 ValueError
             ),
             (
                 dict(
                     player_names=['red', 'blue', 'green', 'yellow'],
-                    pieces_per_player=0.5
+                    pieces_per_player=0.5,  # invalid
+                    section_length=4, number_of_dice_faces=6
                 ),
                 TypeError
             ),
             (
                 dict(
                     player_names=['red', 'blue', 'green', 'yellow'],
-                    section_length=0
+                    section_length=0,  # invalid
+                    pieces_per_player=4, number_of_dice_faces=6
                 ),
                 ValueError
             ),
             (
                 dict(
                     player_names=['red', 'blue', 'green', 'yellow'],
-                    section_length=0.5
+                    section_length=0.5,  # invalid
+                    pieces_per_player=4, number_of_dice_faces=6
                 ),
                 TypeError
             ),
             (
                 dict(
                     player_names=['red', 'blue', 'green', 'yellow'],
-                    number_of_dice_faces=0
+                    number_of_dice_faces=0,  # invalid
+                    pieces_per_player=4, section_length=4
                 ),
                 ValueError
             ),
             (
                 dict(
                     player_names=['red', 'blue', 'green', 'yellow'],
-                    number_of_dice_faces=0.5
+                    number_of_dice_faces=0.5,
+                    pieces_per_player=4, section_length=4
                 ),
                 TypeError
             ),
@@ -71,9 +77,10 @@ class TestGameState:
     player_names = ['red', 'blue', 'green', 'yellow']
     pieces_per_player = 4
     section_length = 4
+    number_of_dice_faces=6
     game_state = GameState(
         player_names=player_names, pieces_per_player=pieces_per_player,
-        section_length=section_length
+        section_length=section_length, number_of_dice_faces=6
     )
     game_state.initialize()
     main_board_length = section_length * len(player_names)

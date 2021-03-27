@@ -22,10 +22,10 @@ class Client:
     Client class for controlling game flow.
     """
     players = attr.ib(type=Sequence['Player'])
-    pieces_per_player = attr.ib(kw_only=True, type=int, default=4)
-    main_board_section_length = attr.ib(kw_only=True, type=int, default=10)
+    pieces_per_player = attr.ib(kw_only=True, type=int)
+    main_board_section_length = attr.ib(kw_only=True, type=int)
     number_of_dice_faces = attr.ib(
-        kw_only=True, type=int, default=6
+        kw_only=True, type=int
     )
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
 

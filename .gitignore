@@ -77,3 +77,6 @@ notebooks/.ipynb_checkpoints
 # idiosyncratic
 commit-notes.md
 _*.ipynb
+
+.ipynb_checkpoints
+.DS_Store

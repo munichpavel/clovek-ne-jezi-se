@@ -10,12 +10,27 @@ from clovek_ne_jezi_se.game_state import (
 
 
 class TestClient:
-    player_names = ['red', 'blue', 'green', 'yellow']
+
+    experiment_config = dict(
+        players=[
+            dict(name='red', agent='HumanPlayer', kwargs=dict(print_game_state=False)),
+            dict(name='blue', agent='HumanPlayer', kwargs=dict(print_game_state=False)),
+            dict(name='green', agent='HumanPlayer', kwargs=dict(print_game_state=False)),
+            dict(name='yellow', agent='HumanPlayer', kwargs=dict(print_game_state=False))
+        ],
+        board=dict(
+            main_board_section_length=4,
+            pieces_per_player=4,
+            number_of_dice_faces=6
+        )
+    )
+    player_names = [player['name'] for player in experiment_config['players']]
     players = [
-        HumanPlayer(name=name, print_game_state=False) for name in player_names
+        eval(player['agent'])(name=player['name'], **player['kwargs'])
+        for player in experiment_config['players']
     ]
 
-    client = Client(players=players)
+    client = Client(players=players, **experiment_config['board'])
     client.initialize()
 
     def test_next_player(self):
