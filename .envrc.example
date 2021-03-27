@@ -1,3 +1,8 @@
-#export LOG_DIR=
+export PROJECT_ROOT=
+
+export LOCAL_BUILD_DIR=
+export LOG_DIR=
+
 # For MLflow experiment tracking
-#export RUNS_PARENT_DIR=
+export RUNS_PARENT_DIR=
+export EXPERIMENT_CONFIGS_DIR=
