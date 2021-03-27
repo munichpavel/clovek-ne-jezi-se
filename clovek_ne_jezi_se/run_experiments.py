@@ -29,14 +29,12 @@ def run_experiments(config_dir):
             click.echo(f'Running experiment {idx} of {n_runs}')
             with mlflow.start_run():
                 client = deepcopy(experiment_variables['client'])
-                #client = experiment_variables['client']
                 agent_names = [player.__class__.__name__ for player in client.players]
                 run_dict = dict(
                     agents=','.join(agent_names),
                     main_board_section_length=client.main_board_section_length,
                     pieces_per_player=client.pieces_per_player,
-                    number_of_dice_faces=client.number_of_dice_faces,
-                    experiment_group_name=experiment_group_name
+                    number_of_dice_faces=client.number_of_dice_faces
                 )
 
                 mlflow.log_params(run_dict)
@@ -51,7 +49,7 @@ def run_experiments(config_dir):
 def get_experiment_variables_from_config_dir(config_dir) -> Sequence[dict]:
     """Get experiment variables from files in config_dir"""
     res = []
-    if isinstance(config_dir, str):
+    if not isinstance(config_dir, Path):
         config_dir = Path(config_dir)
     for fp in config_dir.iterdir():
         config = parse_config_file(fp)
