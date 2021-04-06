@@ -56,9 +56,6 @@ class Client:
             self.take_turn()
             self.play_count += 1
 
-        # Save final game state figure
-        self.save_drawn_game_state(self.pics_dir)
-
         return self.winner, self.play_count
 
     def take_turn(self):
@@ -70,9 +67,6 @@ class Client:
             roll_value = self.roll()
 
             self.log(current_player, f'Rolls a {roll_value}')
-
-            self.save_drawn_game_state(self.pics_dir)
-
             self._choose_and_do_move(current_player, roll_value)
 
             counts = self._get_game_state_counts()
@@ -96,12 +90,11 @@ class Client:
         message = f'{player}:' + message
         logger.debug(message)
 
-    def save_drawn_game_state(self, pics_dir):
-        fig, _ = self._game_state.draw()
-        fig.savefig(pics_dir / (str(self.play_count) + '.jpeg'))
-        plt.close()
-
-    def _choose_and_do_move(self, current_player, roll_value):
+    def _choose_and_do_move(self, current_player, roll_value) -> str:
+        pre_move_text = f'{current_player.name} rolls a {str(roll_value)}'
+        pre_move_path = Path(self.pics_dir) / (str(2 * self.play_count) + '.jpeg')
+        self.save_drawn_game_state(pre_move_path, pre_move_text
+        )
         moves = self._game_state.get_player_moves(
                 roll_value, current_player.name
             )
@@ -112,9 +105,17 @@ class Client:
                 self._game_state, moves
             )
 
+            move_text = ''
             for move_component in selected_move:
                 self._game_state.do(move_component)
                 self.log(current_player, f'Do move {move_component}')
+                move_text += (
+                    move_component.from_space.occupied_by + ' moves from ' + \
+                    move_component.from_space.kind + ' ' + \
+                    str(move_component.from_space.idx) + ' to ' + \
+                    move_component.to_space.kind + ' ' + \
+                    str(move_component.to_space.idx)  + '\n'
+                )
 
             self.log(
                 current_player,
@@ -123,8 +124,22 @@ class Client:
                 f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
                 f'\nHome areas: {self._game_state.home_areas_to_dict()}'
             )
+
         else:
+            move_text = 'No moves possible'
             self.log(current_player, 'No moves possible')
+
+        post_move_path = Path(
+            self.pics_dir) / (str(2 * self.play_count + 1) + '.jpeg'
+        )
+        self.save_drawn_game_state(
+            post_move_path, move_text
+        )
+
+    def save_drawn_game_state(self, file_path, text=None):
+        fig, ax = self._game_state.draw(text=text)
+        fig.savefig(file_path)
+        plt.close()
 
     def _get_game_state_counts(self):
         """Convenience function for debugging.

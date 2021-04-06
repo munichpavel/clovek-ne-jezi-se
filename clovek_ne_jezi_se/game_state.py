@@ -576,7 +576,7 @@ class GameState:
 
     # Visualization
     def draw(
-        self, figsize=(8, 6), with_labels=False,
+        self, figsize=(8, 6), text=None, with_labels=False,
     ) -> matplotlib.axes.Axes:
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
@@ -598,6 +598,8 @@ class GameState:
             self._graph, pos, ax=ax,
             with_labels=with_labels, node_color=node_color
         )
+        if text is not None:
+            ax.text(-figsize[0] * 0.45, figsize[1] * 0.45, text)
         return fig, ax
 
 

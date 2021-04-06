@@ -222,5 +222,6 @@ class TestClient:
 
         Note: this will depend on the game configuration
         """
-        self.client.save_drawn_game_state(tmpdir)
-        assert (Path(tmpdir) / '0.jpeg').stat().st_size > 43000
+        file_path = Path(tmpdir) / 'test.jpeg'
+        self.client.save_drawn_game_state(file_path)
+        assert file_path.stat().st_size > 43000
