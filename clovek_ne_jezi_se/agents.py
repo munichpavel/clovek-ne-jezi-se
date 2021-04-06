@@ -63,6 +63,11 @@ class Player:
         res = ':'.join([self.__repr__(), message])
         logger.debug(res)
 
+    def draw(self, game_state: 'GameState', figsize=(8, 6)):
+        """Delegate to GameState.draw() for interactive play"""
+        game_state.draw(figsize=figsize)
+        plt.show()
+
 
 @attr.s
 class HumanPlayer(Player):
@@ -75,11 +80,6 @@ class HumanPlayer(Player):
     ) -> int:
         res = int(input('Enter chosen move index: '))
         return res
-
-    def draw(self, game_state: 'GameState', figsize=(8, 6)):
-        """Delegate to GameState.draw() for interactive play"""
-        game_state.draw(figsize=figsize)
-        plt.show()
 
 
 @attr.s
