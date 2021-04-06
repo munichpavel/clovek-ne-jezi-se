@@ -1,10 +1,13 @@
 """Client module for controlling game progression"""
+import os
+from pathlib import Path
 import logging
 from typing import Sequence, Tuple
 from itertools import cycle
 from random import randint
 
 import attr
+from matplotlib import pyplot as plt
 
 from clovek_ne_jezi_se.agents import Player
 from clovek_ne_jezi_se.log_handler import handler
@@ -28,6 +31,9 @@ class Client:
         kw_only=True, type=int
     )
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
+    pics_dir = attr.ib(
+        kw_only=True, default=Path(os.getenv('PROJECT_ROOT')) / 'pics'
+    )
 
     def initialize(self):
         self._player_cycle = cycle(self.players)
@@ -50,6 +56,9 @@ class Client:
             self.take_turn()
             self.play_count += 1
 
+        # Save final game state figure
+        self.save_drawn_game_state(self.pics_dir)
+
         return self.winner, self.play_count
 
     def take_turn(self):
@@ -61,6 +70,8 @@ class Client:
             roll_value = self.roll()
 
             self.log(current_player, f'Rolls a {roll_value}')
+
+            self.save_drawn_game_state(self.pics_dir)
 
             self._choose_and_do_move(current_player, roll_value)
 
@@ -85,6 +96,11 @@ class Client:
         message = f'{player}:' + message
         logger.debug(message)
 
+    def save_drawn_game_state(self, pics_dir):
+        fig, _ = self._game_state.draw()
+        fig.savefig(pics_dir / (str(self.play_count) + '.jpeg'))
+        plt.close()
+
     def _choose_and_do_move(self, current_player, roll_value):
         moves = self._game_state.get_player_moves(
                 roll_value, current_player.name
@@ -92,8 +108,6 @@ class Client:
         self.log(current_player, f'Available moves: {moves}')
 
         if len(moves) > 0:
-            if current_player.print_game_state:
-                current_player.draw(self._game_state)
             selected_move = current_player.choose_move(
                 self._game_state, moves
             )

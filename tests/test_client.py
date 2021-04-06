@@ -1,6 +1,7 @@
 """Tests for clovek_ne_jezi_se.Client"""
 import builtins
 from copy import deepcopy
+from pathlib import Path
 
 from clovek_ne_jezi_se.client import Client
 from clovek_ne_jezi_se.agents import HumanPlayer
@@ -213,3 +214,13 @@ class TestClient:
 
         winner, _ = played_client.play()
         assert winner == played_client.players[idx_winner]
+
+    def test_save_drawn_game_state(self, tmpdir):
+        """
+        Check that drawn initial game state not too small, as proxy for
+        non-trivial image file.
+
+        Note: this will depend on the game configuration
+        """
+        self.client.save_drawn_game_state(tmpdir)
+        assert (Path(tmpdir) / '0.jpeg').stat().st_size > 43000

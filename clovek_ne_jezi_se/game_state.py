@@ -11,6 +11,7 @@ from matplotlib import cm
 
 import networkx as nx
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 from .utils import (
@@ -576,7 +577,7 @@ class GameState:
     # Visualization
     def draw(
         self, figsize=(8, 6), with_labels=False,
-    ):
+    ) -> matplotlib.axes.Axes:
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
 
@@ -592,10 +593,13 @@ class GameState:
             plt_color_name_dict = self._get_shades_of_blue_color_dict()
         node_color = self._get_node_color(plt_color_name_dict)
 
-        plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
         nx.draw(
-            self._graph, pos, with_labels=with_labels, node_color=node_color
+            self._graph, pos, ax=ax,
+            with_labels=with_labels, node_color=node_color
         )
+        return fig, ax
+
 
     def _get_shades_of_blue_color_dict(self):
         """

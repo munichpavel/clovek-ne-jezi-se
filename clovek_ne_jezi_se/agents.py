@@ -1,6 +1,6 @@
 """Player classes"""
 import abc
-from typing import Sequence
+from typing import Sequence, Union
 import logging
 from random import randint
 
@@ -62,11 +62,6 @@ class Player:
     def log(self, message):
         res = ':'.join([self.__repr__(), message])
         logger.debug(res)
-
-    def draw(self, game_state: 'GameState', figsize=(8, 6)):
-        """Delegate to GameState.draw() for interactive play"""
-        game_state.draw(figsize=figsize)
-        plt.show()
 
 
 @attr.s
