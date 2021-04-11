@@ -123,12 +123,10 @@ class Client:
             move_text = 'No moves possible'
             self.log(current_player, 'No moves possible')
 
-        post_move_path = Path(
-            self.pics_dir) / (str(2 * self.play_count + 1) + '.jpeg'
+        post_move_path = Path(self.pics_dir) / (
+            str(2 * self.play_count + 1) + '.jpeg'
         )
-        self.save_drawn_game_state(
-            post_move_path, move_text
-        )
+        self.save_drawn_game_state(post_move_path, move_text)
 
     def save_drawn_game_state(self, file_path, text=None):
         fig, ax = self._game_state.draw(text=text)
