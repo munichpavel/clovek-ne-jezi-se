@@ -1,9 +1,15 @@
 """Tests for running experiments"""
 import json
+from copy import copy
+import os
+from pathlib import Path
+
 import pytest
 
 from clovek_ne_jezi_se.run_experiments import (
-    parse_config_file, initialize_client, get_experiment_variables_from_config_dir
+    parse_config_file, initialize_client,
+    get_experiment_variables_from_config_dir,
+    make_movie_from_images_dir
 )
 
 def test_parse_config_file(tmpdir):
@@ -144,3 +150,24 @@ def test_get_clients_from_configs_validation(tmpdir, configs, is_valid, Error):
     else:
         with pytest.raises(Error):
             get_experiment_variables_from_config_dir(tmpdir)
+
+
+def test_make_movie_from_images_dir(tmpdir):
+    config_with_pics = copy(valid_config)
+    config = json.loads(config_with_pics)
+    pics_dir = tmpdir.mkdir('pics')
+    config['pics_dir'] = pics_dir
+
+
+    client = initialize_client(config)
+    client.take_turn()
+
+    # One image file for roll value, one for chosen move
+    assert len(os.listdir(pics_dir)) == 2
+    make_movie_from_images_dir(pics_dir)
+
+    movie_path = Path(pics_dir) / 'play.mp4'
+    # Based on 2 images, will need to be changed if default draw configuration
+    # changes (e.g. figure made smaller)
+    assert movie_path.stat().st_size > 12000
+

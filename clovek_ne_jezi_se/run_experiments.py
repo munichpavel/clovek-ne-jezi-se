@@ -1,6 +1,9 @@
+import os
 from typing import Sequence
 import json
 from copy import deepcopy
+import subprocess
+from contextlib import contextmanager
 
 from pathlib import Path
 
@@ -73,9 +76,17 @@ def initialize_client(config: dict) -> 'Client':
         for player in config['players']
     ]
 
-    client = Client(players=players, **config['board'])
+    client = Client(
+        players=players, **config['board'], pics_dir=config.get('pics_dir'))
     client.initialize()
     return client
 
 if __name__ == '__main__':
     run_experiments()
+
+
+@contextmanager
+def make_movie_from_images_dir(path):
+    movie_cmds = 'ffmpeg -framerate 1 -i %d.jpeg play.mp4'.split(' ')
+    os.chdir(path)
+    subprocess.run(movie_cmds)
