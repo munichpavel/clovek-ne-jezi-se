@@ -64,6 +64,10 @@ def test_assert_game_states_equal():
 
 class TestAgents:
 
+    def test_str(self):
+        player = FurthestAlongPlayer(name='fred', print_game_state=True)
+        assert str(player) == 'FurthestAlongPlayer fred'
+
     experiment_config = dict(
         players=[
             dict(name='red', agent='FurthestAlongPlayer', kwargs=dict()),

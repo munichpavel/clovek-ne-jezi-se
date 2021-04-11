@@ -91,7 +91,7 @@ class Client:
         logger.debug(message)
 
     def _choose_and_do_move(self, current_player, roll_value) -> str:
-        pre_move_text = f'{current_player.name} rolls a {str(roll_value)}'
+        pre_move_text = f'{current_player} rolls a {str(roll_value)}'
         pre_move_path = Path(self.pics_dir) / (str(2 * self.play_count) + '.jpeg')
         self.save_drawn_game_state(pre_move_path, pre_move_text
         )
@@ -105,7 +105,7 @@ class Client:
                 self._game_state, moves
             )
 
-            move_text = ''
+            move_text = str(current_player) + '\n'
             for move_container in selected_move:
                 self._game_state.do(move_container)
                 self.log(current_player, f'Do move {move_container}')
@@ -120,7 +120,7 @@ class Client:
             )
 
         else:
-            move_text = 'No moves possible'
+            move_text = str(current_player) + '\nNo moves possible'
             self.log(current_player, 'No moves possible')
 
         post_move_path = Path(self.pics_dir) / (

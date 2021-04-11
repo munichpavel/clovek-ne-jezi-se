@@ -35,6 +35,9 @@ class Player:
     name = attr.ib(type=str, validator=attr.validators.instance_of(str))
     print_game_state = attr.ib(type=bool, default=False)
 
+    def __str__(self):
+        return self.__class__.__name__ + ' ' + self.name
+
     def choose_move(
         self, game_state: 'GameState',
         allowed_moves: Sequence['MoveContainer']
