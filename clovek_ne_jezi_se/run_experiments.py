@@ -43,13 +43,14 @@ def run_experiments(config_dir):
 
                 mlflow.log_params(run_dict)
 
-                with TemporaryDirectory() as tempdir:
-                    client.pics_dir = tempdir
+                if experiment_variables['make_movie']:
+                    with TemporaryDirectory() as tempdir:
+                        client.pics_dir = tempdir
 
-                    winner, n_plays = client.play()
+                        winner, n_plays = client.play()
 
-                    make_movie_from_images_dir(client.pics_dir)
-                    mlflow.log_artifact(Path(client.pics_dir) / 'play.mp4')
+                        make_movie_from_images_dir(client.pics_dir)
+                        mlflow.log_artifact(Path(client.pics_dir) / 'play.mp4')
 
                 winner_idx = client.players.index(winner)
                 print(f'Winner of round is {winner}')
@@ -66,7 +67,8 @@ def get_experiment_variables_from_config_dir(config_dir) -> Sequence[dict]:
         config = parse_config_file(fp)
         client = initialize_client(config)
         n_runs = config['n_runs']
-        res.append(dict(client=client, n_runs=n_runs))
+        make_movie = config['make_movie']
+        res.append(dict(client=client, n_runs=n_runs, make_movie=make_movie))
 
     return res
 
@@ -92,13 +94,11 @@ def initialize_client(config: dict) -> 'Client':
 
 def make_movie_from_images_dir(path):
     movie_cmds = 'ffmpeg -framerate 1 -i %d.jpeg play.mp4'.split(' ')
-    images_dir = Path(path)
-    wd = os.getcwd()
-    #with images_dir:
-    os.chdir(path)
-    subprocess.run(movie_cmds)
-    os.chdir(wd)
+    subprocess.run(movie_cmds, cwd=path)
 
+@contextmanager
+def cwd(path):
+    os.chdir(path)
 
 if __name__ == '__main__':
     run_experiments()

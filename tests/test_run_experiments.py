@@ -28,7 +28,8 @@ def test_parse_config_file(tmpdir):
     "pieces_per_player": 4,
     "number_of_dice_faces": 6
   },
-  "n_runs": 1
+  "n_runs": 1,
+  "make_movie": false
 }
 '''
 
@@ -44,7 +45,8 @@ def test_parse_config_file(tmpdir):
             pieces_per_player=4,
             number_of_dice_faces=6
         ),
-        n_runs=1
+        n_runs=1,
+        make_movie=False
     )
     tmp_path = tmpdir / 'config.json'
     with open(tmp_path, 'w') as fp:
@@ -63,7 +65,7 @@ def test_parse_config_file(tmpdir):
             ],
             board=dict(main_board_section_length=4, pieces_per_player=4,
                        number_of_dice_faces=6),
-            n_runs=1
+            n_runs=1, make_movie=False
         ), True, None),
         (dict(
             board=dict(main_board_section_length=4, pieces_per_player=4,
@@ -75,7 +77,7 @@ def test_parse_config_file(tmpdir):
                  kwargs=dict(print_game_state=False))
             ],
             board=dict(),  # All board values must be given
-            n_runs=1
+            n_runs=1, make_movie=False
         ), False, TypeError),
     ]
 )
@@ -102,7 +104,8 @@ valid_config = '''{
     "pieces_per_player": 4,
     "number_of_dice_faces": 6
   },
-  "n_runs": 1
+  "n_runs": 1,
+  "make_movie": true
 }
 '''
 invalid_game_config = '''{
@@ -115,7 +118,8 @@ invalid_game_config = '''{
       }
     }
   ],
-  "n_runs": 1
+  "n_runs": 1,
+  "make_movie": false
 }
 '''
 invalid_n_runs_config = '''{
@@ -127,7 +131,22 @@ invalid_n_runs_config = '''{
         "print_game_state": false
       }
     }
-  ]
+  ],
+  "make_movie": false
+}
+'''
+
+invalid_make_movie_config = '''{
+  "players": [
+    {
+      "name": "red",
+      "agent": "FurthestAlongPlayer",
+      "kwargs": {
+        "print_game_state": false
+      }
+    }
+  ],
+  "n_runs": 1
 }
 '''
 
@@ -136,7 +155,8 @@ invalid_n_runs_config = '''{
     [
         ([valid_config, valid_config], True, None),
         ([valid_config, invalid_game_config], False, KeyError),
-        ([valid_config, invalid_n_runs_config], False, KeyError)
+        ([valid_config, invalid_n_runs_config], False, KeyError),
+        ([valid_config, invalid_make_movie_config], False, KeyError)
     ]
 )
 def test_get_clients_from_configs_validation(tmpdir, configs, is_valid, Error):
@@ -153,13 +173,11 @@ def test_get_clients_from_configs_validation(tmpdir, configs, is_valid, Error):
 
 
 def test_make_movie_from_images_dir(tmpdir):
-    config_with_pics = copy(valid_config)
-    config = json.loads(config_with_pics)
+    config = json.loads(valid_config)
     pics_dir = tmpdir.mkdir('pics')
-    config['pics_dir'] = pics_dir
-
 
     client = initialize_client(config)
+    client.pics_dir = pics_dir
     client.take_turn()
 
     # One image file for roll value, one for chosen move

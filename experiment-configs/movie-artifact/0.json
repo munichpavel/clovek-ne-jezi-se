@@ -1,0 +1,25 @@
+{
+  "players": [
+    {
+      "name": "red",
+      "agent": "RandomPlayer",
+      "kwargs": {
+        "print_game_state": false
+      }
+    },
+    {
+      "name": "blue",
+      "agent": "FurthestAlongPlayer",
+      "kwargs": {
+        "print_game_state": false
+      }
+    }
+  ],
+  "board": {
+    "main_board_section_length": 4,
+    "pieces_per_player": 2,
+    "number_of_dice_faces": 6
+  },
+  "n_runs": 1,
+  "make_movie": true
+}
