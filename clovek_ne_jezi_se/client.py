@@ -130,6 +130,7 @@ class Client:
 
     def save_drawn_game_state(self, file_path, text=None):
         fig, ax = self._game_state.draw(text=text)
+        plt.tight_layout()
         fig.savefig(file_path)
         plt.close()
 

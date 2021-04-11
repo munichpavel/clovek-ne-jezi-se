@@ -600,7 +600,7 @@ class GameState:
         )
         if text is not None:
             ax.text(
-                -figsize[0] * 0.45, figsize[1] * 0.5,
+                -figsize[0] * 0.45, figsize[1] * 0.45,
                 text, va='top', ha='left'
             )
         return fig, ax

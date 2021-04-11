@@ -2,6 +2,7 @@ import os
 from typing import Sequence
 import json
 from copy import deepcopy
+from tempfile import TemporaryDirectory
 import subprocess
 from contextlib import contextmanager
 
@@ -42,12 +43,19 @@ def run_experiments(config_dir):
 
                 mlflow.log_params(run_dict)
 
-                winner, n_plays = client.play()
+                with TemporaryDirectory() as tempdir:
+                    client.pics_dir = tempdir
+
+                    winner, n_plays = client.play()
+
+                    make_movie_from_images_dir(client.pics_dir)
+                    mlflow.log_artifact(Path(client.pics_dir) / 'play.mp4')
 
                 winner_idx = client.players.index(winner)
                 print(f'Winner of round is {winner}')
                 mlflow.log_metric('winner_idx', winner_idx)
                 mlflow.log_metric('n_plays', n_plays)
+
 
 def get_experiment_variables_from_config_dir(config_dir) -> Sequence[dict]:
     """Get experiment variables from files in config_dir"""
@@ -81,12 +89,16 @@ def initialize_client(config: dict) -> 'Client':
     client.initialize()
     return client
 
-if __name__ == '__main__':
-    run_experiments()
 
-
-@contextmanager
 def make_movie_from_images_dir(path):
     movie_cmds = 'ffmpeg -framerate 1 -i %d.jpeg play.mp4'.split(' ')
+    images_dir = Path(path)
+    wd = os.getcwd()
+    #with images_dir:
     os.chdir(path)
     subprocess.run(movie_cmds)
+    os.chdir(wd)
+
+
+if __name__ == '__main__':
+    run_experiments()
