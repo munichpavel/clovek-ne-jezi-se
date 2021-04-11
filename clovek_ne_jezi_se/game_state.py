@@ -599,7 +599,10 @@ class GameState:
             with_labels=with_labels, node_color=node_color
         )
         if text is not None:
-            ax.text(-figsize[0] * 0.45, figsize[1] * 0.45, text)
+            ax.text(
+                -figsize[0] * 0.45, figsize[1] * 0.5,
+                text, va='top', ha='left'
+            )
         return fig, ax
 
 
