@@ -1,15 +1,18 @@
 """Client module for controlling game progression"""
+import os
+from pathlib import Path
 import logging
 from typing import Sequence, Tuple
 from itertools import cycle
 from random import randint
 
 import attr
+from matplotlib import pyplot as plt
 
 from clovek_ne_jezi_se.agents import Player
 from clovek_ne_jezi_se.log_handler import handler
 from clovek_ne_jezi_se.game_state import (
-    EMPTY_SYMBOL, GameState
+    EMPTY_SYMBOL, GameState, MoveContainer
 )
 
 logger = logging.getLogger(__name__)
@@ -28,6 +31,7 @@ class Client:
         kw_only=True, type=int
     )
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
+    pics_dir = attr.ib(kw_only=True, default=None)
 
     def initialize(self):
         self._player_cycle = cycle(self.players)
@@ -61,7 +65,6 @@ class Client:
             roll_value = self.roll()
 
             self.log(current_player, f'Rolls a {roll_value}')
-
             self._choose_and_do_move(current_player, roll_value)
 
             counts = self._get_game_state_counts()
@@ -85,25 +88,27 @@ class Client:
         message = f'{player}:' + message
         logger.debug(message)
 
-    def _choose_and_do_move(self, current_player, roll_value):
+    def _choose_and_do_move(self, current_player, roll_value) -> str:
+        if self.pics_dir is not None:
+            pre_move_text = f'{current_player} rolls a {str(roll_value)}'
+            pre_move_path = Path(self.pics_dir) / (str(2 * self.play_count) + '.jpeg')
+            self.save_drawn_game_state(pre_move_path, pre_move_text)
+
         moves = self._game_state.get_player_moves(
                 roll_value, current_player.name
             )
         self.log(current_player, f'Available moves: {moves}')
 
         if len(moves) > 0:
-            if (
-                getattr(current_player, 'draw', None) is not None
-                and current_player.print_game_state
-            ):
-                current_player.draw(self._game_state)
             selected_move = current_player.choose_move(
                 self._game_state, moves
             )
 
-            for move_component in selected_move:
-                self._game_state.do(move_component)
-                self.log(current_player, f'Do move {move_component}')
+            move_text = str(current_player) + '\n'
+            for move_container in selected_move:
+                self._game_state.do(move_container)
+                self.log(current_player, f'Do move {move_container}')
+                move_text += str(move_container) + '\n'
 
             self.log(
                 current_player,
@@ -112,8 +117,22 @@ class Client:
                 f'\nMain spaces: {self._game_state.main_spaces_to_list()}'
                 f'\nHome areas: {self._game_state.home_areas_to_dict()}'
             )
+
         else:
+            move_text = str(current_player) + '\nNo moves possible'
             self.log(current_player, 'No moves possible')
+
+        if self.pics_dir is not None:
+            post_move_path = Path(self.pics_dir) / (
+                str(2 * self.play_count + 1) + '.jpeg'
+            )
+            self.save_drawn_game_state(post_move_path, move_text)
+
+    def save_drawn_game_state(self, file_path, text=None):
+        fig, ax = self._game_state.draw(text=text)
+        plt.tight_layout()
+        fig.savefig(file_path)
+        plt.close()
 
     def _get_game_state_counts(self):
         """Convenience function for debugging.

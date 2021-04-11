@@ -11,6 +11,7 @@ from matplotlib import cm
 
 import networkx as nx
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 from .utils import (
@@ -575,8 +576,8 @@ class GameState:
 
     # Visualization
     def draw(
-        self, figsize=(8, 6), with_labels=False,
-    ):
+        self, figsize=(8, 6), text=None, with_labels=False,
+    ) -> matplotlib.axes.Axes:
         """Show game state graph with human-readable coordinates."""
         pos = self._get_graph_positions()
 
@@ -592,10 +593,18 @@ class GameState:
             plt_color_name_dict = self._get_shades_of_blue_color_dict()
         node_color = self._get_node_color(plt_color_name_dict)
 
-        plt.figure(figsize=figsize)
+        fig, ax = plt.subplots(figsize=figsize)
         nx.draw(
-            self._graph, pos, with_labels=with_labels, node_color=node_color
+            self._graph, pos, ax=ax,
+            with_labels=with_labels, node_color=node_color
         )
+        if text is not None:
+            ax.text(
+                -figsize[0] * 0.45, figsize[1] * 0.45,
+                text, va='top', ha='left'
+            )
+        return fig, ax
+
 
     def _get_shades_of_blue_color_dict(self):
         """
@@ -722,3 +731,12 @@ class MoveContainer:
     """Container for board moves."""
     from_space = attr.ib(type=BoardSpace)
     to_space = attr.ib(type=BoardSpace)
+
+    def __str__(self):
+        return (
+            self.from_space.occupied_by + ' moves from ' + \
+            self.from_space.kind + ' ' + \
+            str(self.from_space.idx) + ' to ' + \
+            self.to_space.kind + ' ' + \
+            str(self.to_space.idx)
+        )

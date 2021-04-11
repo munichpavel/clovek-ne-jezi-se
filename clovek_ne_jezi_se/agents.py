@@ -1,6 +1,6 @@
 """Player classes"""
 import abc
-from typing import Sequence
+from typing import Sequence, Union
 import logging
 from random import randint
 
@@ -34,6 +34,9 @@ class Player:
     """
     name = attr.ib(type=str, validator=attr.validators.instance_of(str))
     print_game_state = attr.ib(type=bool, default=False)
+
+    def __str__(self):
+        return self.__class__.__name__ + ' ' + self.name
 
     def choose_move(
         self, game_state: 'GameState',
@@ -75,11 +78,6 @@ class HumanPlayer(Player):
     ) -> int:
         res = int(input('Enter chosen move index: '))
         return res
-
-    def draw(self, game_state: 'GameState', figsize=(8, 6)):
-        """Delegate to GameState.draw() for interactive play"""
-        game_state.draw(figsize=figsize)
-        plt.show()
 
 
 @attr.s

@@ -1,6 +1,10 @@
+import os
 from typing import Sequence
 import json
 from copy import deepcopy
+from tempfile import TemporaryDirectory
+import subprocess
+from contextlib import contextmanager
 
 from pathlib import Path
 
@@ -39,12 +43,20 @@ def run_experiments(config_dir):
 
                 mlflow.log_params(run_dict)
 
-                winner, n_plays = client.play()
+                if experiment_variables['make_movie']:
+                    with TemporaryDirectory() as tempdir:
+                        client.pics_dir = tempdir
+
+                        winner, n_plays = client.play()
+
+                        make_movie_from_images_dir(client.pics_dir)
+                        mlflow.log_artifact(Path(client.pics_dir) / 'play.mp4')
 
                 winner_idx = client.players.index(winner)
                 print(f'Winner of round is {winner}')
                 mlflow.log_metric('winner_idx', winner_idx)
                 mlflow.log_metric('n_plays', n_plays)
+
 
 def get_experiment_variables_from_config_dir(config_dir) -> Sequence[dict]:
     """Get experiment variables from files in config_dir"""
@@ -55,7 +67,8 @@ def get_experiment_variables_from_config_dir(config_dir) -> Sequence[dict]:
         config = parse_config_file(fp)
         client = initialize_client(config)
         n_runs = config['n_runs']
-        res.append(dict(client=client, n_runs=n_runs))
+        make_movie = config['make_movie']
+        res.append(dict(client=client, n_runs=n_runs, make_movie=make_movie))
 
     return res
 
@@ -73,9 +86,19 @@ def initialize_client(config: dict) -> 'Client':
         for player in config['players']
     ]
 
-    client = Client(players=players, **config['board'])
+    client = Client(
+        players=players, **config['board'], pics_dir=config.get('pics_dir'))
     client.initialize()
     return client
+
+
+def make_movie_from_images_dir(path):
+    movie_cmds = 'ffmpeg -framerate 1 -i %d.jpeg play.mp4'.split(' ')
+    subprocess.run(movie_cmds, cwd=path)
+
+@contextmanager
+def cwd(path):
+    os.chdir(path)
 
 if __name__ == '__main__':
     run_experiments()
