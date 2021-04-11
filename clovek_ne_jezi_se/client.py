@@ -31,9 +31,7 @@ class Client:
         kw_only=True, type=int
     )
     empty_symbol = attr.ib(kw_only=True, default=EMPTY_SYMBOL)
-    pics_dir = attr.ib(
-        kw_only=True, default=Path(os.getenv('PROJECT_ROOT')) / 'pics'
-    )
+    pics_dir = attr.ib(kw_only=True, default=None)
 
     def initialize(self):
         self._player_cycle = cycle(self.players)
@@ -91,10 +89,11 @@ class Client:
         logger.debug(message)
 
     def _choose_and_do_move(self, current_player, roll_value) -> str:
-        pre_move_text = f'{current_player} rolls a {str(roll_value)}'
-        pre_move_path = Path(self.pics_dir) / (str(2 * self.play_count) + '.jpeg')
-        self.save_drawn_game_state(pre_move_path, pre_move_text
-        )
+        if self.pics_dir is not None:
+            pre_move_text = f'{current_player} rolls a {str(roll_value)}'
+            pre_move_path = Path(self.pics_dir) / (str(2 * self.play_count) + '.jpeg')
+            self.save_drawn_game_state(pre_move_path, pre_move_text)
+
         moves = self._game_state.get_player_moves(
                 roll_value, current_player.name
             )
@@ -123,10 +122,11 @@ class Client:
             move_text = str(current_player) + '\nNo moves possible'
             self.log(current_player, 'No moves possible')
 
-        post_move_path = Path(self.pics_dir) / (
-            str(2 * self.play_count + 1) + '.jpeg'
-        )
-        self.save_drawn_game_state(post_move_path, move_text)
+        if self.pics_dir is not None:
+            post_move_path = Path(self.pics_dir) / (
+                str(2 * self.play_count + 1) + '.jpeg'
+            )
+            self.save_drawn_game_state(post_move_path, move_text)
 
     def save_drawn_game_state(self, file_path, text=None):
         fig, ax = self._game_state.draw(text=text)
