@@ -639,3 +639,21 @@ class TestGameState:
     def test_distance_to_end(self, board_space, expected):
         assert self.game_state.distance_to_end(board_space) \
             == expected
+
+
+def test_move_container_str():
+    move_container = MoveContainer(
+        from_space=BoardSpace(
+            kind='waiting', idx=3,
+            occupied_by='yellow',
+            allowed_occupants=['yellow', EMPTY_SYMBOL]
+        ),
+        to_space=BoardSpace(
+            kind='main', idx=0,
+            occupied_by=EMPTY_SYMBOL,
+            allowed_occupants=['yellow', 'red'] + [EMPTY_SYMBOL]
+        )
+    )
+
+    res = str(move_container)
+    assert res == ('yellow moves from waiting 3 to main 0')

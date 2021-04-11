@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from clovek_ne_jezi_se.agents import Player
 from clovek_ne_jezi_se.log_handler import handler
 from clovek_ne_jezi_se.game_state import (
-    EMPTY_SYMBOL, GameState
+    EMPTY_SYMBOL, GameState, MoveContainer
 )
 
 logger = logging.getLogger(__name__)
@@ -106,16 +106,10 @@ class Client:
             )
 
             move_text = ''
-            for move_component in selected_move:
-                self._game_state.do(move_component)
-                self.log(current_player, f'Do move {move_component}')
-                move_text += (
-                    move_component.from_space.occupied_by + ' moves from ' + \
-                    move_component.from_space.kind + ' ' + \
-                    str(move_component.from_space.idx) + ' to ' + \
-                    move_component.to_space.kind + ' ' + \
-                    str(move_component.to_space.idx)  + '\n'
-                )
+            for move_container in selected_move:
+                self._game_state.do(move_container)
+                self.log(current_player, f'Do move {move_container}')
+                move_text += str(move_container) + '\n'
 
             self.log(
                 current_player,

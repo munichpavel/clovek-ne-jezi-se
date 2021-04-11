@@ -728,3 +728,12 @@ class MoveContainer:
     """Container for board moves."""
     from_space = attr.ib(type=BoardSpace)
     to_space = attr.ib(type=BoardSpace)
+
+    def __str__(self):
+        return (
+            self.from_space.occupied_by + ' moves from ' + \
+            self.from_space.kind + ' ' + \
+            str(self.from_space.idx) + ' to ' + \
+            self.to_space.kind + ' ' + \
+            str(self.to_space.idx)
+        )
