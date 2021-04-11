@@ -20,3 +20,5 @@ To run the experiments created in the above notebook, run
 ## Development
 
 See the [installation guide](docs/source/INSTALL.rst) for instructions on local development.
+
+Requires `FFmpeg <https://www.ffmpeg.org>`_ for creating experiment videos.
